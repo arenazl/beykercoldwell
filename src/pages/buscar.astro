@@ -63,6 +63,23 @@ const sugerencias = [
                      focus:outline-none border-none"
               autocomplete="off"
             />
+            <button
+              type="button"
+              id="mic-btn"
+              aria-label="Buscar por voz"
+              title="Buscar por voz"
+              class="flex-shrink-0 w-10 h-10 rounded-full border border-border text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 active:scale-95 flex items-center justify-center"
+            >
+              <svg id="mic-icon-idle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+              <svg id="mic-icon-recording" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="hidden text-red-500">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            </button>
           </div>
           <button type="submit" id="ai-submit" class="btn-primary justify-center sm:px-8 sm:py-3.5">
             <span id="ai-submit-label">Buscar</span>
@@ -71,6 +88,15 @@ const sugerencias = [
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </button>
+        </div>
+
+        <div id="mic-status" class="hidden mt-3 flex items-center gap-2 text-xs">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500/60"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+          <span id="mic-status-label" class="text-muted">Escuchando…</span>
+          <span class="text-muted/60 ml-auto" id="mic-engine-hint"></span>
         </div>
       </form>
 
@@ -266,6 +292,211 @@ const sugerencias = [
     } finally {
       submitBtn.disabled = false
       submitLabel.textContent = 'Buscar'
+    }
+  })
+
+  // ======================
+  // Búsqueda por voz
+  // ======================
+  const micBtn = document.getElementById('mic-btn') as HTMLButtonElement
+  const micIconIdle = document.getElementById('mic-icon-idle') as HTMLElement
+  const micIconRec = document.getElementById('mic-icon-recording') as HTMLElement
+  const micStatus = document.getElementById('mic-status') as HTMLDivElement
+  const micStatusLabel = document.getElementById('mic-status-label') as HTMLSpanElement
+  const micEngineHint = document.getElementById('mic-engine-hint') as HTMLSpanElement
+
+  // Web Speech API no está en los typings DOM por defecto; usamos any local.
+  type SpeechRec = {
+    lang: string
+    interimResults: boolean
+    maxAlternatives: number
+    continuous: boolean
+    onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null
+    onerror: ((e: { error: string }) => void) | null
+    onend: (() => void) | null
+    start: () => void
+    stop: () => void
+  }
+  const SpeechRecognitionCtor =
+    ((window as unknown) as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec })
+      .SpeechRecognition ??
+    ((window as unknown) as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec })
+      .webkitSpeechRecognition
+
+  let isRecording = false
+  let activeRecognition: SpeechRec | null = null
+  let activeRecorder: MediaRecorder | null = null
+  let activeStream: MediaStream | null = null
+
+  function setRecordingUI(on: boolean, label = 'Escuchando…') {
+    isRecording = on
+    micBtn.classList.toggle('border-red-500/50', on)
+    micBtn.classList.toggle('bg-red-500/10', on)
+    micIconIdle.classList.toggle('hidden', on)
+    micIconRec.classList.toggle('hidden', !on)
+    micStatus.classList.toggle('hidden', !on)
+    micStatusLabel.textContent = label
+    micBtn.setAttribute('aria-label', on ? 'Detener grabación' : 'Buscar por voz')
+  }
+
+  function stopAll() {
+    if (activeRecognition) {
+      try { activeRecognition.stop() } catch {}
+      activeRecognition = null
+    }
+    if (activeRecorder && activeRecorder.state !== 'inactive') {
+      try { activeRecorder.stop() } catch {}
+    }
+    if (activeStream) {
+      activeStream.getTracks().forEach((t) => t.stop())
+      activeStream = null
+    }
+    setRecordingUI(false)
+  }
+
+  function applyTranscript(text: string) {
+    if (!text) return
+    input.value = text
+    form.requestSubmit()
+  }
+
+  function showMicError(msg: string) {
+    error.textContent = msg
+    error.classList.remove('hidden')
+  }
+
+  // ----- Camino A: Web Speech API (en navegador) -----
+  function startWebSpeech(): boolean {
+    if (!SpeechRecognitionCtor) return false
+    const rec = new SpeechRecognitionCtor()
+    rec.lang = 'es-AR'
+    rec.interimResults = true
+    rec.maxAlternatives = 1
+    rec.continuous = false
+
+    let finalText = ''
+    rec.onresult = (e) => {
+      let interim = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i]
+        if (r.isFinal) finalText += r[0].transcript
+        else interim += r[0].transcript
+      }
+      micStatusLabel.textContent = finalText || interim || 'Escuchando…'
+    }
+    rec.onerror = (e) => {
+      activeRecognition = null
+      setRecordingUI(false)
+      if (e.error === 'no-speech') return
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        showMicError('Permiso de micrófono denegado. Habilitalo en el navegador.')
+        return
+      }
+      // Cualquier otro error: caer al fallback de servidor.
+      startMediaRecorder().catch((err) => showMicError('No pudimos grabar audio: ' + String(err)))
+    }
+    rec.onend = () => {
+      activeRecognition = null
+      setRecordingUI(false)
+      if (finalText.trim()) applyTranscript(finalText.trim())
+    }
+
+    activeRecognition = rec
+    micEngineHint.textContent = 'voz · navegador'
+    setRecordingUI(true, 'Escuchando…')
+    rec.start()
+    return true
+  }
+
+  // ----- Camino B: MediaRecorder + /api/transcribe (Gemini) -----
+  async function startMediaRecorder() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showMicError('Tu navegador no soporta grabación de audio.')
+      return
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    activeStream = stream
+
+    const mimeCandidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+    ]
+    const mime = mimeCandidates.find((m) => MediaRecorder.isTypeSupported(m)) ?? ''
+    const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined)
+    activeRecorder = recorder
+
+    const chunks: Blob[] = []
+    recorder.addEventListener('dataavailable', (e: BlobEvent) => {
+      if (e.data && e.data.size) chunks.push(e.data)
+    })
+    recorder.addEventListener('stop', async () => {
+      stream.getTracks().forEach((t) => t.stop())
+      activeStream = null
+      activeRecorder = null
+      const blob = new Blob(chunks, { type: mime || 'audio/webm' })
+      if (blob.size === 0) {
+        setRecordingUI(false)
+        return
+      }
+      micStatusLabel.textContent = 'Transcribiendo…'
+      try {
+        const base64 = await blobToBase64(blob)
+        const res = await fetch('/api/transcribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audio: base64, mimeType: blob.type || 'audio/webm' }),
+        })
+        const data = await res.json()
+        setRecordingUI(false)
+        if (!res.ok) {
+          showMicError(data.error || 'Error transcribiendo el audio')
+          return
+        }
+        applyTranscript(String(data.text || '').trim())
+      } catch (err) {
+        setRecordingUI(false)
+        showMicError('No pudimos transcribir el audio: ' + String((err as Error).message))
+      }
+    })
+
+    micEngineHint.textContent = 'voz · IA'
+    setRecordingUI(true, 'Grabando — clic para parar')
+    recorder.start()
+
+    // Hard-stop a los 30s para evitar audios eternos.
+    setTimeout(() => {
+      if (activeRecorder && activeRecorder.state === 'recording') {
+        try { activeRecorder.stop() } catch {}
+      }
+    }, 30_000)
+  }
+
+  function blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const result = String(reader.result || '')
+        const comma = result.indexOf(',')
+        resolve(comma >= 0 ? result.slice(comma + 1) : result)
+      }
+      reader.onerror = () => reject(reader.error || new Error('FileReader error'))
+      reader.readAsDataURL(blob)
+    })
+  }
+
+  micBtn.addEventListener('click', async () => {
+    error.classList.add('hidden')
+    if (isRecording) {
+      stopAll()
+      return
+    }
+    if (startWebSpeech()) return
+    try {
+      await startMediaRecorder()
+    } catch (err) {
+      showMicError('No pudimos iniciar el micrófono: ' + String((err as Error).message))
     }
   })
 </script>
