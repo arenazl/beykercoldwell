@@ -38,7 +38,7 @@ export const POST: APIRoute = async ({ request }) => {
     const filters = await extractFilters(query, {
       tipos: FILTERS.tipos,
       operaciones: FILTERS.operaciones,
-      ubicaciones: FILTERS.ubicaciones,
+      ubicaciones: FILTERS.locationsFull,
       total: CATALOG_META.total,
     })
 

@@ -142,10 +142,17 @@ export function formatPriceUSD(value: number | null, currency = 'USD'): string {
 export const FILTERS = {
   tipos: [...new Set(PROPERTIES.map((p) => p.type).filter(Boolean))].sort(),
   operaciones: [...new Set(PROPERTIES.map((p) => p.operacion).filter(Boolean))].sort() as Operacion[],
+  // Lista corta (provincia/zona) — para dropdowns y marquees de UI.
   ubicaciones: [
     ...new Set(
       PROPERTIES.map((p) => p.location.split(',')[0]?.trim()).filter(Boolean)
     ),
+  ].sort(),
+  // Lista granular (provincia/zona, barrio/ciudad) — fuente de verdad para
+  // matching de la IA. Sin este nivel de detalle el modelo no puede resolver
+  // queries por barrio (ej: "boca", "moreno", "recoleta").
+  locationsFull: [
+    ...new Set(PROPERTIES.map((p) => p.location?.trim()).filter(Boolean)),
   ].sort(),
   precios: [
     { label: 'Hasta USD 100.000', max: 100000 },
