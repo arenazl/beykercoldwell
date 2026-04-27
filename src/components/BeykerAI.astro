@@ -1,0 +1,339 @@
+---
+/**
+ * BeykerAI — asistente conversacional flotante.
+ * Se monta en el Layout, presente en todo el sitio. Persiste el chat por sesión.
+ */
+---
+
+<div id="beyker-ai-root" class="fixed bottom-5 right-5 z-50 print:hidden">
+  <button
+    id="beyker-ai-fab"
+    type="button"
+    aria-label="Abrir asistente IA"
+    class="group relative w-14 h-14 rounded-full bg-accent text-bg shadow-2xl shadow-accent/30
+           hover:shadow-accent/50 hover:scale-105 active:scale-95 transition-all duration-300
+           flex items-center justify-center"
+  >
+    <span class="absolute inset-0 rounded-full bg-accent/30 animate-ping opacity-40"></span>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+    </svg>
+    <span class="hidden sm:flex absolute right-16 top-1/2 -translate-y-1/2 whitespace-nowrap
+                 px-3 py-1.5 rounded-full bg-elevated border border-border text-xs font-medium text-text
+                 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+      Beyker IA — preguntame lo que quieras
+    </span>
+  </button>
+
+  <div
+    id="beyker-ai-panel"
+    class="hidden flex-col absolute bottom-16 right-0 w-[min(380px,calc(100vw-2.5rem))]
+           h-[min(560px,calc(100vh-7rem))] rounded-2xl glass-strong shadow-2xl overflow-hidden"
+  >
+    <header class="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border bg-elevated/60">
+      <div class="w-9 h-9 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold text-text">Beyker IA</div>
+        <div class="text-xs text-muted flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+          Online · Respondo al toque
+        </div>
+      </div>
+      <button
+        id="beyker-ai-clear"
+        type="button"
+        title="Reiniciar conversación"
+        class="w-8 h-8 rounded-full hover:bg-elevated text-muted hover:text-text transition-colors flex items-center justify-center"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+      </button>
+      <button
+        id="beyker-ai-close"
+        type="button"
+        aria-label="Cerrar"
+        class="w-8 h-8 rounded-full hover:bg-elevated text-muted hover:text-text transition-colors flex items-center justify-center"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </header>
+
+    <div id="beyker-ai-messages" class="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3">
+      <!-- mensajes inyectados por JS -->
+    </div>
+
+    <div id="beyker-ai-quick" class="flex-shrink-0 flex flex-wrap gap-2 px-4 pb-2">
+      <button class="quick-chip" data-quick="Quiero comprar mi primer departamento">Comprar mi primer depto</button>
+      <button class="quick-chip" data-quick="Quiero tasar mi propiedad">Tasar mi propiedad</button>
+      <button class="quick-chip" data-quick="Necesito calcular si me da el crédito">Calcular crédito</button>
+      <button class="quick-chip" data-quick="Busco una buena inversión">Inversión</button>
+    </div>
+
+    <form id="beyker-ai-form" class="flex-shrink-0 flex items-center gap-2 p-3 border-t border-border bg-elevated/40">
+      <input
+        id="beyker-ai-input"
+        type="text"
+        placeholder="Escribí lo que buscás…"
+        autocomplete="off"
+        class="flex-1 min-w-0 bg-transparent text-sm text-text placeholder:text-muted/60 focus:outline-none px-2 py-2"
+      />
+      <button
+        type="submit"
+        id="beyker-ai-send"
+        class="w-9 h-9 rounded-full bg-accent text-bg flex items-center justify-center
+               hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+        aria-label="Enviar"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .quick-chip {
+    @apply text-xs px-2.5 py-1 rounded-full border border-border bg-elevated/60
+           text-muted hover:text-accent hover:border-accent/40 hover:bg-accent/5
+           transition-all;
+  }
+  #beyker-ai-panel[data-open='true'] {
+    display: flex;
+    animation: ai-fade 0.25s ease-out;
+  }
+  @keyframes ai-fade {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+</style>
+
+<script>
+  type Msg = { role: 'user' | 'assistant'; text: string }
+  type ApiProperty = {
+    id: string
+    title: string
+    location: string
+    image: string
+    detailUrl: string
+    operacion: string
+    type: string
+    priceValue: number | null
+    priceCurrency: string
+  }
+
+  const fab = document.getElementById('beyker-ai-fab') as HTMLButtonElement
+  const panel = document.getElementById('beyker-ai-panel') as HTMLDivElement
+  const closeBtn = document.getElementById('beyker-ai-close') as HTMLButtonElement
+  const clearBtn = document.getElementById('beyker-ai-clear') as HTMLButtonElement
+  const form = document.getElementById('beyker-ai-form') as HTMLFormElement
+  const input = document.getElementById('beyker-ai-input') as HTMLInputElement
+  const sendBtn = document.getElementById('beyker-ai-send') as HTMLButtonElement
+  const list = document.getElementById('beyker-ai-messages') as HTMLDivElement
+  const quick = document.getElementById('beyker-ai-quick') as HTMLDivElement
+
+  const STORE_KEY = 'cb-beyker-ai-history'
+  let history: Msg[] = []
+
+  function loadHistory() {
+    try {
+      const raw = sessionStorage.getItem(STORE_KEY)
+      if (raw) history = JSON.parse(raw) as Msg[]
+    } catch {
+      history = []
+    }
+  }
+  function saveHistory() {
+    sessionStorage.setItem(STORE_KEY, JSON.stringify(history.slice(-12)))
+  }
+
+  function escapeHtml(s: string): string {
+    const div = document.createElement('div')
+    div.textContent = s
+    return div.innerHTML
+  }
+
+  function fmtPrice(p: number | null, c: string): string {
+    if (p == null) return 'Consultar'
+    return `${c || 'USD'} ${p.toLocaleString('es-AR')}`
+  }
+
+  function renderMsg(m: Msg, props?: ApiProperty[], cta?: { label: string; href: string } | null, followUp?: string | null) {
+    const isUser = m.role === 'user'
+    const wrap = document.createElement('div')
+    wrap.className = isUser
+      ? 'flex justify-end'
+      : 'flex justify-start'
+
+    const bubble = document.createElement('div')
+    bubble.className = isUser
+      ? 'max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-tr-md bg-accent text-bg text-sm leading-relaxed'
+      : 'max-w-[90%] px-3.5 py-2.5 rounded-2xl rounded-tl-md bg-elevated border border-border text-sm leading-relaxed text-text'
+    bubble.innerHTML = escapeHtml(m.text).replace(/\n/g, '<br/>')
+    wrap.appendChild(bubble)
+
+    list.appendChild(wrap)
+
+    if (!isUser && props && props.length) {
+      const cards = document.createElement('div')
+      cards.className = 'flex flex-col gap-2 pl-1'
+      props.slice(0, 3).forEach((p) => {
+        const card = document.createElement('a')
+        card.href = p.detailUrl || '#'
+        card.target = '_blank'
+        card.rel = 'noopener'
+        card.className = 'flex gap-2.5 p-2 rounded-xl border border-border bg-elevated/60 hover:border-accent/40 hover:bg-elevated transition-all'
+        card.innerHTML = `
+          <div class="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-border/30">
+            ${p.image ? `<img src="${p.image}" alt="" loading="lazy" class="w-full h-full object-cover" />` : ''}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-semibold text-text line-clamp-2">${escapeHtml(p.title || 'Propiedad')}</div>
+            <div class="text-[10px] text-muted truncate mt-0.5">📍 ${escapeHtml(p.location || '')}</div>
+            <div class="text-xs text-accent font-bold mt-0.5">${fmtPrice(p.priceValue, p.priceCurrency)}</div>
+          </div>
+        `
+        list.appendChild(card)
+      })
+    }
+
+    if (!isUser && cta) {
+      const ctaWrap = document.createElement('div')
+      ctaWrap.className = 'pl-1'
+      const a = document.createElement('a')
+      a.href = cta.href
+      a.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors'
+      a.innerHTML = `${escapeHtml(cta.label)} <span>→</span>`
+      ctaWrap.appendChild(a)
+      list.appendChild(ctaWrap)
+    }
+
+    if (!isUser && followUp) {
+      const fu = document.createElement('div')
+      fu.className = 'text-xs text-muted italic pl-1'
+      fu.textContent = followUp
+      list.appendChild(fu)
+    }
+
+    list.scrollTop = list.scrollHeight
+  }
+
+  function renderTyping(): HTMLDivElement {
+    const wrap = document.createElement('div')
+    wrap.className = 'flex justify-start'
+    wrap.innerHTML = `<div class="px-3.5 py-2.5 rounded-2xl bg-elevated border border-border text-muted text-sm">
+      <span class="inline-flex gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse" style="animation-delay:120ms"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse" style="animation-delay:240ms"></span>
+      </span>
+    </div>`
+    list.appendChild(wrap)
+    list.scrollTop = list.scrollHeight
+    return wrap
+  }
+
+  function welcome() {
+    const greeting: Msg = {
+      role: 'assistant',
+      text: '¡Hola! Soy Beyker IA. Te ayudo a encontrar propiedad, tasar la tuya o ver si te da el crédito. ¿Por dónde arrancamos?',
+    }
+    renderMsg(greeting)
+  }
+
+  function rerender() {
+    list.innerHTML = ''
+    if (!history.length) {
+      welcome()
+    } else {
+      history.forEach((m) => renderMsg(m))
+    }
+  }
+
+  function open() {
+    panel.dataset.open = 'true'
+    panel.classList.remove('hidden')
+    setTimeout(() => input.focus(), 100)
+  }
+  function close() {
+    panel.dataset.open = 'false'
+    panel.classList.add('hidden')
+  }
+
+  fab.addEventListener('click', () => {
+    if (panel.dataset.open === 'true') close()
+    else open()
+  })
+  closeBtn.addEventListener('click', close)
+  clearBtn.addEventListener('click', () => {
+    history = []
+    saveHistory()
+    rerender()
+  })
+
+  quick.querySelectorAll<HTMLButtonElement>('.quick-chip').forEach((b) => {
+    b.addEventListener('click', () => {
+      const q = b.dataset.quick || ''
+      input.value = q
+      form.requestSubmit()
+    })
+  })
+
+  async function send(text: string) {
+    history.push({ role: 'user', text })
+    saveHistory()
+    renderMsg({ role: 'user', text })
+    const typing = renderTyping()
+    sendBtn.disabled = true
+
+    try {
+      const res = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history }),
+      })
+      const data = await res.json()
+      typing.remove()
+
+      if (!res.ok) {
+        renderMsg({
+          role: 'assistant',
+          text: data.error || 'Tuve un problemita técnico. Probá de nuevo.',
+        })
+        return
+      }
+
+      const reply: Msg = { role: 'assistant', text: data.reply || '...' }
+      history.push(reply)
+      saveHistory()
+      renderMsg(reply, data.properties as ApiProperty[], data.cta, data.followUp)
+    } catch (err) {
+      typing.remove()
+      renderMsg({ role: 'assistant', text: 'Sin conexión. Reintentá en un momento.' })
+    } finally {
+      sendBtn.disabled = false
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault()
+    const text = input.value.trim()
+    if (!text) return
+    input.value = ''
+    void send(text)
+  })
+
+  // Init
+  loadHistory()
+  rerender()
+</script>

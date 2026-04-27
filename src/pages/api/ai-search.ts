@@ -42,6 +42,13 @@ export const POST: APIRoute = async ({ request }) => {
       total: CATALOG_META.total,
     })
 
+    if (filters.out_of_scope) {
+      return new Response(
+        JSON.stringify({ filters, total: 0, results: [] }),
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
     const results = applyFilters(filters, 24)
 
     return new Response(

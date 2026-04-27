@@ -1,0 +1,146 @@
+---
+import Layout from '../../layouts/Layout.astro'
+
+export const prerender = false
+
+const { zona: zonaParam } = Astro.params
+const zona = decodeURIComponent(zonaParam || '').trim()
+
+if (!zona) {
+  return Astro.redirect('/barrios')
+}
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Barrios', url: '/barrios' },
+  { name: zona, url: `/barrios/${encodeURIComponent(zona)}` },
+]
+---
+
+<Layout
+  title={`${zona} · Guía de barrio IA · Coldwell Banker Beyker`}
+  description={`Guía honesta de ${zona}: perfil del habitante, fortalezas, contras, rango de precios y tendencia del mercado inmobiliario. Generada con IA.`}
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <div class="max-w-3xl">
+        <a href="/barrios" class="text-xs text-muted hover:text-accent mb-3 inline-flex items-center gap-1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Todas las zonas
+        </a>
+        <div class="section-eyebrow mb-3">Guía IA</div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-2">{zona}</h1>
+        <p class="text-base text-muted">Perfil y datos del barrio, generados con IA en base a nuestro catálogo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-app py-12">
+    <div class="max-w-5xl mx-auto" data-zona={zona}>
+      <div id="loading" class="flex items-center gap-3 text-muted">
+        <svg class="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 11-6.219-8.56" />
+        </svg>
+        Generando guía…
+      </div>
+      <div id="error" class="hidden p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+      <div id="content" class="hidden space-y-6"></div>
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ zona }}>
+  const loading = document.getElementById('loading')
+  const errorBox = document.getElementById('error')
+  const content = document.getElementById('content')
+
+  function escapeHtml(s) {
+    const d = document.createElement('div')
+    d.textContent = s
+    return d.innerHTML
+  }
+  function fmtUSD(n) {
+    return 'USD ' + Math.round(n).toLocaleString('es-AR')
+  }
+
+  async function load() {
+    try {
+      const res = await fetch('/api/barrio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zona }),
+      })
+      const data = await res.json()
+      loading.classList.add('hidden')
+      if (!res.ok) {
+        errorBox.textContent = data.error || 'Error desconocido'
+        errorBox.classList.remove('hidden')
+        return
+      }
+
+      const sample = (data.sampleProperties || []).map((p) => `
+        <a href="/propiedades/${p.slug}" class="property-card group block">
+          <div class="aspect-[4/3] overflow-hidden bg-border/30 relative">
+            ${p.image ? `<img src="${p.image}" alt="" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />` : ''}
+          </div>
+          <div class="p-3">
+            <div class="text-xs font-bold line-clamp-2">${escapeHtml(p.title)}</div>
+            <div class="text-sm font-bold text-accent mt-1">USD ${(p.priceValue || 0).toLocaleString('es-AR')}</div>
+          </div>
+        </a>
+      `).join('')
+
+      content.innerHTML = `
+        <div class="card-static">
+          <p class="text-base text-text/90 leading-relaxed">${escapeHtml(data.resumen || '')}</p>
+          <p class="text-sm text-muted leading-relaxed mt-3"><span class="text-accent font-semibold">Quién vive ahí: </span>${escapeHtml(data.perfilHabitante || '')}</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-5 rounded-2xl border border-green-500/30 bg-green-500/5">
+            <h2 class="text-xs uppercase tracking-wider text-green-400 font-semibold mb-3">Fortalezas</h2>
+            <ul class="text-sm space-y-2">${(data.fortalezas || []).map((x) => `<li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span>${escapeHtml(x)}</span></li>`).join('')}</ul>
+          </div>
+          <div class="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5">
+            <h2 class="text-xs uppercase tracking-wider text-amber-400 font-semibold mb-3">A tener en cuenta</h2>
+            <ul class="text-sm space-y-2">${(data.contras || []).map((x) => `<li class="flex gap-2"><span class="text-amber-400 flex-shrink-0">!</span><span>${escapeHtml(x)}</span></li>`).join('')}</ul>
+          </div>
+        </div>
+
+        <div class="card-static border-accent/30 bg-accent/5">
+          <h2 class="text-xs uppercase tracking-wider text-accent font-semibold mb-3">Rango de precios</h2>
+          <div class="text-3xl font-bold text-accent mb-1">${fmtUSD(data.precioRangoUSD?.min || 0)} – ${fmtUSD(data.precioRangoUSD?.max || 0)}</div>
+          <p class="text-sm text-text/80 leading-relaxed">${escapeHtml(data.precioRangoUSD?.nota || '')}</p>
+          <div class="mt-3 pt-3 border-t border-accent/20 text-xs text-muted">
+            <strong class="text-text/70">Tendencia: </strong>${escapeHtml(data.tendencia || '')}
+          </div>
+        </div>
+
+        <div class="card-static">
+          <h2 class="text-sm font-semibold mb-3">Cerca tuyo encontrás</h2>
+          <div class="flex flex-wrap gap-2">${(data.cercanias || []).map((c) => `<span class="pill text-xs">${escapeHtml(c)}</span>`).join('')}</div>
+        </div>
+
+        ${sample ? `
+          <div>
+            <h2 class="text-lg font-bold mb-4">Propiedades en ${escapeHtml(zona)} (${data.propertiesCount})</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">${sample}</div>
+          </div>
+        ` : `
+          <div class="card-static text-sm text-muted">No hay propiedades en nuestro catálogo en esta zona en este momento.</div>
+        `}
+
+        <div class="text-center pt-4">
+          <a href="/contacto" class="btn-primary">Quiero asesoramiento en ${escapeHtml(zona)}</a>
+        </div>
+      `
+      content.classList.remove('hidden')
+    } catch (err) {
+      loading.classList.add('hidden')
+      errorBox.textContent = 'Error: ' + String(err.message)
+      errorBox.classList.remove('hidden')
+    }
+  }
+  load()
+</script>

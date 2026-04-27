@@ -1,0 +1,271 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CATALOG_META, FILTERS } from '../data/properties'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Encontrá tu casa ideal', url: '/match-ia' },
+]
+
+const zonas = FILTERS.ubicaciones.slice(0, 12)
+const estilos = [
+  'Cerca de transporte',
+  'Cerca de colegios',
+  'Movida gastronómica',
+  'Tranquilo y verde',
+  'Apto familias',
+  'Apto inversores',
+  'Apto crédito',
+  'Amenities',
+]
+---
+
+<Layout
+  title="Encontrá tu casa ideal · Match IA · Coldwell Banker Beyker"
+  description={`Respondé 4 preguntas y la IA te elige las 3 mejores propiedades del catálogo Coldwell Banker (${CATALOG_META.total} propiedades). Match basado en tu estilo de vida.`}
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <div class="max-w-3xl">
+        <div class="section-eyebrow mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+          </svg>
+          Match IA · 4 preguntas, 3 resultados
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
+          Decinos cómo querés vivir.<br />
+          <span class="text-accent">Te elegimos las propiedades.</span>
+        </h1>
+        <p class="text-lg text-muted leading-relaxed">
+          Sin filtros tediosos. Respondé 4 preguntas sobre tu estilo de vida y la IA te recomienda
+          las 3 propiedades del catálogo que mejor te van. Tarda menos de 30 segundos.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-app py-16">
+    <div class="max-w-3xl mx-auto">
+      <form id="match-form" class="space-y-8">
+        <!-- 1. Operación -->
+        <fieldset>
+          <legend class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">1. ¿Qué buscás?</legend>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="match-radio">
+              <input type="radio" name="operacion" value="comprar" checked class="sr-only" />
+              <div class="match-card">
+                <div class="text-2xl mb-1">🏠</div>
+                <div class="font-semibold">Comprar</div>
+              </div>
+            </label>
+            <label class="match-radio">
+              <input type="radio" name="operacion" value="alquilar" class="sr-only" />
+              <div class="match-card">
+                <div class="text-2xl mb-1">🔑</div>
+                <div class="font-semibold">Alquilar</div>
+              </div>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- 2. Zona -->
+        <fieldset>
+          <legend class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">2. ¿Qué zona te interesa?</legend>
+          <input
+            id="zona"
+            name="zona"
+            type="text"
+            list="zonas-list"
+            placeholder="Palermo, Recoleta, Pilar, Tigre…"
+            class="w-full px-5 py-3.5 rounded-xl border border-border bg-elevated text-text placeholder:text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
+          />
+          <datalist id="zonas-list">
+            {zonas.map((z) => <option value={z} />)}
+          </datalist>
+          <p class="text-xs text-muted mt-2">Dejá vacío si no te casás con una zona.</p>
+        </fieldset>
+
+        <!-- 3. Presupuesto + ambientes -->
+        <fieldset class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <legend class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">3. Presupuesto USD</legend>
+            <input
+              id="presupuesto"
+              name="presupuesto"
+              type="number"
+              min="0"
+              step="10000"
+              placeholder="200000"
+              class="w-full px-5 py-3.5 rounded-xl border border-border bg-elevated text-text placeholder:text-muted/60 focus:outline-none focus:border-accent/60"
+            />
+          </div>
+          <div>
+            <legend class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">Ambientes</legend>
+            <select
+              id="ambientes"
+              name="ambientes"
+              class="w-full px-5 py-3.5 rounded-xl border border-border bg-elevated text-text focus:outline-none focus:border-accent/60"
+            >
+              <option value="">No me importa</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4+</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <!-- 4. Estilo de vida -->
+        <fieldset>
+          <legend class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">4. Estilo de vida (las que te resuenen)</legend>
+          <div class="flex flex-wrap gap-2">
+            {estilos.map((e) => (
+              <label class="cursor-pointer">
+                <input type="checkbox" name="estilo" value={e} class="sr-only peer" />
+                <span class="inline-block px-3.5 py-1.5 rounded-full text-xs border border-border text-muted peer-checked:bg-accent peer-checked:text-bg peer-checked:border-accent transition-all">
+                  {e}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <!-- Notas -->
+        <fieldset>
+          <legend class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">¿Algo más que tengamos que saber? (opcional)</legend>
+          <textarea
+            id="notas"
+            name="notas"
+            rows="2"
+            placeholder="Tengo dos hijos, trabajo en microcentro, busco algo silencioso…"
+            class="w-full px-5 py-3 rounded-xl border border-border bg-elevated text-text placeholder:text-muted/60 focus:outline-none focus:border-accent/60 resize-none"
+          ></textarea>
+        </fieldset>
+
+        <button type="submit" id="match-submit" class="btn-primary w-full justify-center text-base py-4">
+          <span id="match-label">Encontrar mis 3 ideales</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </form>
+
+      <div id="match-error" class="hidden mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+
+      <div id="match-results" class="hidden mt-12 space-y-6"></div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .match-radio input:checked + .match-card {
+    @apply border-accent bg-accent/10 text-accent;
+  }
+  .match-card {
+    @apply p-5 rounded-xl border border-border bg-elevated text-center cursor-pointer transition-all
+           hover:border-accent/60 hover:bg-accent/5;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('match-form') as HTMLFormElement
+  const submit = document.getElementById('match-submit') as HTMLButtonElement
+  const label = document.getElementById('match-label') as HTMLSpanElement
+  const errorBox = document.getElementById('match-error') as HTMLDivElement
+  const results = document.getElementById('match-results') as HTMLDivElement
+
+  function escapeHtml(s: string): string {
+    const d = document.createElement('div')
+    d.textContent = s
+    return d.innerHTML
+  }
+  function fmtPrice(p: number | null, c: string): string {
+    if (p == null) return 'Consultar'
+    return `${c || 'USD'} ${p.toLocaleString('es-AR')}`
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errorBox.classList.add('hidden')
+    results.classList.add('hidden')
+
+    const fd = new FormData(form)
+    const operacion = (fd.get('operacion') as string) || 'comprar'
+    const zona = ((fd.get('zona') as string) || '').trim()
+    const presupuesto = Number(fd.get('presupuesto') || 0) || null
+    const ambientes = Number(fd.get('ambientes') || 0) || null
+    const estilo = fd.getAll('estilo').map(String)
+    const notas = (fd.get('notas') as string) || ''
+
+    submit.disabled = true
+    label.textContent = 'Pensando…'
+
+    try {
+      const res = await fetch('/api/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operacion,
+          zona,
+          presupuestoUSD: presupuesto,
+          ambientes,
+          estiloVida: estilo,
+          notas,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        errorBox.textContent = data.error || 'Error desconocido'
+        errorBox.classList.remove('hidden')
+        return
+      }
+
+      const html = `
+        <div class="p-5 rounded-2xl glass">
+          <div class="text-xs text-muted uppercase tracking-wider mb-1">Tu perfil</div>
+          <div class="text-lg font-semibold text-text">${escapeHtml(data.perfilSugerido || '')}</div>
+          <p class="text-sm text-muted mt-2 leading-relaxed">${escapeHtml(data.summary || '')}</p>
+        </div>
+        ${(data.picks || []).map((pk: any, i: number) => {
+          const p = pk.property
+          if (!p) return ''
+          return `
+          <article class="property-card flex flex-col md:flex-row gap-0 overflow-hidden">
+            <a href="${p.detailUrl}" target="_blank" rel="noopener" class="md:w-2/5 aspect-[4/3] md:aspect-auto relative overflow-hidden bg-border/30 flex-shrink-0">
+              <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-full bg-accent text-bg text-xs font-bold shadow-lg">#${i + 1} · ${pk.score}/100</span>
+              <img src="${p.image}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
+            </a>
+            <div class="flex-1 p-5 min-w-0 flex flex-col gap-2">
+              <div class="text-xs text-accent font-semibold uppercase tracking-wider">Por qué te va</div>
+              <p class="text-sm text-text/90 leading-relaxed">${escapeHtml(pk.reason || '')}</p>
+              <h3 class="text-lg font-bold text-text mt-2 line-clamp-2">${escapeHtml(p.title)}</h3>
+              <div class="text-sm text-muted truncate">📍 ${escapeHtml(p.location)}</div>
+              <div class="flex items-center gap-3 text-xs text-text/70 pt-2 border-t border-border">
+                ${p.bedrooms != null ? `<span>🛏 ${p.bedrooms}</span>` : ''}
+                ${p.bathrooms != null ? `<span>🛁 ${p.bathrooms}</span>` : ''}
+                ${p.surfaceM2 != null ? `<span>📐 ${p.surfaceM2} m²</span>` : ''}
+                <span class="ml-auto font-bold text-accent">${fmtPrice(p.priceValue, p.priceCurrency)}</span>
+              </div>
+              <a href="${p.detailUrl}" target="_blank" rel="noopener" class="btn-secondary text-sm justify-center mt-2">Ver ficha completa</a>
+            </div>
+          </article>
+        `}).join('')}
+        <div class="text-center pt-4">
+          <a href="/contacto" class="btn-primary">Hablar con un asesor</a>
+        </div>
+      `
+      results.innerHTML = html
+      results.classList.remove('hidden')
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } catch (err) {
+      errorBox.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
+      errorBox.classList.remove('hidden')
+    } finally {
+      submit.disabled = false
+      label.textContent = 'Encontrar mis 3 ideales'
+    }
+  })
+</script>

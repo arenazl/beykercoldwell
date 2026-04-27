@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { PROPERTIES } from '../../data/properties'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Guías de barrios IA', url: '/barrios' },
+]
+
+// Tomamos las zonas más representadas en el catálogo.
+const counter = new Map<string, number>()
+for (const p of PROPERTIES) {
+  const key = p.location.split(',')[0]?.trim()
+  if (!key) continue
+  counter.set(key, (counter.get(key) ?? 0) + 1)
+}
+const zonas = [...counter.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 24)
+  .map(([nombre, count]) => ({ nombre, count }))
+---
+
+<Layout
+  title="Guías de barrios IA · Coldwell Banker Beyker"
+  description="Guías honestas de barrios y zonas en Argentina, generadas con IA: perfil, fortalezas, contras, rango de precios y tendencia del mercado."
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <div class="max-w-3xl">
+        <div class="section-eyebrow mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Guías de barrios IA
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
+          Conocé el barrio.<br />
+          <span class="text-accent">Antes de comprar.</span>
+        </h1>
+        <p class="text-lg text-muted leading-relaxed">
+          Guías generadas con IA: perfil del habitante, fortalezas, contras honestos, rango de precios y tendencia.
+          Usá el buscador o elegí una zona destacada.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-app py-12">
+    <div class="max-w-4xl mx-auto">
+      <form action="" id="search-zona" class="flex gap-2 mb-8">
+        <input
+          id="zona-input"
+          type="text"
+          placeholder="Recoleta, Palermo, Pilar, Tigre, Vicente López…"
+          class="flex-1 px-5 py-3.5 rounded-xl border border-border bg-elevated text-text placeholder:text-muted/60 focus:outline-none focus:border-accent/60"
+        />
+        <button type="submit" class="btn-primary">Ver guía</button>
+      </form>
+
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-muted mb-4">Zonas con más propiedades</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {zonas.map((z) => (
+          <a
+            href={`/barrios/${encodeURIComponent(z.nombre)}`}
+            class="card group hover:!translate-y-0"
+          >
+            <div class="text-base font-bold text-text group-hover:text-accent transition-colors line-clamp-1">{z.nombre}</div>
+            <div class="text-xs text-muted mt-1">{z.count} propiedad{z.count === 1 ? '' : 'es'}</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const form = document.getElementById('search-zona') as HTMLFormElement
+  const input = document.getElementById('zona-input') as HTMLInputElement
+  form.addEventListener('submit', (e) => {
+    e.preventDefault()
+    const v = input.value.trim()
+    if (!v) return
+    location.href = `/barrios/${encodeURIComponent(v)}`
+  })
+</script>

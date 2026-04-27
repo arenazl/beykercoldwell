@@ -1,0 +1,280 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { PROPERTIES, formatPriceUSD } from '../../data/properties'
+import { CONTACT } from '../../data/site'
+
+export async function getStaticPaths() {
+  return PROPERTIES.map((p) => ({ params: { slug: p.slug } }))
+}
+
+const { slug } = Astro.params
+const property = PROPERTIES.find((p) => p.slug === slug)!
+// getStaticPaths enumera todos los slugs del catálogo, así que `property` siempre existe.
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Propiedades', url: '/propiedades' },
+  { name: property.title, url: `/propiedades/${property.slug}` },
+]
+
+const opLabel = property.operacion
+  ? property.operacion[0].toUpperCase() + property.operacion.slice(1)
+  : 'Consultar'
+
+// Propiedades similares: misma zona o mismo tipo, distinto id, hasta 3.
+const similar = PROPERTIES.filter(
+  (p) =>
+    p.id !== property.id &&
+    (p.location.split(',')[0] === property.location.split(',')[0] || p.type === property.type)
+).slice(0, 3)
+
+const waText = `Hola, te escribo por la propiedad: ${property.title} (Ref ${property.reference})`
+const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${encodeURIComponent(waText)}`
+---
+
+<Layout
+  title={`${property.title} · ${property.location} · Coldwell Banker Beyker`}
+  description={(property.description || '').slice(0, 200)}
+  ogImage={property.image}
+  breadcrumbs={breadcrumbs}
+>
+  <section class="container-app py-8 lg:py-12">
+    <div class="max-w-6xl mx-auto">
+      <a href="/propiedades" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors mb-6">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Volver al listado
+      </a>
+
+      <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-3">
+          <div class="rounded-2xl overflow-hidden bg-elevated border border-border aspect-[4/3] mb-4 relative">
+            {property.image ? (
+              <img src={property.image} alt={property.title} class="w-full h-full object-cover" />
+            ) : (
+              <div class="w-full h-full flex items-center justify-center text-muted">Sin imagen</div>
+            )}
+            <div class="absolute top-4 left-4 flex flex-wrap gap-2">
+              <span class="pill-accent">{opLabel}</span>
+              {property.type && <span class="pill">{property.type}</span>}
+              {property.antiguedadLabel && (
+                <span class="pill border-gold/40 bg-gold/10 text-gold">
+                  {property.antiguedadYears === 0 ? '✨' : '🏛'} {property.antiguedadLabel}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <h1 class="text-3xl lg:text-4xl font-bold tracking-tightest leading-tight mb-3">
+            {property.title}
+          </h1>
+          <p class="text-base text-muted flex items-center gap-2 mb-6">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            {property.location}
+          </p>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            {property.bedrooms != null && (
+              <div class="card-static text-center">
+                <div class="text-xs text-muted uppercase tracking-wider">Dormitorios</div>
+                <div class="text-2xl font-bold text-text">{property.bedrooms}</div>
+              </div>
+            )}
+            {property.bathrooms != null && (
+              <div class="card-static text-center">
+                <div class="text-xs text-muted uppercase tracking-wider">Baños</div>
+                <div class="text-2xl font-bold text-text">{property.bathrooms}</div>
+              </div>
+            )}
+            {property.surfaceM2 != null && (
+              <div class="card-static text-center">
+                <div class="text-xs text-muted uppercase tracking-wider">Superficie</div>
+                <div class="text-2xl font-bold text-text">{property.surfaceM2} m²</div>
+              </div>
+            )}
+            {property.reference && (
+              <div class="card-static text-center">
+                <div class="text-xs text-muted uppercase tracking-wider">Referencia</div>
+                <div class="text-sm font-bold text-text">{property.reference}</div>
+              </div>
+            )}
+          </div>
+
+          {property.description && (
+            <div class="card-static mb-8">
+              <h2 class="text-lg font-bold mb-3">Descripción</h2>
+              <p class="text-sm text-text/80 leading-relaxed whitespace-pre-line">{property.description}</p>
+            </div>
+          )}
+
+          <!-- AI Insights -->
+          <div class="rounded-2xl glass p-6 mb-8" data-property-id={property.id}>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-lg font-bold text-text">Análisis IA</h2>
+                  <div class="text-xs text-muted">Pros, contras y consejos honestos</div>
+                </div>
+              </div>
+              <button
+                id="ai-insight-btn"
+                type="button"
+                class="btn-secondary text-sm"
+              >
+                Generar análisis
+              </button>
+            </div>
+
+            <div id="ai-insight-content" class="hidden space-y-5"></div>
+            <div id="ai-insight-error" class="hidden text-sm text-red-400"></div>
+            <div id="ai-insight-empty" class="text-sm text-muted">
+              Tocá "Generar análisis" y la IA te devuelve pros, contras, perfil ideal de comprador,
+              consejos de negociación y preguntas para hacerle al asesor.
+            </div>
+          </div>
+        </div>
+
+        <aside class="lg:col-span-2">
+          <div class="sticky top-24 space-y-4">
+            <div class="card-static">
+              <div class="text-xs text-muted uppercase tracking-wider">Precio de {property.operacion || 'venta'}</div>
+              <div class="text-3xl lg:text-4xl font-bold text-accent mt-1 mb-4">
+                {formatPriceUSD(property.priceValue, property.priceCurrency)}
+              </div>
+
+              <a href={waLink} target="_blank" rel="noopener" class="btn-primary w-full justify-center mb-3">
+                Consultar por WhatsApp
+              </a>
+              <a href={`mailto:${CONTACT.email}?subject=Consulta%20por%20${encodeURIComponent(property.reference)}`} class="btn-secondary w-full justify-center">
+                Enviar email
+              </a>
+
+              {property.detailUrl && (
+                <a href={property.detailUrl} target="_blank" rel="noopener" class="block text-center text-xs text-muted hover:text-accent mt-4 transition-colors">
+                  Ver ficha en Coldwell Banker →
+                </a>
+              )}
+            </div>
+
+            <div class="card-static">
+              <h3 class="text-sm font-semibold mb-3">Acciones</h3>
+              <div class="space-y-2">
+                <a href={`/credito`} class="text-sm text-text/80 hover:text-accent flex items-center justify-between transition-colors">
+                  <span>Ver si me da el crédito</span>
+                  <span>→</span>
+                </a>
+                <a href={`/comparar?ids=${property.id}`} class="text-sm text-text/80 hover:text-accent flex items-center justify-between transition-colors">
+                  <span>Comparar con otras</span>
+                  <span>→</span>
+                </a>
+                <a href={`/barrios/${encodeURIComponent(property.location.split(',')[0]?.trim() || '')}`} class="text-sm text-text/80 hover:text-accent flex items-center justify-between transition-colors">
+                  <span>Guía del barrio</span>
+                  <span>→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {similar.length > 0 && (
+        <section class="mt-16 pt-12 border-t border-border">
+          <h2 class="text-2xl font-bold mb-6">Propiedades similares</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {similar.map((p) => (
+              <a href={`/propiedades/${p.slug}`} class="property-card group block">
+                <div class="aspect-[4/3] overflow-hidden bg-border/30 relative">
+                  {p.image && <img src={p.image} alt={p.title} loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
+                </div>
+                <div class="p-4">
+                  <h3 class="text-sm font-bold line-clamp-2">{p.title}</h3>
+                  <p class="text-xs text-muted truncate mt-1">📍 {p.location}</p>
+                  <div class="text-base font-bold text-accent mt-2">{formatPriceUSD(p.priceValue, p.priceCurrency)}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ propertyId: property.id }}>
+  const btn = document.getElementById('ai-insight-btn')
+  const content = document.getElementById('ai-insight-content')
+  const empty = document.getElementById('ai-insight-empty')
+  const err = document.getElementById('ai-insight-error')
+
+  function escapeHtml(s) {
+    const d = document.createElement('div')
+    d.textContent = s
+    return d.innerHTML
+  }
+
+  btn?.addEventListener('click', async () => {
+    btn.disabled = true
+    btn.textContent = 'Pensando…'
+    err.classList.add('hidden')
+    empty.classList.add('hidden')
+
+    try {
+      const res = await fetch('/api/property-insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ propertyId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        err.textContent = data.error || 'Error desconocido'
+        err.classList.remove('hidden')
+        return
+      }
+
+      content.innerHTML = `
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl border border-green-500/30 bg-green-500/5">
+            <div class="text-xs uppercase tracking-wider text-green-400 font-semibold mb-2">Pros</div>
+            <ul class="text-sm space-y-1.5 text-text/90">${(data.pros || []).map((x) => `<li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span><span>${escapeHtml(x)}</span></li>`).join('')}</ul>
+          </div>
+          <div class="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5">
+            <div class="text-xs uppercase tracking-wider text-amber-400 font-semibold mb-2">A chequear</div>
+            <ul class="text-sm space-y-1.5 text-text/90">${(data.contras || []).map((x) => `<li class="flex gap-2"><span class="text-amber-400 flex-shrink-0">!</span><span>${escapeHtml(x)}</span></li>`).join('')}</ul>
+          </div>
+        </div>
+        <div class="p-4 rounded-xl border border-border bg-elevated/50">
+          <div class="text-xs uppercase tracking-wider text-muted font-semibold mb-1">Perfil ideal</div>
+          <div class="text-sm text-text/90">${escapeHtml(data.perfilIdeal || '')}</div>
+        </div>
+        <div class="p-4 rounded-xl border border-border bg-elevated/50">
+          <div class="text-xs uppercase tracking-wider text-muted font-semibold mb-1">El barrio</div>
+          <div class="text-sm text-text/90 leading-relaxed">${escapeHtml(data.barrioResumen || '')}</div>
+        </div>
+        <div class="p-4 rounded-xl border border-accent/30 bg-accent/5">
+          <div class="text-xs uppercase tracking-wider text-accent font-semibold mb-1">Consejo de negociación</div>
+          <div class="text-sm text-text/90 leading-relaxed">${escapeHtml(data.consejoNegociacion || '')}</div>
+        </div>
+        <div class="p-4 rounded-xl border border-border bg-elevated/50">
+          <div class="text-xs uppercase tracking-wider text-muted font-semibold mb-2">Preguntas para tu asesor</div>
+          <ul class="text-sm space-y-1.5 text-text/90">${(data.preguntasParaAgente || []).map((x, i) => `<li class="flex gap-2"><span class="text-accent flex-shrink-0">${i + 1}.</span><span>${escapeHtml(x)}</span></li>`).join('')}</ul>
+        </div>
+      `
+      content.classList.remove('hidden')
+      btn.style.display = 'none'
+    } catch (e) {
+      err.textContent = 'Error: ' + String(e.message)
+      err.classList.remove('hidden')
+      btn.disabled = false
+      btn.textContent = 'Reintentar'
+    }
+  })
+</script>

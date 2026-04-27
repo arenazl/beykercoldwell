@@ -1,0 +1,226 @@
+---
+import Layout from '../layouts/Layout.astro'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Generador de aviso IA', url: '/generar-aviso' },
+]
+
+const types = ['Departamento', 'Casa', 'PH', 'Casa Quinta', 'Lote', 'Local', 'Oficina']
+const featureOptions = [
+  'Cochera', 'Pileta', 'Terraza', 'Balcón', 'Patio', 'Parrilla', 'Quincho',
+  'Amenities', 'Solarium', 'Vista despejada', 'Luminoso', 'Apto profesional',
+  'Apto crédito', 'Seguridad 24h', 'Ascensor', 'Lavadero', 'Vestidor',
+]
+---
+
+<Layout
+  title="Generador de aviso IA · Coldwell Banker Beyker"
+  description="Subí los datos crudos de tu propiedad y la IA arma el título, descripción larga, highlights y hashtags para tu publicación."
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <div class="max-w-3xl">
+        <div class="section-eyebrow mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          Generador de aviso IA
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
+          De datos crudos a aviso premium.<br />
+          <span class="text-accent">En 15 segundos.</span>
+        </h1>
+        <p class="text-lg text-muted leading-relaxed">
+          Cargá los datos básicos de la propiedad y la IA te arma título, descripción larga,
+          highlights y hashtags listos para publicar.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-app py-12">
+    <div class="max-w-6xl mx-auto grid lg:grid-cols-5 gap-8">
+      <form id="gen-form" class="lg:col-span-2 card-static space-y-4">
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Tipo</label>
+          <select id="type" name="type" required class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60">
+            {types.map((t) => <option value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Ubicación</label>
+          <input id="location" name="location" type="text" required placeholder="Palermo, CABA" class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-sm font-semibold mb-2 block">m²</label>
+            <input id="surfaceM2" name="surfaceM2" type="number" min="0" required class="w-full px-3 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+          </div>
+          <div>
+            <label class="text-sm font-semibold mb-2 block">Dorm</label>
+            <input id="bedrooms" name="bedrooms" type="number" min="0" class="w-full px-3 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+          </div>
+          <div>
+            <label class="text-sm font-semibold mb-2 block">Baños</label>
+            <input id="bathrooms" name="bathrooms" type="number" min="0" class="w-full px-3 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Antigüedad (años)</label>
+          <input id="ageYears" name="ageYears" type="number" min="0" placeholder="0 = a estrenar" class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+        </div>
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Características</label>
+          <div class="flex flex-wrap gap-2">
+            {featureOptions.map((f) => (
+              <label class="cursor-pointer">
+                <input type="checkbox" name="feature" value={f} class="sr-only peer" />
+                <span class="inline-block px-3 py-1 rounded-full text-xs border border-border text-muted peer-checked:bg-accent peer-checked:text-bg peer-checked:border-accent transition-all">{f}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Notas (opcional)</label>
+          <textarea id="notas" name="notas" rows="2" placeholder="Lo que quieras destacar y no esté en la lista" class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60 resize-none"></textarea>
+        </div>
+        <button type="submit" id="gen-submit" class="btn-primary w-full justify-center">
+          <span id="gen-label">Generar aviso</span>
+        </button>
+      </form>
+
+      <div class="lg:col-span-3 space-y-4">
+        <div id="gen-empty" class="card-static text-center py-16 text-muted">
+          <div class="text-5xl mb-3 opacity-40">✍️</div>
+          <p class="text-sm">Completá los datos y la IA te arma el aviso completo.</p>
+        </div>
+        <div id="gen-error" class="hidden p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+        <div id="gen-result" class="hidden space-y-4"></div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const form = document.getElementById('gen-form') as HTMLFormElement
+  const submit = document.getElementById('gen-submit') as HTMLButtonElement
+  const label = document.getElementById('gen-label') as HTMLSpanElement
+  const empty = document.getElementById('gen-empty') as HTMLDivElement
+  const errorBox = document.getElementById('gen-error') as HTMLDivElement
+  const result = document.getElementById('gen-result') as HTMLDivElement
+
+  function escapeHtml(s: string): string {
+    const d = document.createElement('div')
+    d.textContent = s
+    return d.innerHTML
+  }
+
+  async function copyToClipboard(text: string, btn: HTMLButtonElement) {
+    try {
+      await navigator.clipboard.writeText(text)
+      const old = btn.textContent
+      btn.textContent = 'Copiado ✓'
+      setTimeout(() => { btn.textContent = old }, 1400)
+    } catch {
+      // ignore
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    empty.classList.add('hidden')
+    errorBox.classList.add('hidden')
+    result.classList.add('hidden')
+    submit.disabled = true
+    label.textContent = 'Pensando…'
+
+    const fd = new FormData(form)
+    const features = fd.getAll('feature').map(String)
+    const payload = {
+      type: fd.get('type'),
+      location: fd.get('location'),
+      surfaceM2: Number(fd.get('surfaceM2')),
+      bedrooms: fd.get('bedrooms') ? Number(fd.get('bedrooms')) : undefined,
+      bathrooms: fd.get('bathrooms') ? Number(fd.get('bathrooms')) : undefined,
+      ageYears: fd.get('ageYears') !== '' ? Number(fd.get('ageYears')) : undefined,
+      features,
+      notas: fd.get('notas') as string,
+    }
+
+    try {
+      const res = await fetch('/api/generar-aviso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        errorBox.textContent = data.error || 'Error desconocido'
+        errorBox.classList.remove('hidden')
+        return
+      }
+
+      const fullText = `${data.titulo}\n\n${data.descripcion}\n\nDestacados:\n${(data.highlights || []).map((h: string) => '· ' + h).join('\n')}\n\n${data.ctaSugerido || ''}\n\n${(data.hashtags || []).map((h: string) => '#' + h).join(' ')}`
+
+      result.innerHTML = `
+        <div class="card-static border-accent/40 bg-accent/5">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs text-accent uppercase tracking-wider font-semibold">Título</div>
+            <button type="button" data-copy="title" class="text-xs px-2 py-1 rounded-full border border-border hover:bg-elevated transition-all">Copiar</button>
+          </div>
+          <div id="copy-title" class="text-xl font-bold text-text leading-snug">${escapeHtml(data.titulo || '')}</div>
+        </div>
+
+        <div class="card-static">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs text-muted uppercase tracking-wider font-semibold">Descripción</div>
+            <button type="button" data-copy="desc" class="text-xs px-2 py-1 rounded-full border border-border hover:bg-elevated transition-all">Copiar</button>
+          </div>
+          <div id="copy-desc" class="text-sm text-text/90 leading-relaxed whitespace-pre-line">${escapeHtml(data.descripcion || '')}</div>
+        </div>
+
+        <div class="card-static">
+          <div class="text-xs text-muted uppercase tracking-wider font-semibold mb-2">Destacados</div>
+          <ul class="text-sm space-y-1">${(data.highlights || []).map((h: string) => `<li class="flex gap-2"><span class="text-accent">·</span><span>${escapeHtml(h)}</span></li>`).join('')}</ul>
+        </div>
+
+        <div class="card-static">
+          <div class="text-xs text-muted uppercase tracking-wider font-semibold mb-2">CTA</div>
+          <div class="text-sm text-text/90">${escapeHtml(data.ctaSugerido || '')}</div>
+        </div>
+
+        <div class="card-static">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs text-muted uppercase tracking-wider font-semibold">Hashtags</div>
+            <button type="button" data-copy="tags" class="text-xs px-2 py-1 rounded-full border border-border hover:bg-elevated transition-all">Copiar</button>
+          </div>
+          <div id="copy-tags" class="text-sm text-accent font-mono break-words">${(data.hashtags || []).map((h: string) => '#' + escapeHtml(h)).join(' ')}</div>
+        </div>
+
+        <button type="button" id="copy-all" class="btn-primary w-full justify-center">Copiar aviso completo</button>
+      `
+
+      result.classList.remove('hidden')
+
+      result.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const what = btn.dataset.copy
+          if (what === 'title') copyToClipboard(data.titulo, btn)
+          else if (what === 'desc') copyToClipboard(data.descripcion, btn)
+          else if (what === 'tags') copyToClipboard((data.hashtags || []).map((h: string) => '#' + h).join(' '), btn)
+        })
+      })
+      result.querySelector<HTMLButtonElement>('#copy-all')?.addEventListener('click', (e) => {
+        copyToClipboard(fullText, e.currentTarget as HTMLButtonElement)
+      })
+    } catch (err) {
+      errorBox.textContent = 'Error: ' + String((err as Error).message)
+      errorBox.classList.remove('hidden')
+    } finally {
+      submit.disabled = false
+      label.textContent = 'Generar aviso'
+    }
+  })
+</script>

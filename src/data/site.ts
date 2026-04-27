@@ -35,13 +35,23 @@ export const SOCIAL = {
 export const NAV = [
   { label: 'Inicio', href: '/' },
   { label: 'Buscar IA', href: '/buscar' },
+  { label: 'Match IA', href: '/match-ia' },
   { label: 'Propiedades', href: '/propiedades' },
   { label: 'Tasar IA', href: '/tasaciones-ia' },
-  { label: 'Franquicias', href: '/franquicias' },
-  { label: 'Tecnología', href: '/tecnologia' },
+  { label: 'Crédito', href: '/credito' },
   { label: 'La Empresa', href: '/la-empresa' },
   { label: 'Contacto', href: '/contacto' },
 ]
+
+export const NAV_TOOLS_IA = [
+  { label: 'Buscar con IA', href: '/buscar', desc: 'Lenguaje natural sobre el catálogo' },
+  { label: 'Match IA', href: '/match-ia', desc: '4 preguntas, 3 propiedades ideales' },
+  { label: 'Tasación IA', href: '/tasaciones-ia', desc: 'Banda de precio en 30 segundos' },
+  { label: '¿Te da el crédito?', href: '/credito', desc: 'Capacidad de compra hipotecaria' },
+  { label: 'Comparador IA', href: '/comparar', desc: 'Compará hasta 3 propiedades' },
+  { label: 'Guías de barrios', href: '/barrios', desc: 'Perfil, fortalezas y precios' },
+  { label: 'Generador de aviso', href: '/generar-aviso', desc: 'Datos crudos → publicación lista' },
+] as const
 
 export const NAV_CTA = { label: 'Unite al equipo', href: '/unite' }
 

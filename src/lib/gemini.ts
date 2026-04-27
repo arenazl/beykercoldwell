@@ -40,6 +40,10 @@ export interface AISearchFilters {
   keywords?: string[]
   summary: string
   follow_up?: string
+  /** true cuando el cliente pide algo fuera del alcance del catálogo (ej: ubicación en otro país). */
+  out_of_scope?: boolean
+  /** Mensaje al usuario explicando por qué la consulta cae fuera del catálogo. */
+  out_of_scope_message?: string
 }
 
 export interface SchemaContext {
@@ -63,16 +67,19 @@ export async function extractFilters(
 
   const prompt = `Sos un asistente inmobiliario de Coldwell Banker Argentina. Tu trabajo es traducir lo que pide el cliente a un filtro estructurado sobre nuestro catálogo.
 
-Catálogo disponible (${schema.total} propiedades):
-- Tipos de propiedad reales: ${schema.tipos.slice(0, 30).join(', ')}
-- Operaciones: ${schema.operaciones.join(', ')}
-- Ubicaciones más frecuentes (provincia/ciudad): ${schema.ubicaciones.slice(0, 60).join(', ')}
+CATÁLOGO (estado actual, fuente de verdad):
+- País / alcance: Argentina exclusivamente (CABA, GBA, capitales del interior). NO operamos fuera del país.
+- Total propiedades: ${schema.total}
+- Tipos disponibles: ${schema.tipos.join(', ')}
+- Operaciones disponibles: ${schema.operaciones.join(', ')}
+- Ubicaciones DISPONIBLES (lista exacta, formato "provincia/zona, barrio/ciudad"):
+${schema.ubicaciones.map((u) => `  · ${u}`).join('\n')}
 
 Devolvé JSON con esta forma exacta:
 {
   "operacion": "venta" | "alquiler" | null,
   "type": "Departamento" | "Casa" | "PH" | "Casa Quinta" | "Lote" | "Local" | "Oficina" | null,
-  "location_includes": "string a buscar dentro del campo location (ej: 'Recoleta', 'Palermo', 'Pilar') o null",
+  "location_includes": "substring que matchee al menos una entrada de la lista de ubicaciones de arriba (ej: 'Recoleta', 'Boca', 'Pilar') o null",
   "minPriceUSD": number | null,
   "maxPriceUSD": number | null,
   "minBedrooms": number | null,
@@ -84,12 +91,21 @@ Devolvé JSON con esta forma exacta:
   "aEstrenar": true | false | null,
   "keywords": ["palabras clave a buscar en title+description, ej: 'apto credito', 'pileta', 'cochera', 'amenities'"],
   "summary": "Resumen amigable de lo que entendiste, en 1 oración. Tutealo (vos), tono argentino.",
-  "follow_up": "Pregunta corta si la consulta es ambigua o falta info clave (ej: '¿Para vivir o invertir?', '¿Tenés un presupuesto en mente?'). null si no hace falta."
+  "follow_up": "Pregunta corta si la consulta es ambigua o falta info clave (ej: '¿Para vivir o invertir?'). null si no hace falta.",
+  "out_of_scope": true | false,
+  "out_of_scope_message": "Mensaje al usuario explicando que esa búsqueda cae fuera del catálogo (ej: 'No operamos en Boca Ratón, FL — nuestro catálogo es exclusivamente Argentina.'). null si la consulta es válida."
 }
 
-Reglas:
-- Si el usuario dice "departamento", "depto", "depa" → type "Departamento".
-- Si dice "casa quinta" o "quinta" → type "Casa Quinta".
+REGLAS DE UBICACIÓN (críticas, no opcionales):
+- "location_includes" tiene que ser un substring que matchee AL MENOS UNA entrada de la lista de ubicaciones disponibles. Si no matchea ninguna, NO lo inventes.
+- Resolución case-insensitive y parcial: si el usuario escribe "boca" y la lista contiene "Capital Federal, Boca" → location_includes: "Boca". Si escribe "palermo" → "Palermo".
+- Typos / variantes / "boca raton" interpretado como "boca": si parece un typo o extensión de un barrio AR conocido (ej: "boca raton" → puede ser "Boca"), elegí la opción AR y agregá un follow_up confirmando ("¿Te referías a La Boca, en CABA?").
+- Si la ubicación pedida claramente NO es Argentina (ej: "Miami", "Madrid", "Boca Ratón Florida", "Cancún", "Punta del Este"): out_of_scope: true, location_includes: null, redactá out_of_scope_message explicando que el catálogo es exclusivamente AR.
+- Si no se menciona ubicación, location_includes: null y out_of_scope: false.
+
+Otras reglas:
+- "departamento", "depto", "depa" → type "Departamento".
+- "casa quinta" o "quinta" → type "Casa Quinta".
 - "apto crédito", "credito hipotecario" → keyword "apto credito".
 - "Capital", "CABA", "Capital Federal" → location_includes "Capital Federal".
 - Precios: "hasta 200k", "200 mil" → maxPriceUSD: 200000. "entre 100 y 200" → min/max.
@@ -109,8 +125,8 @@ Consulta del cliente: "${query.replace(/"/g, '\\"')}"`
   // Sanitización: convertir nulls a undefined para que el filtro server-side
   // los ignore con un simple `if (filter.x != null)`.
   for (const k of Object.keys(parsed) as (keyof AISearchFilters)[]) {
-    if ((parsed as Record<string, unknown>)[k] === null) {
-      delete (parsed as Record<string, unknown>)[k]
+    if ((parsed as unknown as Record<string, unknown>)[k] === null) {
+      delete (parsed as unknown as Record<string, unknown>)[k]
     }
   }
   return parsed

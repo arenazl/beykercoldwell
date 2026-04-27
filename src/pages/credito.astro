@@ -1,0 +1,240 @@
+---
+import Layout from '../layouts/Layout.astro'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Calculadora de crédito IA', url: '/credito' },
+]
+---
+
+<Layout
+  title="¿Te da el crédito? · Calculadora hipotecaria IA · Coldwell Banker Beyker"
+  description="Calculá cuánto podés comprar con un crédito hipotecario UVA. La IA estima precio máximo, cuota y muestra propiedades aptas crédito que entran en tu rango."
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <div class="max-w-3xl">
+        <div class="section-eyebrow mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+          </svg>
+          Calculadora hipotecaria IA
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
+          ¿Hasta cuánto podés comprar?<br />
+          <span class="text-accent">Te lo decimos en 10 segundos.</span>
+        </h1>
+        <p class="text-lg text-muted leading-relaxed">
+          Estimamos tu capacidad de compra con crédito UVA: precio máximo, cuota mensual,
+          anticipo necesario, y te mostramos propiedades del catálogo aptas crédito que entran en tu rango.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-app py-12">
+    <div class="max-w-5xl mx-auto grid lg:grid-cols-5 gap-8">
+      <form id="credito-form" class="lg:col-span-2 card-static space-y-5">
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Ingreso mensual neto (ARS)</label>
+          <input
+            id="ingreso"
+            name="ingresoMensualARS"
+            type="number"
+            min="0"
+            step="50000"
+            required
+            placeholder="2.500.000"
+            class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
+          />
+          <p class="text-xs text-muted mt-1">Si están en pareja, sumá ambos ingresos.</p>
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Ahorro disponible (USD)</label>
+          <input
+            id="ahorro"
+            name="ahorroUSD"
+            type="number"
+            min="0"
+            step="1000"
+            required
+            placeholder="50000"
+            class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
+          />
+          <p class="text-xs text-muted mt-1">El banco financia hasta ~75% del valor.</p>
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Cuota máxima sobre ingreso</label>
+          <select
+            id="pct"
+            name="cuotaMaxPctIngreso"
+            class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
+          >
+            <option value="20">20% (conservador)</option>
+            <option value="25" selected>25% (estándar bancario)</option>
+            <option value="30">30% (agresivo)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold mb-2 block">Plazo</label>
+          <select
+            id="plazo"
+            name="plazoAnios"
+            class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
+          >
+            <option value="10">10 años</option>
+            <option value="15">15 años</option>
+            <option value="20" selected>20 años</option>
+            <option value="25">25 años</option>
+            <option value="30">30 años</option>
+          </select>
+        </div>
+
+        <button type="submit" id="credito-submit" class="btn-primary w-full justify-center">
+          <span id="credito-label">Calcular</span>
+        </button>
+        <p class="text-[10px] text-muted leading-relaxed">
+          Estimación orientativa con tasas y TC promedio del mercado argentino. La oferta real
+          depende de cada banco, scoring y antigüedad laboral. No reemplaza una consulta con tu banco.
+        </p>
+      </form>
+
+      <div class="lg:col-span-3 space-y-6">
+        <div id="credito-empty" class="card-static text-center py-16 text-muted">
+          <div class="text-5xl mb-3 opacity-40">🏦</div>
+          <p class="text-sm">Completá el formulario para ver tu capacidad de compra estimada.</p>
+        </div>
+
+        <div id="credito-error" class="hidden card-static border-red-500/30 bg-red-500/5 text-red-400 text-sm"></div>
+        <div id="credito-result" class="hidden space-y-6"></div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const form = document.getElementById('credito-form') as HTMLFormElement
+  const submit = document.getElementById('credito-submit') as HTMLButtonElement
+  const label = document.getElementById('credito-label') as HTMLSpanElement
+  const empty = document.getElementById('credito-empty') as HTMLDivElement
+  const errorBox = document.getElementById('credito-error') as HTMLDivElement
+  const result = document.getElementById('credito-result') as HTMLDivElement
+
+  function escapeHtml(s: string): string {
+    const d = document.createElement('div')
+    d.textContent = s
+    return d.innerHTML
+  }
+  function fmtUSD(n: number): string {
+    if (!isFinite(n)) return 'USD —'
+    return 'USD ' + Math.round(n).toLocaleString('es-AR')
+  }
+  function fmtARS(n: number): string {
+    if (!isFinite(n)) return 'ARS —'
+    return 'ARS ' + Math.round(n).toLocaleString('es-AR')
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    empty.classList.add('hidden')
+    errorBox.classList.add('hidden')
+    result.classList.add('hidden')
+    submit.disabled = true
+    label.textContent = 'Calculando…'
+
+    const fd = new FormData(form)
+    const payload = {
+      ingresoMensualARS: Number(fd.get('ingresoMensualARS')),
+      ahorroUSD: Number(fd.get('ahorroUSD')),
+      cuotaMaxPctIngreso: Number(fd.get('cuotaMaxPctIngreso')),
+      plazoAnios: Number(fd.get('plazoAnios')),
+    }
+
+    try {
+      const res = await fetch('/api/credito', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        errorBox.textContent = data.error || 'Error desconocido'
+        errorBox.classList.remove('hidden')
+        return
+      }
+
+      const matches = (data.matches || [])
+        .map((p: any) => `
+          <a href="/propiedades/${p.slug}" class="property-card group block">
+            <div class="aspect-[4/3] overflow-hidden bg-border/30 relative">
+              ${p.image ? `<img src="${p.image}" alt="" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />` : ''}
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-green-500/90 text-white text-[10px] font-bold">APTO CRÉDITO</span>
+            </div>
+            <div class="p-4">
+              <h3 class="text-sm font-bold line-clamp-2">${escapeHtml(p.title)}</h3>
+              <p class="text-xs text-muted truncate mt-1">📍 ${escapeHtml(p.location)}</p>
+              <div class="text-base font-bold text-accent mt-2">USD ${(p.priceValue || 0).toLocaleString('es-AR')}</div>
+            </div>
+          </a>
+        `)
+        .join('')
+
+      result.innerHTML = `
+        <div class="card-static border-accent/40 bg-accent/5">
+          <div class="text-xs text-accent uppercase tracking-wider font-semibold mb-1">Tu capacidad estimada</div>
+          <div class="text-4xl lg:text-5xl font-bold text-accent">${fmtUSD(data.precioMaxUSD)}</div>
+          <p class="text-sm text-text/80 leading-relaxed mt-3">${escapeHtml(data.resumen || '')}</p>
+
+          <div class="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-accent/20">
+            <div>
+              <div class="text-xs text-muted">Cuota mensual</div>
+              <div class="text-lg font-bold text-text">${fmtUSD(data.cuotaEstimadaUSD)}</div>
+              <div class="text-xs text-muted">≈ ${fmtARS(data.cuotaEstimadaARS)}</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted">Anticipo necesario</div>
+              <div class="text-lg font-bold text-text">${fmtUSD(data.anticipoNecesarioUSD)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-static">
+          <h3 class="text-sm font-semibold mb-2">Supuestos</h3>
+          <ul class="text-xs text-muted space-y-1">${(data.supuestos || []).map((s: string) => `<li>· ${escapeHtml(s)}</li>`).join('')}</ul>
+        </div>
+
+        <div class="card-static">
+          <h3 class="text-sm font-semibold mb-2">Recomendaciones</h3>
+          <ul class="text-sm space-y-1.5 text-text/80">${(data.recomendaciones || []).map((s: string) => `<li class="flex gap-2"><span class="text-accent flex-shrink-0">→</span><span>${escapeHtml(s)}</span></li>`).join('')}</ul>
+        </div>
+
+        ${matches ? `
+        <div>
+          <h3 class="text-lg font-bold mb-3">Propiedades aptas crédito que entran en tu rango</h3>
+          <div class="grid sm:grid-cols-2 gap-4">${matches}</div>
+        </div>
+        ` : `
+        <div class="card-static text-sm text-muted">
+          No hay propiedades aptas crédito dentro de tu rango actual en el catálogo. Probá ampliar tu ahorro
+          o consultá con un asesor.
+        </div>
+        `}
+
+        <div class="text-center pt-2">
+          <a href="/contacto" class="btn-primary">Hablar con un asesor</a>
+        </div>
+      `
+      result.classList.remove('hidden')
+    } catch (err) {
+      errorBox.textContent = 'Error: ' + String((err as Error).message)
+      errorBox.classList.remove('hidden')
+    } finally {
+      submit.disabled = false
+      label.textContent = 'Calcular'
+    }
+  })
+</script>

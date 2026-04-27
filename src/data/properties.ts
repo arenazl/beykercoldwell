@@ -8,6 +8,19 @@
  * Para refrescar el catálogo: `node scripts/scrape-cb-argentina.mjs`
  */
 import raw from './cb-argentina.json' assert { type: 'json' }
+// Detalles enriquecidos (scraped de fichas individuales: antigüedad estructurada,
+// situation, orientation, etc.). El archivo siempre existe (mínimo {details:{}}).
+import detailsRaw from './cb-argentina-details.json' assert { type: 'json' }
+
+interface DetailEntry {
+  antiquity?: string
+  antiguedadYears?: number
+  situation?: string
+  orientation?: string
+  floors?: string
+}
+const detailsMap: Record<string, DetailEntry> =
+  ((detailsRaw as { details?: Record<string, DetailEntry> }).details) ?? {}
 
 export type Operacion = 'venta' | 'alquiler' | 'reserva' | 'alquiler temporario'
 
@@ -93,12 +106,23 @@ function inferAntiguedad(text: string): { years: number | null; label: string | 
 }
 
 export const PROPERTIES: Property[] = catalog.properties.map((p) => {
-  const ant = inferAntiguedad(`${p.title || ''} ${p.description || ''}`)
+  // Preferimos data estructurada del detalle; si no, regex sobre title+description.
+  const detail = detailsMap[p.id]
+  let years: number | null = null
+  let label: string | null = null
+  if (detail?.antiguedadYears != null) {
+    years = detail.antiguedadYears
+    label = detail.antiquity ?? (years === 0 ? 'A estrenar' : `${years} año${years === 1 ? '' : 's'}`)
+  } else {
+    const ant = inferAntiguedad(`${p.title || ''} ${p.description || ''}`)
+    years = ant.years
+    label = ant.label
+  }
   return {
     ...p,
     slug: `${slugify(p.title)}-${p.id}`,
-    antiguedadYears: ant.years,
-    antiguedadLabel: ant.label,
+    antiguedadYears: years,
+    antiguedadLabel: label,
   }
 })
 

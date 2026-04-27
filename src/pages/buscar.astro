@@ -104,6 +104,20 @@ const sugerencias = [
 
       <div id="ai-error" class="hidden mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
 
+      <div id="ai-out-of-scope" class="hidden mb-6 p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 9v4M12 17h.01M3 21h18L12 3 3 21z" />
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-bold text-text mb-1">Esa búsqueda cae fuera del catálogo</h3>
+            <p id="ai-out-of-scope-message" class="text-sm text-text/80 leading-relaxed"></p>
+          </div>
+        </div>
+      </div>
+
       <div id="ai-results" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
 
       <div id="ai-empty" class="hidden text-center py-20 text-muted">
@@ -127,6 +141,8 @@ const sugerencias = [
   const error = document.getElementById('ai-error') as HTMLDivElement
   const results = document.getElementById('ai-results') as HTMLDivElement
   const empty = document.getElementById('ai-empty') as HTMLDivElement
+  const outOfScope = document.getElementById('ai-out-of-scope') as HTMLDivElement
+  const outOfScopeMessage = document.getElementById('ai-out-of-scope-message') as HTMLParagraphElement
 
   document.querySelectorAll<HTMLButtonElement>('.suggestion').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -194,6 +210,7 @@ const sugerencias = [
     error.classList.add('hidden')
     status.classList.add('hidden')
     empty.classList.add('hidden')
+    outOfScope.classList.add('hidden')
     results.innerHTML = ''
 
     try {
@@ -212,6 +229,14 @@ const sugerencias = [
       }
 
       const f = data.filters
+
+      if (f.out_of_scope) {
+        outOfScopeMessage.textContent = f.out_of_scope_message ||
+          'No tenemos propiedades en esa zona. Nuestro catálogo es exclusivamente Argentina.'
+        outOfScope.classList.remove('hidden')
+        return
+      }
+
       summary.textContent = f.summary || 'Resultados'
       const parts: string[] = []
       if (f.operacion) parts.push(f.operacion)

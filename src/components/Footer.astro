@@ -1,11 +1,11 @@
 ---
-import { SITE, CONTACT, SOCIAL, NAV, LOGOS } from '../data/site'
+import { SITE, CONTACT, SOCIAL, NAV, NAV_TOOLS_IA, LOGOS } from '../data/site'
 const year = new Date().getFullYear()
 ---
 
 <footer class="border-t border-border bg-bg mt-12">
   <div class="container-app py-16 grid grid-cols-1 md:grid-cols-12 gap-10">
-    <div class="md:col-span-4">
+    <div class="md:col-span-3">
       <a href="/" class="inline-block mb-4" aria-label="Coldwell Banker Beyker — Inicio">
         <img
           src={LOGOS.primary}
@@ -31,7 +31,7 @@ const year = new Date().getFullYear()
       </div>
     </div>
 
-    <div class="md:col-span-3">
+    <div class="md:col-span-2">
       <h3 class="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Navegación</h3>
       <ul class="space-y-2">
         {NAV.map((item) => (
@@ -45,13 +45,21 @@ const year = new Date().getFullYear()
     </div>
 
     <div class="md:col-span-2">
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Herramientas IA</h3>
+      <ul class="space-y-2">
+        {NAV_TOOLS_IA.map((t) => (
+          <li><a href={t.href} class="text-sm text-text/80 hover:text-accent transition-colors">{t.label}</a></li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="md:col-span-2">
       <h3 class="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Accesos</h3>
       <ul class="space-y-2">
         <li><a href="/unite" class="text-sm text-text/80 hover:text-accent transition-colors">Unite al equipo</a></li>
         <li><a href="/franquicias" class="text-sm text-text/80 hover:text-accent transition-colors">Franquicias</a></li>
         <li><a href="/tecnologia" class="text-sm text-text/80 hover:text-accent transition-colors">Tecnología</a></li>
         <li><a href="/inversores" class="text-sm text-text/80 hover:text-accent transition-colors">Inversores</a></li>
-        <li><a href="/tasaciones-ia" class="text-sm text-text/80 hover:text-accent transition-colors">Tasar con IA</a></li>
         <li><a href="/tasaciones" class="text-sm text-text/80 hover:text-accent transition-colors">Tasación profesional</a></li>
         <li><a href="/emprendimientos" class="text-sm text-text/80 hover:text-accent transition-colors">Emprendimientos</a></li>
       </ul>
