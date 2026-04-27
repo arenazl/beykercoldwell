@@ -32,6 +32,10 @@ export interface RawProperty {
 
 export interface Property extends RawProperty {
   slug: string
+  /** Antigüedad inferida del title+description. null si no se pudo inferir. */
+  antiguedadYears: number | null
+  /** Label para mostrar en UI: "A estrenar", "5 años", null si null. */
+  antiguedadLabel: string | null
 }
 
 interface CatalogShape {
@@ -53,15 +57,56 @@ function slugify(s: string): string {
     .slice(0, 80)
 }
 
-export const PROPERTIES: Property[] = catalog.properties.map((p) => ({
-  ...p,
-  slug: `${slugify(p.title)}-${p.id}`,
-}))
+/**
+ * Infiere antigüedad a partir de title+description. Conservador:
+ * - "a estrenar" / "estrenar" / "en pozo" / "a construir" → 0
+ * - "X años de antigüedad" / "antigüedad de X años" → X
+ * - Si nada matchea, devuelve null (no inventamos).
+ */
+function inferAntiguedad(text: string): { years: number | null; label: string | null } {
+  if (!text) return { years: null, label: null }
+  const t = text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+  if (/\b(a estrenar|sin estrenar|estrenar)\b/.test(t)) {
+    return { years: 0, label: 'A estrenar' }
+  }
+  if (/\b(en pozo|en construccion|a construir|preventa)\b/.test(t)) {
+    return { years: 0, label: 'En pozo' }
+  }
+
+  const patterns = [
+    /antiguedad[^0-9]{0,30}(\d{1,3})\s*anos?/,
+    /(\d{1,3})\s*anos?\s*de\s*antiguedad/,
+    /(\d{1,3})\s*anos?\s*de\s*construccion/,
+  ]
+  for (const rx of patterns) {
+    const m = t.match(rx)
+    if (m) {
+      const y = Number(m[1])
+      if (y >= 0 && y <= 150) {
+        if (y === 0) return { years: 0, label: 'A estrenar' }
+        return { years: y, label: `${y} año${y === 1 ? '' : 's'}` }
+      }
+    }
+  }
+  return { years: null, label: null }
+}
+
+export const PROPERTIES: Property[] = catalog.properties.map((p) => {
+  const ant = inferAntiguedad(`${p.title || ''} ${p.description || ''}`)
+  return {
+    ...p,
+    slug: `${slugify(p.title)}-${p.id}`,
+    antiguedadYears: ant.years,
+    antiguedadLabel: ant.label,
+  }
+})
 
 export const CATALOG_META = {
   total: catalog.total,
   scrapedAt: catalog.scrapedAt,
   source: catalog.source,
+  withAntiguedad: PROPERTIES.filter((p) => p.antiguedadLabel).length,
 }
 
 export function formatPriceUSD(value: number | null, currency = 'USD'): string {

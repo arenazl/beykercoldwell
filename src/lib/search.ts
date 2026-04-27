@@ -44,6 +44,16 @@ export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult
     if (filters.minSurfaceM2 != null && (p.surfaceM2 ?? 0) < filters.minSurfaceM2) pass = false
     if (filters.maxSurfaceM2 != null && (p.surfaceM2 ?? Infinity) > filters.maxSurfaceM2) pass = false
 
+    if (filters.aEstrenar) {
+      if (p.antiguedadYears !== 0) pass = false
+      else hits.push('✨ A estrenar')
+    } else if (filters.maxAntiguedad != null) {
+      // Solo descartamos si conocemos la antigüedad y supera el máximo.
+      // Si no la sabemos, no descartamos (no hay dato suficiente).
+      if (p.antiguedadYears != null && p.antiguedadYears > filters.maxAntiguedad) pass = false
+      else if (p.antiguedadLabel) hits.push(`🏛 ${p.antiguedadLabel}`)
+    }
+
     if (!pass) continue
 
     let score = 1

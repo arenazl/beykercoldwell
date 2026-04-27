@@ -35,6 +35,14 @@ const detailHref = property.detailUrl || '#'
       <div class="flex flex-wrap gap-2">
         <span class="pill-accent">{opLabel}</span>
         {property.type && <span class="pill">{property.type}</span>}
+        {property.antiguedadLabel && (
+          <span class:list={[
+            'pill border-gold/40 bg-gold/10 text-gold',
+            property.antiguedadYears === 0 && 'animate-pulse-glow',
+          ]}>
+            {property.antiguedadYears === 0 ? '✨' : '🏛'} {property.antiguedadLabel}
+          </span>
+        )}
       </div>
       {property.reference && (
         <span class="pill text-[10px] opacity-70">{property.reference}</span>

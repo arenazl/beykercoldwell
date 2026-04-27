@@ -33,6 +33,10 @@ export interface AISearchFilters {
   minBathrooms?: number
   minSurfaceM2?: number
   maxSurfaceM2?: number
+  /** Edad máxima de la propiedad. 0 = solo a estrenar / en pozo. */
+  maxAntiguedad?: number
+  /** true = solo "a estrenar" o "en pozo" */
+  aEstrenar?: boolean
   keywords?: string[]
   summary: string
   follow_up?: string
@@ -76,6 +80,8 @@ Devolvé JSON con esta forma exacta:
   "minBathrooms": number | null,
   "minSurfaceM2": number | null,
   "maxSurfaceM2": number | null,
+  "maxAntiguedad": number | null,
+  "aEstrenar": true | false | null,
   "keywords": ["palabras clave a buscar en title+description, ej: 'apto credito', 'pileta', 'cochera', 'amenities'"],
   "summary": "Resumen amigable de lo que entendiste, en 1 oración. Tutealo (vos), tono argentino.",
   "follow_up": "Pregunta corta si la consulta es ambigua o falta info clave (ej: '¿Para vivir o invertir?', '¿Tenés un presupuesto en mente?'). null si no hace falta."
@@ -87,6 +93,10 @@ Reglas:
 - "apto crédito", "credito hipotecario" → keyword "apto credito".
 - "Capital", "CABA", "Capital Federal" → location_includes "Capital Federal".
 - Precios: "hasta 200k", "200 mil" → maxPriceUSD: 200000. "entre 100 y 200" → min/max.
+- "a estrenar", "estrenar", "en pozo", "preventa", "nueva construcción" → aEstrenar: true.
+- "no más de 10 años", "hasta 5 años antigüedad" → maxAntiguedad: número.
+- "moderno", "reciente" → maxAntiguedad: 15 (opcional, si no es claro dejá null).
+- "antigua", "estilo francés", "estilo italiano" → NO setear maxAntiguedad (es estilo, no edad).
 - Si pide "barato" sin número → no inventes precio, dejá null y agregá follow_up preguntando rango.
 - NO inventes valores. Si algo no está claro, dejalo null.
 
