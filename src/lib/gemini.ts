@@ -97,7 +97,7 @@ Devolvé JSON con esta forma exacta:
 }
 
 REGLAS DE UBICACIÓN (críticas, no opcionales):
-- "location_includes" tiene que ser un substring que matchee AL MENOS UNA entrada de la lista de ubicaciones disponibles. Si no matchea ninguna, NO lo inventes.
+- "location_includes" debería preferentemente ser un substring que matchee AL MENOS UNA entrada de la lista. Pero el matching server-side también busca en título + descripción de cada propiedad — así que si el usuario menciona claramente un barrio/localidad de Argentina (ej: "La Reja", "Tristán Suárez", "Villa Devoto"), seteá igual "location_includes" con ese nombre aunque no aparezca exacto en la lista de arriba. NO lo inventes solo si el usuario no mencionó ningún lugar.
 - Resolución case-insensitive y parcial: si el usuario escribe "boca" y la lista contiene "Capital Federal, Boca" → location_includes: "Boca". Si escribe "palermo" → "Palermo".
 - Typos / variantes / "boca raton" interpretado como "boca": si parece un typo o extensión de un barrio AR conocido (ej: "boca raton" → puede ser "Boca"), elegí la opción AR y agregá un follow_up confirmando ("¿Te referías a La Boca, en CABA?").
 - Si la ubicación pedida claramente NO es Argentina (ej: "Miami", "Madrid", "Boca Ratón Florida", "Cancún", "Punta del Este"): out_of_scope: true, location_includes: null, redactá out_of_scope_message explicando que el catálogo es exclusivamente AR.
