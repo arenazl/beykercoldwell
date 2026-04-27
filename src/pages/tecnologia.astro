@@ -1,0 +1,210 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CONTACT } from '../data/site'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Tecnología', url: '/tecnologia' },
+]
+
+const modulos = [
+  {
+    icon: 'database',
+    title: 'CRM con IA integrado',
+    desc: 'Plataforma central donde toda interacción queda registrada, enriquecida y accionable. La IA prioriza, sugiere próximos pasos y nunca deja un lead frío.',
+    features: ['Pipeline visual', 'Sugerencias automáticas', 'Integración WhatsApp / mail / web'],
+  },
+  {
+    icon: 'magnet',
+    title: 'Captación automática de leads',
+    desc: 'Crawlers, formularios inteligentes y campañas auto-optimizadas que llenan el pipeline sin intervención manual.',
+    features: ['Scraping multi-canal', 'Formularios adaptativos', 'A/B testing automático'],
+  },
+  {
+    icon: 'target',
+    title: 'Scoring de propietarios',
+    desc: 'Modelo que clasifica propietarios por probabilidad real de captación, urgencia, motivación y precio razonable.',
+    features: ['Score 0–100', 'Razones explicables', 'Re-scoring continuo'],
+  },
+  {
+    icon: 'calculator',
+    title: 'Valuador automático',
+    desc: 'AVM (Automated Valuation Model) entrenado con datos de mercado, comparables reales y ajustes por microzona.',
+    features: ['ACM en segundos', 'Bandas de precio', 'Reporte exportable'],
+  },
+  {
+    icon: 'whatsapp',
+    title: 'IA que responde WhatsApp',
+    desc: 'Atención 24/7 con un agente que conoce tu cartera, califica al lead y deriva al asesor solo cuando vale la pena.',
+    features: ['Respuesta < 30 segundos', 'Calificación automática', 'Hand-off al humano'],
+  },
+  {
+    icon: 'pulse',
+    title: 'IA de seguimiento comercial',
+    desc: 'Nunca más se pierde un lead por olvido. La IA sigue, recuerda, vuelve a llamar y reactiva oportunidades dormidas.',
+    features: ['Cadencias inteligentes', 'Reactivación automática', 'Predicción de cierre'],
+  },
+  {
+    icon: 'video',
+    title: 'IA para reels y marketing',
+    desc: 'Generación automática de reels, carousels y piezas de marketing por propiedad, optimizadas por canal.',
+    features: ['Reels desde fotos', 'Copywriting por canal', 'Calendario auto'],
+  },
+  {
+    icon: 'pen',
+    title: 'IA para copywriting',
+    desc: 'Descripciones de propiedades, mails de seguimiento, propuestas — todo escrito por IA con tu estilo de marca.',
+    features: ['Tono editorial', 'Multi-idioma', 'A/B de copy'],
+  },
+  {
+    icon: 'document',
+    title: 'IA para contratos',
+    desc: 'Generación, revisión y firma electrónica de boletos, reservas y contratos con cláusulas adaptables.',
+    features: ['Plantillas oficiales', 'Revisión legal asistida', 'Firma digital'],
+  },
+  {
+    icon: 'graduation',
+    title: 'Capacitación continua',
+    desc: 'Academia interna con cursos cortos, role-play con IA y certificaciones por nivel.',
+    features: ['Onboarding 30 días', 'Role-play con IA', 'Certificación por nivel'],
+  },
+  {
+    icon: 'chart',
+    title: 'Dashboard de KPIs en vivo',
+    desc: 'Tu oficina en tiempo real: leads, conversiones, tiempo de respuesta, NPS, comisiones — todo medible.',
+    features: ['KPIs por asesor', 'Comparativa entre oficinas', 'Alertas automáticas'],
+  },
+  {
+    icon: 'coin',
+    title: 'Tokenización (roadmap)',
+    desc: 'Línea de fractional ownership y tokenización de inversiones inmobiliarias, con revenue share por oficina.',
+    features: ['Pilotos 2027', 'Marco legal en diseño', 'Revenue share'],
+  },
+]
+
+function iconPath(name: string): string {
+  const map: Record<string, string> = {
+    database: 'M4 6c0-1.1 3.6-2 8-2s8 .9 8 2v12c0 1.1-3.6 2-8 2s-8-.9-8-2V6zm0 0c0 1.1 3.6 2 8 2s8-.9 8-2M4 12c0 1.1 3.6 2 8 2s8-.9 8-2',
+    magnet: 'M12 2v6m0 0a4 4 0 014 4v8M12 8a4 4 0 00-4 4v8m0 0h4m4 0h4',
+    target: 'M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a6 6 0 100 12 6 6 0 000-12zm0 4a2 2 0 100 4 2 2 0 000-4z',
+    calculator: 'M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm2 4h10v3H7V7zm0 6h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v6h-2v-6zm-8 4h2v2H7v-2zm4 0h2v2h-2v-2z',
+    whatsapp: 'M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z',
+    pulse: 'M22 12h-4l-3 9L9 3l-3 9H2',
+    video: 'M23 7l-7 5 7 5V7zM3 5h12a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2z',
+    pen: 'M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586M11 11a2 2 0 11-4 0 2 2 0 014 0z',
+    document: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M16 13H8M16 17H8M10 9H8',
+    graduation: 'M22 10L12 5 2 10l10 5 10-5zM6 12v5c3 3 9 3 12 0v-5',
+    chart: 'M3 3v18h18M7 12l4-4 4 4 6-6',
+    coin: 'M12 2a10 10 0 100 20 10 10 0 000-20zm0 5v10m-3-7h6m-6 4h6',
+  }
+  return map[name] || ''
+}
+---
+
+<Layout
+  title="Tecnología · Stack IA inmobiliario"
+  description="El stack tecnológico completo que reciben las oficinas de la red: CRM con IA, captación, scoring, valuación, WhatsApp, marketing automatizado y dashboard de KPIs."
+  schemaType="Service"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-16 lg:py-24">
+      <div class="max-w-3xl">
+        <div class="section-eyebrow mb-3">Tecnología</div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-6">
+          IA en cada punto de contacto.
+        </h1>
+        <p class="text-lg text-muted leading-relaxed">
+          Mientras la competencia debate si adoptar IA, nuestras oficinas ya están operando con ella. El stack
+          es obligatorio para todos los franquiciados — porque la red sólo funciona si todos miden lo mismo,
+          con las mismas herramientas, en tiempo real.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {modulos.map((m) => (
+          <div class="card flex flex-col">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-4">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d={iconPath(m.icon)} />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2">{m.title}</h3>
+            <p class="text-sm text-muted leading-relaxed mb-4">{m.desc}</p>
+            <ul class="mt-auto space-y-1.5 pt-4 border-t border-border">
+              {m.features.map((f) => (
+                <li class="flex items-center gap-2 text-xs text-text/80">
+                  <span class="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-gold"></span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div>
+          <div class="section-eyebrow mb-3">Cómo funciona</div>
+          <h2 class="section-title mb-5">De lead a cierre, todo trazado.</h2>
+          <p class="text-muted leading-relaxed mb-6">
+            Cada lead que entra al sistema queda atado a su origen, su asesor, su flujo de seguimiento, su
+            probabilidad de cierre y su tiempo de respuesta. Ningún paso es invisible. La IA empuja, el asesor
+            cierra, el dashboard mide.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a href="/franquicias" class="btn-primary">Ver modelo de franquicia</a>
+            <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="btn-secondary">Hablar por WhatsApp</a>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          {[
+            { step: '01', title: 'Lead entra al CRM', desc: 'Web, WhatsApp, redes, referidos — todo unificado.' },
+            { step: '02', title: 'IA califica y prioriza', desc: 'Score automático y razón del score visible al asesor.' },
+            { step: '03', title: 'WhatsApp 24/7 responde', desc: 'Conversación inicial automatizada, hand-off cuando vale.' },
+            { step: '04', title: 'Asesor recibe el lead caliente', desc: 'Solo cuando está calificado, con contexto y sugerencia de próximo paso.' },
+            { step: '05', title: 'IA acompaña hasta el cierre', desc: 'Recordatorios, seguimientos, contratos, firma — sin fricción.' },
+          ].map((s) => (
+            <div class="flex items-start gap-4 p-5 rounded-2xl bg-elevated border border-border">
+              <div class="flex-shrink-0 text-2xl font-display font-bold text-gold">{s.step}</div>
+              <div class="min-w-0">
+                <div class="font-bold text-text mb-1">{s.title}</div>
+                <p class="text-sm text-muted leading-relaxed">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-accent text-white relative overflow-hidden">
+    <div class="absolute inset-0 -z-0">
+      <div class="absolute -top-1/2 right-0 w-[600px] aspect-square bg-gold/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container-app relative">
+      <div class="max-w-2xl">
+        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gold mb-4">Compromiso técnico</div>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tightest leading-[1.05] mb-6">
+          El stack evoluciona cada trimestre.
+        </h2>
+        <p class="text-lg text-white/85 leading-relaxed mb-8">
+          La red invierte el fee tecnológico en upgrade continuo: nuevos módulos, mejores modelos de IA,
+          integraciones y automatizaciones. Lo que hoy es un diferencial, mañana ya está obsoleto si nadie lo
+          mantiene vivo.
+        </p>
+        <a href="/franquicias#postular" class="btn-gold">Quiero abrir una oficina</a>
+      </div>
+    </div>
+  </section>
+</Layout>

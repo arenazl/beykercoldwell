@@ -1,0 +1,246 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CATALOG_META, FILTERS } from '../data/properties'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Buscar con IA', url: '/buscar' },
+]
+
+const sugerencias = [
+  'Departamento 2 ambientes en Palermo hasta USD 200.000 apto crédito',
+  'Casa con pileta en zona norte para vivir, hasta 500k',
+  'PH en CABA con patio, máximo 150k',
+  'Local comercial en Microcentro',
+  'Casa quinta para fin de semana cerca de Pilar',
+]
+---
+
+<Layout
+  title="Búsqueda IA · Coldwell Banker Beyker"
+  description={`Buscá entre ${CATALOG_META.total} propiedades de la red Coldwell Banker Argentina con asistente IA. Decime qué buscás en lenguaje natural.`}
+  breadcrumbs={breadcrumbs}
+>
+  <section class="relative overflow-hidden -mt-16 lg:-mt-20 pt-16 lg:pt-20">
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute inset-0 bg-gradient-to-b from-[rgb(var(--navy))]/40 via-bg to-bg"></div>
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] aspect-square bg-accent/15 blur-[120px] rounded-full animate-float"></div>
+    </div>
+
+    <div class="container-app pt-12 lg:pt-20 pb-8">
+      <div class="max-w-3xl mx-auto text-center reveal">
+        <div class="section-eyebrow mb-5 justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+          </svg>
+          Búsqueda guiada por IA
+        </div>
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tightest leading-[1.02] mb-6">
+          Decime qué buscás.<br />
+          <span class="gradient-text-accent">Yo me encargo del resto.</span>
+        </h1>
+        <p class="text-base lg:text-lg text-muted leading-relaxed max-w-2xl mx-auto">
+          {CATALOG_META.total.toLocaleString('es-AR')} propiedades de toda la red Coldwell Banker Argentina. Escribí en lenguaje natural — barrio, ambientes, presupuesto, características — y la IA elige lo que mejor matchea.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-app pb-20">
+    <div class="max-w-4xl mx-auto">
+      <form id="ai-form" class="glass-strong rounded-3xl shadow-2xl p-2 mb-8 reveal">
+        <div class="flex flex-col sm:flex-row gap-2">
+          <div class="flex-1 flex items-center gap-3 px-5 py-3 sm:py-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-accent flex-shrink-0">
+              <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+            </svg>
+            <input
+              id="query"
+              name="query"
+              type="text"
+              placeholder="Departamento 2 ambientes en Recoleta hasta 200k apto crédito…"
+              class="flex-1 bg-transparent text-text placeholder:text-muted/60 text-base
+                     focus:outline-none border-none"
+              autocomplete="off"
+            />
+          </div>
+          <button type="submit" id="ai-submit" class="btn-primary justify-center sm:px-8 sm:py-3.5">
+            <span id="ai-submit-label">Buscar</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </button>
+        </div>
+      </form>
+
+      <div class="flex flex-wrap items-center gap-2 mb-10 reveal reveal-delay-1">
+        <span class="text-xs text-muted">Probá:</span>
+        {sugerencias.map((s) => (
+          <button
+            type="button"
+            data-suggestion={s}
+            class="suggestion px-3.5 py-1.5 rounded-full text-xs border border-border text-muted hover:text-accent hover:border-accent/40 hover:bg-accent/5 transition-all"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <div id="ai-status" class="hidden mb-8 p-5 rounded-2xl glass">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div id="ai-summary" class="text-text font-semibold mb-1"></div>
+            <div id="ai-meta" class="text-xs text-muted leading-relaxed"></div>
+            <div id="ai-followup" class="hidden mt-3 text-sm text-accent border-t border-border/50 pt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ai-error" class="hidden mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+
+      <div id="ai-results" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+
+      <div id="ai-empty" class="hidden text-center py-20 text-muted">
+        <div class="text-5xl mb-3 opacity-40">🔍</div>
+        <p>Sin resultados para esa búsqueda.</p>
+        <p class="text-sm mt-1">Probá relajar algún filtro o describir lo que buscás de otra forma.</p>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const form = document.getElementById('ai-form') as HTMLFormElement
+  const input = document.getElementById('query') as HTMLInputElement
+  const submitBtn = document.getElementById('ai-submit') as HTMLButtonElement
+  const submitLabel = document.getElementById('ai-submit-label') as HTMLSpanElement
+  const status = document.getElementById('ai-status') as HTMLDivElement
+  const summary = document.getElementById('ai-summary') as HTMLDivElement
+  const meta = document.getElementById('ai-meta') as HTMLDivElement
+  const followup = document.getElementById('ai-followup') as HTMLDivElement
+  const error = document.getElementById('ai-error') as HTMLDivElement
+  const results = document.getElementById('ai-results') as HTMLDivElement
+  const empty = document.getElementById('ai-empty') as HTMLDivElement
+
+  document.querySelectorAll<HTMLButtonElement>('.suggestion').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const s = btn.dataset.suggestion
+      if (!s) return
+      input.value = s
+      form.requestSubmit()
+    })
+  })
+
+  function fmtPrice(p: number | null, c: string) {
+    if (p == null) return 'Consultar'
+    return `${c || 'USD'} ${p.toLocaleString('es-AR')}`
+  }
+
+  function renderCard(item: any): string {
+    const p = item.property
+    const hits = (item.hits as string[]).map(
+      (h) => `<span class="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">${h}</span>`
+    ).join('')
+    return `
+      <article class="property-card group">
+        <a href="${p.detailUrl}" target="_blank" rel="noopener" class="block relative aspect-[4/3] overflow-hidden bg-border/30">
+          <img src="${p.image}" alt="${p.title.replace(/"/g, '&quot;')}" loading="lazy"
+               class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <div class="absolute top-3 left-3 flex flex-wrap gap-2">
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-accent text-white shadow-lg">
+              ${p.operacion ? p.operacion[0].toUpperCase() + p.operacion.slice(1) : 'Consultar'}
+            </span>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-elevated/90 text-text border border-border backdrop-blur-sm">
+              ${p.type || ''}
+            </span>
+          </div>
+        </a>
+        <div class="p-5 flex-1 flex flex-col gap-3 min-w-0">
+          ${hits ? `<div class="flex flex-wrap gap-1.5">${hits}</div>` : ''}
+          <h3 class="text-lg font-bold text-text leading-snug line-clamp-2">${p.title || 'Propiedad'}</h3>
+          <p class="text-sm text-muted truncate">📍 ${p.location || '—'}</p>
+          <div class="flex items-center gap-4 text-sm text-text/80 pt-2 border-t border-border">
+            ${p.bedrooms != null ? `<span>🛏 ${p.bedrooms} dorm.</span>` : ''}
+            ${p.bathrooms != null ? `<span>🛁 ${p.bathrooms} baño${p.bathrooms === 1 ? '' : 's'}</span>` : ''}
+            ${p.surfaceM2 != null ? `<span>📐 ${p.surfaceM2} m²</span>` : ''}
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-border">
+            <div>
+              <div class="text-xs text-muted">Precio de ${p.operacion || 'venta'}</div>
+              <div class="text-xl font-bold text-accent">${fmtPrice(p.priceValue, p.priceCurrency)}</div>
+            </div>
+            <a href="${p.detailUrl}" target="_blank" rel="noopener" class="text-sm font-semibold text-accent hover:text-accent-hover">
+              Ver ficha →
+            </a>
+          </div>
+        </div>
+      </article>
+    `
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const query = input.value.trim()
+    if (!query) return
+
+    submitBtn.disabled = true
+    submitLabel.textContent = 'Pensando…'
+    error.classList.add('hidden')
+    status.classList.add('hidden')
+    empty.classList.add('hidden')
+    results.innerHTML = ''
+
+    try {
+      const res = await fetch('/api/ai-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        error.textContent = data.error || 'Error desconocido'
+        if (data.hint) error.textContent += ` — ${data.hint}`
+        error.classList.remove('hidden')
+        return
+      }
+
+      const f = data.filters
+      summary.textContent = f.summary || 'Resultados'
+      const parts: string[] = []
+      if (f.operacion) parts.push(f.operacion)
+      if (f.type) parts.push(f.type)
+      if (f.location_includes) parts.push(`📍 ${f.location_includes}`)
+      if (f.maxPriceUSD) parts.push(`hasta USD ${f.maxPriceUSD.toLocaleString('es-AR')}`)
+      if (f.minBedrooms) parts.push(`${f.minBedrooms}+ dorm.`)
+      if (f.keywords?.length) parts.push(...f.keywords.map((k: string) => `“${k}”`))
+      meta.textContent = `${data.total} propiedad${data.total === 1 ? '' : 'es'} encontrada${data.total === 1 ? '' : 's'}` +
+        (parts.length ? ' · ' + parts.join(' · ') : '')
+      if (f.follow_up) {
+        followup.textContent = '💬 ' + f.follow_up
+        followup.classList.remove('hidden')
+      } else {
+        followup.classList.add('hidden')
+      }
+      status.classList.remove('hidden')
+
+      if (data.results.length === 0) {
+        empty.classList.remove('hidden')
+      } else {
+        results.innerHTML = data.results.map(renderCard).join('')
+      }
+    } catch (err) {
+      error.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
+      error.classList.remove('hidden')
+    } finally {
+      submitBtn.disabled = false
+      submitLabel.textContent = 'Buscar'
+    }
+  })
+</script>

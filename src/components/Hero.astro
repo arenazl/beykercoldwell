@@ -1,0 +1,113 @@
+---
+import { CONTACT } from '../data/site'
+import { CATALOG_META } from '../data/properties'
+
+const stats = [
+  { value: CATALOG_META.total.toLocaleString('es-AR'), label: 'Propiedades en la red' },
+  { value: '48', label: 'Oficinas Coldwell Banker' },
+  { value: '40+', label: 'Países con Coldwell Banker®' },
+  { value: '24/7', label: 'Asistencia con IA' },
+]
+---
+
+<section class="relative overflow-hidden -mt-16 lg:-mt-20 pt-16 lg:pt-20">
+  <!-- BG: gradient navy → bg + spotlights -->
+  <div class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-b from-[rgb(var(--navy))]/40 via-bg to-bg"></div>
+    <div class="absolute top-1/3 -left-1/4 w-[700px] aspect-square rounded-full bg-accent/15 blur-[120px] animate-float"></div>
+    <div class="absolute -bottom-1/4 -right-1/4 w-[700px] aspect-square rounded-full bg-gold/10 blur-[120px] animate-float" style="animation-delay: -3s"></div>
+  </div>
+
+  <div class="container-app pt-16 lg:pt-24 pb-20 lg:pb-28">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+
+      <div class="lg:col-span-7 reveal">
+        <div class="section-eyebrow mb-6">
+          La red inmobiliaria del futuro
+        </div>
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tightest leading-[1.0] mb-7">
+          Aliados en tu camino,<br />
+          <span class="gradient-text-accent">expertos en cada decisión.</span>
+        </h1>
+        <p class="text-lg lg:text-xl text-muted leading-relaxed max-w-2xl mb-10">
+          Combinamos el respaldo global de <strong class="text-text">Coldwell Banker®</strong> con un stack de
+          inteligencia artificial que acelera cada operación. Comprá, vendé o invertí con la red más sofisticada del país.
+        </p>
+        <div class="flex flex-wrap items-center gap-3 mb-12">
+          <a href="/buscar" class="btn-primary group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform group-hover:rotate-12">
+              <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+            </svg>
+            Buscar con IA
+          </a>
+          <a href="/propiedades" class="btn-secondary">
+            Ver propiedades
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+          <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="btn-ghost">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+            </svg>
+            WhatsApp directo
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/40 rounded-2xl overflow-hidden border border-border max-w-2xl">
+          {stats.map((s, i) => (
+            <div class={`bg-bg p-5 reveal reveal-delay-${i + 1}`}>
+              <div class="text-2xl sm:text-3xl font-display font-bold gradient-text-accent leading-none mb-1">
+                {s.value}
+              </div>
+              <div class="text-xs uppercase tracking-wider text-muted">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Imagen / mockup del lado derecho -->
+      <div class="lg:col-span-5 relative reveal reveal-delay-2">
+        <div class="relative aspect-[4/5] lg:aspect-[3/4] rounded-3xl overflow-hidden border border-border shadow-2xl shadow-bg/50">
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=70"
+            alt="Propiedad premium"
+            class="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-bg/90 via-bg/30 to-transparent"></div>
+
+          <!-- Glass card flotante con highlight -->
+          <div class="absolute bottom-6 left-6 right-6 glass-strong rounded-2xl p-5">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="pill-accent">Destacada</span>
+              <span class="pill">Recoleta · CABA</span>
+            </div>
+            <div class="text-lg font-bold text-text mb-1">Departamento 2 amb · 48 m²</div>
+            <div class="flex items-center justify-between">
+              <span class="text-2xl font-display font-bold text-accent">USD 155.000</span>
+              <a href="/propiedades" class="text-xs text-muted hover:text-accent transition-colors">Ver detalle →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating badge -->
+        <div class="absolute -top-4 -right-4 lg:-top-6 lg:-right-6 glass-strong rounded-2xl p-4 animate-float shadow-xl">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-accent/20 text-accent flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-xs text-muted">Asistente IA</div>
+              <div class="text-sm font-bold text-text">Búsqueda inteligente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>

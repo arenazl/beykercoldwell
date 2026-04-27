@@ -1,0 +1,33 @@
+---
+import { FILTERS, CATALOG_META } from '../data/properties'
+
+// Top 30 ubicaciones del catálogo, ordenadas. Si alguna está vacía, las pasamos.
+const locations = FILTERS.ubicaciones.slice(0, 30)
+const doubled = [...locations, ...locations]
+---
+
+<section class="section-tight border-y border-border bg-bg-soft overflow-hidden">
+  <div class="container-app mb-6">
+    <div class="flex items-center justify-between gap-6 reveal">
+      <div>
+        <div class="section-eyebrow mb-2">Cobertura</div>
+        <h2 class="text-xl lg:text-2xl font-bold">
+          Operamos en {locations.length}+ zonas de toda la red CB Argentina
+        </h2>
+      </div>
+      <span class="hidden sm:inline-flex pill text-muted text-xs">
+        {CATALOG_META.total.toLocaleString('es-AR')} propiedades
+      </span>
+    </div>
+  </div>
+
+  <div class="relative mask-fade-r">
+    <div class="flex gap-3 animate-marquee w-max">
+      {doubled.map((loc) => (
+        <span class="flex-shrink-0 px-5 py-2.5 rounded-full bg-elevated border border-border text-sm text-text/80 hover:text-accent hover:border-accent/40 transition-colors">
+          {loc}
+        </span>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro'
+import ContactBlock from '../components/ContactBlock.astro'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Contacto', url: '/contacto' },
+]
+---
+
+<Layout
+  title="Contacto · Coldwell Banker Beyker"
+  description="Contactanos por WhatsApp, mail o visitanos en Florida 826, CABA."
+  schemaType="ContactPage"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <nav class="text-xs text-muted mb-4" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-accent transition-colors">Inicio</a>
+        <span class="mx-2">/</span>
+        <span class="text-text">Contacto</span>
+      </nav>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tightest mb-3">Contacto</h1>
+      <p class="text-lg text-muted max-w-2xl">
+        Estamos para asesorarte. Escribinos, llamanos o agendá una reunión presencial.
+      </p>
+    </div>
+  </section>
+
+  <ContactBlock />
+</Layout>

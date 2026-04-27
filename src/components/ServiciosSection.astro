@@ -1,0 +1,41 @@
+---
+import { SERVICIOS } from '../data/site'
+
+const ICONS: Record<string, string> = {
+  home: '<path d="M3 9.5L12 2l9 7.5V21a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1V9.5z"/>',
+  chart: '<path d="M3 3v18h18M7 14l4-4 4 4 5-5"/>',
+  building: '<path d="M3 21h18M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16M9 8h.01M9 12h.01M9 16h.01M15 8h.01M15 12h.01M15 16h.01"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',
+}
+---
+
+<section class="section relative overflow-hidden">
+  <div class="absolute inset-0 -z-10">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] aspect-square rounded-full bg-accent/5 blur-[120px]"></div>
+  </div>
+
+  <div class="container-app">
+    <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+      <div class="section-eyebrow mb-4 justify-center">Servicios</div>
+      <h2 class="section-title mb-6">
+        Asesoramiento integral,<br />
+        <span class="gradient-text-accent">potenciado con IA.</span>
+      </h2>
+      <p class="text-lg text-muted leading-relaxed">
+        Combinamos el respaldo global de Coldwell Banker® con un equipo local que conoce cada microzona y un stack tecnológico que acelera cada operación.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {SERVICIOS.map((s, i) => (
+        <div class={`card group reveal reveal-delay-${(i % 4) + 1}`}>
+          <div class="w-12 h-12 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-5 group-hover:bg-accent group-hover:text-bg group-hover:scale-110 transition-all duration-300">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" set:html={ICONS[s.icon] ?? ICONS.home} />
+          </div>
+          <h3 class="text-lg font-bold mb-2 group-hover:text-accent transition-colors">{s.title}</h3>
+          <p class="text-sm text-muted leading-relaxed">{s.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

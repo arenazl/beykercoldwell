@@ -1,0 +1,120 @@
+---
+import Layout from '../layouts/Layout.astro'
+import PropertyCard from '../components/PropertyCard.astro'
+import { PROPERTIES, FILTERS, CATALOG_META } from '../data/properties'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Propiedades', url: '/propiedades' },
+]
+
+// Mostramos primera página de 24 — el filtrado real se hace client-side o vía /buscar (IA).
+const visible = PROPERTIES.slice(0, 24)
+---
+
+<Layout
+  title="Propiedades · Coldwell Banker Beyker"
+  description="Propiedades en venta y alquiler en CABA y Buenos Aires. Filtrá por ubicación, tipo, dormitorios y precio."
+  schemaType="CollectionPage"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <nav class="text-xs text-muted mb-4" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-accent transition-colors">Inicio</a>
+        <span class="mx-2">/</span>
+        <span class="text-text">Propiedades</span>
+      </nav>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tightest mb-3">Propiedades</h1>
+      <p class="text-lg text-muted max-w-2xl">
+        Encontrá tu próximo hogar o inversión. {CATALOG_META.total.toLocaleString('es-AR')} propiedades disponibles
+        en toda la red Coldwell Banker Argentina.
+      </p>
+      <p class="text-sm text-accent mt-3">
+        💡 Probá la <a href="/buscar" class="underline font-semibold">búsqueda con IA</a> — describí lo que buscás en
+        lenguaje natural.
+      </p>
+    </div>
+  </section>
+
+  <section class="container-app py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <aside class="lg:col-span-3 lg:sticky lg:top-24 lg:self-start space-y-6">
+      <form method="get" class="bg-elevated border border-border rounded-2xl p-5 space-y-5">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted">Filtros</h2>
+
+        <div class="space-y-2">
+          <h3 class="text-sm font-semibold">Palabras clave</h3>
+          <input type="text" name="q" placeholder="Barrio, calle…" class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm focus:outline-none focus:border-accent" />
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-sm font-semibold">Tipo de operación</h3>
+          <div class="flex flex-col gap-1.5">
+            {FILTERS.operaciones.map((op) => (
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" name="operacion" value={op} class="rounded border-border accent-accent" />
+                <span>{op === 'venta' ? 'Venta' : 'Alquiler'}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-sm font-semibold">Tipo de propiedad</h3>
+          <div class="flex flex-col gap-1.5">
+            {FILTERS.tipos.map((t) => (
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" name="tipo" value={t} class="rounded border-border accent-accent" />
+                <span>{t}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-sm font-semibold">Dormitorios</h3>
+          <div class="flex flex-wrap gap-2">
+            {FILTERS.dormitorios.map((n) => (
+              <label class="cursor-pointer">
+                <input type="checkbox" name="dorm" value={n} class="peer sr-only" />
+                <span class="px-3 py-1 rounded-full text-sm border border-border peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent transition-all">
+                  {n}+
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-sm font-semibold">Precio (USD)</h3>
+          <select name="precio" class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm focus:outline-none focus:border-accent">
+            <option value="">Todos</option>
+            {FILTERS.precios.map((p) => (
+              <option value={`${p.min ?? ''}-${p.max ?? ''}`}>{p.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary w-full justify-center">
+          Aplicar filtros
+        </button>
+      </form>
+    </aside>
+
+    <div class="lg:col-span-9">
+      <div class="flex items-center justify-between mb-6">
+        <p class="text-sm text-muted">Mostrando {visible.length} de {CATALOG_META.total.toLocaleString('es-AR')} resultados</p>
+        <select class="px-3 py-2 rounded-lg bg-elevated border border-border text-sm focus:outline-none focus:border-accent">
+          <option>Más recientes</option>
+          <option>Menor precio</option>
+          <option>Mayor precio</option>
+          <option>Mayor superficie</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {visible.map((p) => <PropertyCard property={p} />)}
+      </div>
+    </div>
+  </section>
+</Layout>

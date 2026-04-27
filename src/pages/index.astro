@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Hero from '../components/Hero.astro'
+import PropertiesGrid from '../components/PropertiesGrid.astro'
+import LocationsMarquee from '../components/LocationsMarquee.astro'
+import ServiciosSection from '../components/ServiciosSection.astro'
+import ValoresSection from '../components/ValoresSection.astro'
+import CtaUnite from '../components/CtaUnite.astro'
+import { SITE } from '../data/site'
+import { PROPERTIES, CATALOG_META } from '../data/properties'
+
+// Destacados: 6 propiedades con precio + foto + ubicación, mezcla balanceada.
+const candidates = PROPERTIES.filter(
+  (p) => p.priceValue && p.image && p.location && p.title
+)
+const featured = candidates.length >= 6
+  ? [...candidates].sort(() => Math.random() - 0.5).slice(0, 6)
+  : PROPERTIES.slice(0, 6)
+---
+
+<Layout
+  title={`${SITE.name} — ${SITE.tagline}`}
+  description={SITE.description}
+>
+  <Hero />
+
+  <LocationsMarquee />
+
+  <PropertiesGrid
+    properties={featured}
+    eyebrow="Destacados"
+    title="Propiedades seleccionadas para vos"
+    cta={{ label: 'Ver las 9.000+ propiedades', href: '/propiedades' }}
+  />
+
+  <ServiciosSection />
+  <ValoresSection />
+  <CtaUnite />
+</Layout>

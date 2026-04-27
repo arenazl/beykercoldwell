@@ -1,0 +1,71 @@
+---
+import Layout from '../layouts/Layout.astro'
+import ValoresSection from '../components/ValoresSection.astro'
+import { SITE } from '../data/site'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'La Empresa', url: '/la-empresa' },
+]
+
+const stats = [
+  { value: '+100', label: 'Años de Coldwell Banker®' },
+  { value: '40+', label: 'Países con presencia' },
+  { value: '+100k', label: 'Asesores en la red global' },
+  { value: 'CABA', label: 'Conocimiento local profundo' },
+]
+---
+
+<Layout
+  title="La Empresa · Coldwell Banker Beyker"
+  description="Conocé a Coldwell Banker Beyker: respaldo internacional, equipo local, asesoramiento profesional en compra y venta."
+  schemaType="AboutPage"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-16 lg:py-24">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <div class="lg:col-span-7">
+          <div class="section-eyebrow mb-3">La Empresa</div>
+          <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-6">
+            {SITE.tagline}
+          </h1>
+          <p class="text-lg text-muted leading-relaxed mb-4">
+            Brindamos asesoramiento estratégico y soluciones a medida para que cada decisión inmobiliaria sea una
+            oportunidad de crecimiento. Con el respaldo global de Coldwell Banker® y una visión de excelencia,
+            combinamos conocimiento local y alcance internacional para marcar la diferencia.
+          </p>
+          <p class="text-lg text-muted leading-relaxed">
+            Trabajamos en alianza con bancos, escribanías, arquitectos e ingenieros para ofrecer una experiencia
+            integral en cada operación.
+          </p>
+        </div>
+
+        <div class="lg:col-span-5 grid grid-cols-2 gap-4">
+          {stats.map((s) => (
+            <div class="card text-center">
+              <div class="text-3xl lg:text-4xl font-bold text-accent mb-2">{s.value}</div>
+              <div class="text-xs uppercase tracking-wider text-muted">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <ValoresSection />
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="max-w-3xl mx-auto text-center">
+        <div class="section-eyebrow mb-3">Coldwell Banker®</div>
+        <h2 class="section-title mb-6">Una red global con más de 100 años de historia</h2>
+        <p class="text-lg text-muted leading-relaxed">
+          Fundada en 1906 en San Francisco, Coldwell Banker® es una de las marcas inmobiliarias más reconocidas del
+          mundo, con miles de oficinas y más de 100.000 asesores en más de 40 países. En Beyker traducimos ese
+          respaldo a la realidad del mercado argentino.
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

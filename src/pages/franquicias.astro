@@ -1,0 +1,365 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CONTACT } from '../data/site'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Franquicias', url: '/franquicias' },
+]
+
+const dolores = [
+  {
+    title: 'Herramientas viejas',
+    desc: 'CRMs lentos, planillas de Excel y procesos manuales que matan la productividad del asesor.',
+  },
+  {
+    title: 'Marketing débil',
+    desc: 'Publicaciones mediocres, fotos sin curar, copywriting que no convierte y cero tracking.',
+  },
+  {
+    title: 'Coaching genérico',
+    desc: 'Capacitaciones standard que no se adaptan al perfil del asesor ni al mercado local.',
+  },
+  {
+    title: 'Oficinas costosas',
+    desc: 'Estructuras pesadas con mucho fee fijo y poco retorno medible por asesor.',
+  },
+  {
+    title: 'Mala retención',
+    desc: 'Asesores que rotan porque no ven crecimiento real ni soporte tecnológico.',
+  },
+  {
+    title: 'Cero innovación',
+    desc: 'Marcas que viven de la historia pero reaccionan tarde a la transformación digital.',
+  },
+]
+
+const stack = [
+  'CRM con IA integrado',
+  'Captación automática de leads',
+  'Scoring de propietarios',
+  'Valuador automático',
+  'IA para WhatsApp',
+  'IA de seguimiento comercial',
+  'IA para reels y marketing',
+  'IA para copywriting',
+  'IA para contratos',
+  'Dashboard de KPIs en vivo',
+  'Academia de capacitación continua',
+  'Roadmap de tokenización',
+]
+
+const fees = [
+  { label: 'Franquicia inicial', value: 'USD 20.000', sub: 'Por oficina, único pago' },
+  { label: 'Regalías', value: '10%', sub: 'Mensual, sobre facturación bruta' },
+  { label: 'Fee tecnológico', value: 'USD 500–1.000', sub: 'Mensual, stack IA completo' },
+  { label: 'Academia premium', value: 'Variable', sub: 'Cursos y certificaciones pagos' },
+]
+
+const fases = [
+  {
+    n: '01',
+    title: 'Argentina',
+    desc: '10 oficinas piloto en CABA, GBA y principales capitales del país.',
+  },
+  {
+    n: '02',
+    title: 'Latam',
+    desc: 'Expansión a Uruguay, Paraguay, Chile y Perú con franquiciados validados.',
+  },
+  {
+    n: '03',
+    title: 'Hispanoamérica global',
+    desc: 'México, Miami hispano y España, completando red de habla hispana.',
+  },
+]
+
+const etapas = [
+  { plazo: '3 meses', label: 'Diseño estratégico', desc: 'Naming, branding, manuales, modelo comercial, contrato franquicia, stack IA.' },
+  { plazo: '6 meses', label: 'MVP operativo', desc: 'Oficina flagship funcionando, playbook probado, primeras ventas medibles.' },
+  { plazo: '12 meses', label: 'Franquiciable', desc: 'Manualizado, rentable y replicable. Apertura controlada de primeras franquicias.' },
+  { plazo: '24–36 meses', label: 'Escala fuerte', desc: 'Crecimiento sostenido, expansión Latam, primeras experiencias de tokenización.' },
+]
+---
+
+<Layout
+  title="Franquicias · Red inmobiliaria AI-native"
+  description="Modelo de franquicia inmobiliaria con stack IA propio, performance medible y soporte real. La red creada para el futuro."
+  schemaType="Service"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="relative border-b border-border overflow-hidden">
+    <div class="absolute inset-0 -z-10 bg-accent"></div>
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute -top-1/2 right-0 w-[600px] aspect-square bg-gold/30 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container-app py-20 lg:py-28 text-white">
+      <div class="max-w-3xl">
+        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gold mb-4">Franquicias</div>
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tightest leading-[1.02] mb-6">
+          La red inmobiliaria creada para el futuro.
+        </h1>
+        <p class="text-lg lg:text-xl text-white/85 leading-relaxed mb-8 max-w-2xl">
+          No vendemos historia. Vendemos performance. Stack tecnológico con IA, procesos medibles y un modelo
+          diseñado para duplicar la productividad de cada oficina en 12 meses.
+        </p>
+        <div class="flex flex-wrap items-center gap-3">
+          <a href="#postular" class="btn-gold">
+            Quiero abrir una oficina
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+          <a href="/tecnologia" class="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-200 active:scale-95">
+            Ver stack tecnológico
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">El problema</div>
+        <h2 class="section-title">Lo que hoy frena a brokers y asesores</h2>
+        <p class="text-muted mt-4 leading-relaxed">
+          Las redes tradicionales tienen marca y estructura, pero innovan lento. El costo lo paga el asesor.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {dolores.map((d, i) => (
+          <div class="card">
+            <div class="text-3xl font-display font-bold text-accent/30 mb-3">{String(i + 1).padStart(2, '0')}</div>
+            <h3 class="text-lg font-bold mb-2">{d.title}</h3>
+            <p class="text-sm text-muted leading-relaxed">{d.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <div class="lg:col-span-5">
+          <div class="section-eyebrow mb-3">La solución</div>
+          <h2 class="section-title mb-5">Stack tecnológico obligatorio para cada oficina.</h2>
+          <p class="text-muted leading-relaxed mb-6">
+            Cada franquiciado recibe una infraestructura completa de IA y automatización. No es un agregado
+            opcional: es el corazón del modelo. Mientras la competencia debate si adoptar IA, vos ya estás
+            operando con ella.
+          </p>
+          <a href="/tecnologia" class="btn-secondary">Ver detalle del stack</a>
+        </div>
+
+        <div class="lg:col-span-7">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {stack.map((item) => (
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-elevated border border-border">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center mt-0.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div class="text-sm font-medium text-text leading-snug">{item}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Modelo económico</div>
+        <h2 class="section-title">Reglas claras desde el día uno</h2>
+        <p class="text-muted mt-4 leading-relaxed">
+          Sin letra chica. Cada línea de ingreso está diseñada para alinear a la red con el éxito del franquiciado.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {fees.map((f) => (
+          <div class="card text-center">
+            <div class="text-xs uppercase tracking-wider text-muted mb-2">{f.label}</div>
+            <div class="text-3xl lg:text-4xl font-bold text-accent mb-2">{f.value}</div>
+            <div class="text-sm text-muted leading-snug">{f.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-10 max-w-3xl mx-auto p-6 rounded-2xl bg-elevated border border-border">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gold/20 text-gold flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <div>
+            <div class="font-bold mb-1">Revenue share de tokenización (futuro)</div>
+            <p class="text-sm text-muted leading-relaxed">
+              A medida que se habilite la línea de tokenización inmobiliaria / fractional ownership,
+              cada franquiciado participa del revenue share de las inversiones originadas en su oficina.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Roadmap geográfico</div>
+        <h2 class="section-title">Tres fases, una red continental</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {fases.map((f) => (
+          <div class="card">
+            <div class="text-5xl font-display font-bold text-gold mb-4">{f.n}</div>
+            <h3 class="text-xl font-bold mb-2">{f.title}</h3>
+            <p class="text-sm text-muted leading-relaxed">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Roadmap de ejecución</div>
+        <h2 class="section-title">De cero a red franquiciable</h2>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-4">
+        {etapas.map((e, i) => (
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start p-6 rounded-2xl border border-border bg-elevated">
+            <div class="sm:col-span-3">
+              <div class="text-xs uppercase tracking-wider text-muted mb-1">Etapa {String(i + 1).padStart(2, '0')}</div>
+              <div class="text-2xl font-bold text-accent">{e.plazo}</div>
+            </div>
+            <div class="sm:col-span-9">
+              <div class="text-lg font-bold mb-1">{e.label}</div>
+              <p class="text-sm text-muted leading-relaxed">{e.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-accent text-white relative overflow-hidden">
+    <div class="absolute inset-0 -z-0">
+      <div class="absolute -bottom-1/2 left-0 w-[700px] aspect-square bg-gold/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container-app relative">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gold mb-4">Promesa comercial</div>
+          <h2 class="text-3xl md:text-5xl font-bold tracking-tightest leading-[1.05] mb-6">
+            En 12 meses te duplicamos la productividad.
+          </h2>
+          <p class="text-lg text-white/85 leading-relaxed">
+            No vendemos franquicias. Vendemos resultados. Si tu oficina no crece, el modelo falló — y eso
+            no nos sirve a ninguno.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-6 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+            <div class="text-4xl font-bold text-gold mb-1">2×</div>
+            <div class="text-sm text-white/80">productividad por asesor</div>
+          </div>
+          <div class="p-6 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+            <div class="text-4xl font-bold text-gold mb-1">10×</div>
+            <div class="text-sm text-white/80">velocidad de respuesta a leads</div>
+          </div>
+          <div class="p-6 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+            <div class="text-4xl font-bold text-gold mb-1">100%</div>
+            <div class="text-sm text-white/80">procesos medibles en KPIs</div>
+          </div>
+          <div class="p-6 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+            <div class="text-4xl font-bold text-gold mb-1">24/7</div>
+            <div class="text-sm text-white/80">IA respondiendo en WhatsApp</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="postular" class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="max-w-3xl mx-auto bg-elevated border border-border rounded-2xl p-6 lg:p-10">
+        <div class="text-center mb-8">
+          <div class="section-eyebrow mb-3">Postulate</div>
+          <h2 class="section-title mb-3">Quiero abrir una oficina</h2>
+          <p class="text-muted">No es para cualquiera. Buscamos brokers con visión, capital y obsesión por crecer.</p>
+        </div>
+
+        <form class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Nombre completo</label>
+              <input type="text" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Teléfono</label>
+              <input type="tel" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Email</label>
+              <input type="email" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Ciudad / país de interés</label>
+              <input type="text" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Experiencia inmobiliaria</label>
+              <select class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent">
+                <option>Broker con oficina activa</option>
+                <option>Asesor con cartera propia</option>
+                <option>Inversor sin operación inmobiliaria</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Capital disponible</label>
+              <select class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent">
+                <option>USD 20k – 50k</option>
+                <option>USD 50k – 150k</option>
+                <option>USD 150k+</option>
+                <option>Prefiero conversarlo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Contanos tu visión</label>
+            <textarea rows="5" class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent resize-none"></textarea>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="btn-secondary justify-center">
+              Hablar por WhatsApp
+            </a>
+            <button type="submit" class="btn-primary justify-center">Enviar postulación</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>

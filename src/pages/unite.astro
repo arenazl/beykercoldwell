@@ -1,0 +1,219 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CONTACT } from '../data/site'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Unite', url: '/unite' },
+]
+
+const perfil = [
+  { title: 'Ambición real', desc: 'Querés ganar de verdad y estás dispuesto a pagar el precio que eso requiere.' },
+  { title: 'Disciplina', desc: 'Cumplís cadencias, llamás cuando dijiste que ibas a llamar y no necesitás que te empujen.' },
+  { title: 'Mentalidad comercial', desc: 'Disfrutás vender. No te pesa el "no". Cerrás operaciones y mirás el siguiente lead.' },
+  { title: 'Tecnológico', desc: 'No le tenés miedo a una IA. Probás herramientas nuevas. Querés que la tecnología te potencie.' },
+  { title: 'Visión empresarial', desc: 'Pensás como dueño, no como empleado. Tu cartera es tu negocio.' },
+  { title: 'Obsesión por crecer', desc: 'Lo que hiciste ayer ya no te alcanza. Cada mes querés mejor que el anterior.' },
+]
+
+const beneficios = [
+  {
+    title: 'Stack IA completo',
+    desc: 'Recibís CRM con IA, captación automática, valuador, IA en WhatsApp y dashboard de KPIs desde el día uno.',
+  },
+  {
+    title: 'Capacitación continua',
+    desc: 'Academia interna con cursos cortos, role-play con IA y certificaciones por nivel. Onboarding 30 días.',
+  },
+  {
+    title: 'Marketing automatizado',
+    desc: 'Reels, copywriting y campañas hechas por IA, con tu marca y tu tono. Foco vos en cerrar, no en publicar.',
+  },
+  {
+    title: 'Comisiones transparentes',
+    desc: 'Esquema claro y competitivo desde el día uno. Sin letra chica.',
+  },
+  {
+    title: 'Procesos medibles',
+    desc: 'Tu performance es visible en tiempo real. Sabés exactamente qué ajustar para escalar.',
+  },
+  {
+    title: 'Back-office integrado',
+    desc: 'Marketing, legales y administración te acompañan para que vos sólo te ocupes de lo comercial.',
+  },
+]
+
+const noEs = [
+  '"Yo lo hago a mi manera"',
+  '"No tengo tiempo para capacitarme"',
+  '"Las herramientas digitales me complican"',
+  '"Si el lead no me llama, mala suerte"',
+  '"No me gusta medir mi performance"',
+]
+---
+
+<Layout
+  title="Unite · Asesores de elite + tecnología"
+  description="Buscamos asesores con vocación comercial, mentalidad empresarial y obsesión por crecer. Te damos el stack IA, la capacitación y la red para escalar."
+  breadcrumbs={breadcrumbs}
+>
+  <section class="relative border-b border-border overflow-hidden">
+    <div class="absolute inset-0 -z-10 bg-accent"></div>
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute -top-1/2 right-0 w-[600px] aspect-square bg-gold/30 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container-app py-20 lg:py-28 text-white">
+      <div class="max-w-3xl">
+        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gold mb-4">Asesores de elite</div>
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tightest leading-[1.02] mb-6">
+          No es para cualquiera. Pero si te identificás, no hay nada igual.
+        </h1>
+        <p class="text-lg lg:text-xl text-white/85 leading-relaxed mb-8 max-w-2xl">
+          Buscamos un perfil específico: ambicioso, disciplinado, comercial, tecnológico y obsesionado con
+          crecer. Si encajás, te damos el stack IA, la capacitación y la red para escalar tu carrera.
+        </p>
+        <div class="flex flex-wrap items-center gap-3">
+          <a href="#postular" class="btn-gold">
+            Postularme
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+          <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-200 active:scale-95">
+            Hablar por WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Perfil que buscamos</div>
+        <h2 class="section-title">Seis cosas no negociables</h2>
+        <p class="text-muted mt-4 leading-relaxed">
+          No buscamos experiencia. Buscamos perfil. Si tenés esto, lo demás se enseña.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {perfil.map((p, i) => (
+          <div class="card">
+            <div class="text-3xl font-display font-bold text-accent/30 mb-3">{String(i + 1).padStart(2, '0')}</div>
+            <h3 class="text-lg font-bold mb-2">{p.title}</h3>
+            <p class="text-sm text-muted leading-relaxed">{p.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Lo que recibís</div>
+        <h2 class="section-title">Una propuesta diseñada para que ganes</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {beneficios.map((b) => (
+          <div class="card">
+            <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gold/20 text-gold flex items-center justify-center mb-4">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2">{b.title}</h3>
+            <p class="text-sm text-muted leading-relaxed">{b.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-10 text-center">
+        <a href="/tecnologia" class="btn-secondary">Ver stack tecnológico completo</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center max-w-5xl mx-auto">
+        <div>
+          <div class="section-eyebrow mb-3">Honestidad brutal</div>
+          <h2 class="section-title mb-6">Esto no es para vos si pensás:</h2>
+          <p class="text-muted leading-relaxed">
+            Preferimos que sepas ahora. Si alguna de estas frases es tuya, esta red no te va a hacer feliz —
+            y vos tampoco a la red. No pasa nada. Hay otros lugares que te van a calzar mejor.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          {noEs.map((frase) => (
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-elevated border border-border">
+              <div class="flex-shrink-0 w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center mt-0.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+              </div>
+              <div class="text-sm font-medium text-text/80 leading-snug italic">{frase}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="postular" class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="max-w-3xl mx-auto bg-elevated border border-border rounded-2xl p-6 lg:p-10">
+        <div class="text-center mb-8">
+          <div class="section-eyebrow mb-3">Postulate</div>
+          <h2 class="section-title mb-3">Quiero sumarme</h2>
+          <p class="text-muted">Contanos sobre vos. Si encajás con el perfil, te respondemos en 48hs.</p>
+        </div>
+
+        <form class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Nombre completo</label>
+              <input type="text" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Teléfono</label>
+              <input type="tel" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Email</label>
+              <input type="email" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Experiencia inmobiliaria</label>
+              <select class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent">
+                <option>Sin experiencia / quiero empezar</option>
+                <option>Menos de 2 años</option>
+                <option>2 a 5 años</option>
+                <option>Más de 5 años</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">¿Por qué te interesa esta red en particular?</label>
+            <textarea rows="5" class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent resize-none"></textarea>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="submit" class="btn-primary">Enviar postulación</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>

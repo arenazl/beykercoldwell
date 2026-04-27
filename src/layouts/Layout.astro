@@ -1,0 +1,171 @@
+---
+import '../styles/global.css'
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
+import { SITE, LOGOS, CONTACT, SOCIAL } from '../data/site'
+
+interface Props {
+  title: string
+  description?: string
+  ogImage?: string
+  schemaType?: 'WebPage' | 'Service' | 'AboutPage' | 'ContactPage' | 'CollectionPage'
+  breadcrumbs?: { name: string; url: string }[]
+}
+
+const {
+  title,
+  description = SITE.description,
+  ogImage = LOGOS.primary,
+  schemaType = 'WebPage',
+  breadcrumbs = [],
+} = Astro.props
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString()
+---
+
+<!doctype html>
+<html lang="es-AR" data-theme="coldwell-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#002554" />
+    <link rel="icon" type="image/svg+xml" href={LOGOS.favicon} />
+    <link rel="canonical" href={canonical} />
+
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="author" content={SITE.legal} />
+    <meta name="geo.region" content="AR-C" />
+    <meta name="geo.placename" content="Ciudad Autónoma de Buenos Aires" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@500;600;700;800&display=swap" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:site_name" content={SITE.name} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateAgent',
+      '@id': `${SITE.url}#organization`,
+      name: SITE.name,
+      url: SITE.url,
+      logo: LOGOS.primary,
+      image: LOGOS.primary,
+      slogan: SITE.tagline,
+      description: SITE.description,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: CONTACT.address.line1,
+        addressLocality: 'Ciudad Autónoma de Buenos Aires',
+        addressRegion: 'CABA',
+        postalCode: CONTACT.address.cp,
+        addressCountry: 'AR',
+      },
+      contactPoint: [{
+        '@type': 'ContactPoint',
+        telephone: CONTACT.phone_e164,
+        contactType: 'sales',
+        email: CONTACT.email,
+        areaServed: 'AR',
+        availableLanguage: ['Spanish', 'es-AR'],
+      }],
+      sameAs: [SOCIAL.facebook, SOCIAL.instagram, SOCIAL.linkedin],
+    })} />
+
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      '@id': `${SITE.url}#website`,
+      url: SITE.url,
+      name: SITE.name,
+      description: SITE.description,
+      inLanguage: 'es-AR',
+      publisher: { '@id': `${SITE.url}#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE.url}/propiedades?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    })} />
+
+    {breadcrumbs.length > 0 && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbs.map((b, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: b.name,
+          item: new URL(b.url, SITE.url).toString(),
+        })),
+      })} />
+    )}
+
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': schemaType,
+      url: canonical,
+      name: title,
+      description: description,
+      inLanguage: 'es-AR',
+      isPartOf: { '@id': `${SITE.url}#website` },
+      about: { '@id': `${SITE.url}#organization` },
+    })} />
+
+    <script is:inline>
+      // Carga el tema persistido antes del render para evitar flash.
+      const saved = localStorage.getItem('cb-theme')
+      if (saved) document.documentElement.setAttribute('data-theme', saved)
+    </script>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <Header />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+
+    <script is:inline>
+      // Scroll-reveal: agrega .is-visible cuando el elemento .reveal entra en viewport.
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible')
+              io.unobserve(e.target)
+            }
+          }
+        },
+        { rootMargin: '0px 0px -10% 0px', threshold: 0.05 }
+      )
+      const start = () => document.querySelectorAll('.reveal').forEach((el) => io.observe(el))
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start)
+      } else {
+        start()
+      }
+
+      // Scroll header state — para sombra/línea dorada cuando hay scroll.
+      const onScroll = () => {
+        document.documentElement.dataset.scrolled = window.scrollY > 12 ? 'true' : 'false'
+      }
+      onScroll()
+      window.addEventListener('scroll', onScroll, { passive: true })
+    </script>
+  </body>
+</html>

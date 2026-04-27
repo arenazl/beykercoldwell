@@ -1,0 +1,50 @@
+---
+import { CONTACT } from '../data/site'
+---
+
+<section class="section">
+  <div class="container-app reveal">
+    <div class="relative overflow-hidden rounded-3xl border border-border p-10 lg:p-16">
+      <!-- Fondo navy + spotlights -->
+      <div class="absolute inset-0 -z-10 bg-gradient-to-br from-[rgb(var(--navy))] to-[rgb(var(--navy))]/70"></div>
+      <div class="absolute inset-0 -z-10">
+        <div class="absolute -top-1/2 -right-1/4 w-[600px] aspect-square bg-gold/25 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-1/2 -left-1/4 w-[500px] aspect-square bg-accent/20 rounded-full blur-3xl"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <div class="lg:col-span-7 text-white">
+          <div class="text-xs font-semibold uppercase tracking-[0.25em] text-gold mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-gold animate-pulse-glow"></span>
+            Asesores de elite + IA
+          </div>
+          <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tightest leading-[1.05] mb-6">
+            Una red inmobiliaria diseñada para el <span class="text-gold">próximo ciclo</span>.
+          </h2>
+          <p class="text-base lg:text-lg text-white/85 leading-relaxed max-w-xl">
+            Si vendés bien, te potenciamos con tecnología. Si querés crecer, te damos la red. Si pensás como dueño, te abrimos la franquicia. Te formamos en el método Coldwell Banker® y te equipamos con stack IA propio.
+          </p>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col gap-3">
+          <a href="/unite" class="btn-gold w-full justify-center group">
+            Unite al equipo
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform group-hover:translate-x-1">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+          <a href="/franquicias" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-200 active:scale-[0.97]">
+            Quiero una franquicia
+          </a>
+          <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-white/70 hover:text-white text-sm transition-all">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892z"/>
+            </svg>
+            o hablar primero por WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

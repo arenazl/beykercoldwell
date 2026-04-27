@@ -1,0 +1,449 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CONTACT } from '../data/site'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Tasación IA', url: '/tasaciones-ia' },
+]
+
+const types = ['Departamento', 'Casa', 'PH', 'Casa Quinta', 'Lote', 'Local', 'Oficina']
+const states: { value: string; label: string }[] = [
+  { value: 'a estrenar', label: 'A estrenar' },
+  { value: 'excelente', label: 'Excelente' },
+  { value: 'bueno', label: 'Bueno' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'a refaccionar', label: 'A refaccionar' },
+]
+const featureOptions = [
+  'Cochera', 'Pileta', 'Terraza', 'Balcón', 'Patio', 'Parrilla', 'Quincho',
+  'Amenities', 'Solarium', 'Vista despejada', 'Luminoso', 'Apto profesional',
+  'Apto crédito', 'Seguridad 24h',
+]
+---
+
+<Layout
+  title="Tasación IA · Valuación instantánea con Análisis Comparativo"
+  description="Valuá tu propiedad con IA: banda de precio, comparables de la zona, factores de ajuste y estrategia comercial en menos de 30 segundos."
+  schemaType="Service"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-12 lg:py-16">
+      <div class="max-w-3xl">
+        <div class="section-eyebrow mb-3 flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
+          </svg>
+          Tasación con IA
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
+          Valuá tu propiedad<br />
+          <span class="text-accent">en 30 segundos.</span>
+        </h1>
+        <p class="text-lg text-muted leading-relaxed">
+          Análisis Comparativo de Mercado generado por IA: banda de precio, comparables de la zona, factores
+          que suman y restan, y estrategia comercial recomendada. Es una valuación orientativa —
+          la final requiere visita presencial.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-app py-12">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <form id="val-form" class="lg:col-span-5 bg-elevated border border-border rounded-2xl shadow-xl p-6 space-y-5 flex flex-col">
+        <div>
+          <div class="section-eyebrow mb-3">Datos de la propiedad</div>
+          <h2 class="text-2xl font-bold leading-snug">Contanos qué tenés</h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Tipo</label>
+            <select id="f-type" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
+              {types.map((t) => <option value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Estado</label>
+            <select id="f-state" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
+              {states.map((s) => <option value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold uppercase tracking-wider text-muted">Zona / Barrio / Ciudad</label>
+          <input id="f-location" type="text" required placeholder="Ej: Recoleta, CABA"
+                 class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Sup. total (m²)</label>
+            <input id="f-surface-total" type="number" min="1" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Sup. cubierta (m²)</label>
+            <input id="f-surface-covered" type="number" min="1" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Ambientes</label>
+            <input id="f-rooms" type="number" min="1" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm.</label>
+            <input id="f-bedrooms" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Baños</label>
+            <input id="f-bathrooms" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Antigüedad (años)</label>
+            <input id="f-age" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Expensas (ARS)</label>
+            <input id="f-expenses" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-muted">Características</label>
+          <div class="flex flex-wrap gap-2">
+            {featureOptions.map((f) => (
+              <label class="cursor-pointer">
+                <input type="checkbox" name="feature" value={f} class="peer sr-only" />
+                <span class="inline-block px-3 py-1.5 text-xs rounded-full border border-border text-muted bg-bg transition-all hover:border-accent/40 peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent">
+                  {f}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold uppercase tracking-wider text-muted">Notas (opcional)</label>
+          <textarea id="f-notes" rows="2" placeholder="Detalles relevantes: orientación, vista, planta, etc."
+                    class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent resize-none"></textarea>
+        </div>
+
+        <button type="submit" id="val-submit" class="btn-primary justify-center mt-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
+          </svg>
+          <span id="val-submit-label">Valuar con IA</span>
+        </button>
+
+        <p class="text-xs text-muted leading-relaxed text-center">
+          Valuación orientativa generada por IA. Para una tasación profesional con visita presencial,
+          <a href="/tasaciones" class="text-accent hover:underline">solicitala acá</a>.
+        </p>
+      </form>
+
+      <div class="lg:col-span-7 min-w-0">
+        <div id="val-empty" class="bg-elevated/40 border border-dashed border-border rounded-2xl p-10 text-center">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-accent/10 text-accent flex items-center justify-center mb-4">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3v18h18M7 12l4-4 4 4 6-6" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">Esperando los datos</h3>
+          <p class="text-muted text-sm leading-relaxed max-w-md mx-auto">
+            Completá el formulario de la izquierda y la IA va a generar la valuación con banda de precio,
+            comparables, factores de ajuste y estrategia comercial.
+          </p>
+        </div>
+
+        <div id="val-loading" class="hidden bg-elevated border border-border rounded-2xl p-10 text-center">
+          <div class="w-12 h-12 mx-auto rounded-full border-2 border-accent/20 border-t-accent animate-spin mb-4"></div>
+          <h3 class="text-lg font-bold mb-1">Analizando el mercado…</h3>
+          <p class="text-muted text-sm">Cruzando datos comparables y factores de la zona.</p>
+        </div>
+
+        <div id="val-error" class="hidden p-5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-600 text-sm"></div>
+
+        <div id="val-result" class="hidden space-y-5"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="max-w-3xl mx-auto text-center">
+        <div class="section-eyebrow mb-3">Próximo paso</div>
+        <h2 class="section-title mb-4">¿Querés una tasación profesional con visita?</h2>
+        <p class="text-muted mb-6 leading-relaxed">
+          La IA te da una banda orientativa. La tasación profesional ajusta esa banda con visita presencial,
+          inspección detallada y estrategia comercial diseñada para tu propiedad.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <a href="/tasaciones" class="btn-primary">Solicitar tasación profesional</a>
+          <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="btn-secondary">Hablar por WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  type Band = { low: number; typical: number; high: number }
+  type Comparable = {
+    description: string
+    surfaceM2: number
+    pricePerM2USD: number
+    totalPriceUSD: number
+    reason: string
+  }
+  type Result = {
+    pricePerM2USD: Band
+    totalPriceUSD: Band
+    confidence: 'alta' | 'media' | 'baja'
+    marketSummary: string
+    comparables: Comparable[]
+    factorsUp: string[]
+    factorsDown: string[]
+    commercialStrategy: string
+    recommendations: string[]
+    caveats: string
+  }
+
+  const form = document.getElementById('val-form') as HTMLFormElement
+  const submitBtn = document.getElementById('val-submit') as HTMLButtonElement
+  const submitLabel = document.getElementById('val-submit-label') as HTMLSpanElement
+  const empty = document.getElementById('val-empty') as HTMLDivElement
+  const loading = document.getElementById('val-loading') as HTMLDivElement
+  const errorBox = document.getElementById('val-error') as HTMLDivElement
+  const result = document.getElementById('val-result') as HTMLDivElement
+
+  function num(id: string): number | undefined {
+    const el = document.getElementById(id) as HTMLInputElement | null
+    if (!el || !el.value) return undefined
+    const n = Number(el.value)
+    return Number.isFinite(n) ? n : undefined
+  }
+  function str(id: string): string | undefined {
+    const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null
+    if (!el) return undefined
+    const v = el.value.trim()
+    return v || undefined
+  }
+  function fmtUSD(v: number) {
+    return 'USD ' + Math.round(v).toLocaleString('es-AR')
+  }
+  function fmtUSDperM2(v: number) {
+    return 'USD ' + Math.round(v).toLocaleString('es-AR') + '/m²'
+  }
+  function escape(s: string) {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
+  }
+  function confidenceBadge(c: 'alta' | 'media' | 'baja') {
+    const cls = c === 'alta'
+      ? 'bg-green-500/10 text-green-600 border-green-500/30'
+      : c === 'media'
+        ? 'bg-amber-500/10 text-amber-600 border-amber-500/30'
+        : 'bg-red-500/10 text-red-600 border-red-500/30'
+    return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${cls}">
+      <span class="w-1.5 h-1.5 rounded-full bg-current"></span>Confianza ${c}
+    </span>`
+  }
+
+  function renderBandBar(band: Band) {
+    const range = band.high - band.low || 1
+    const typicalPct = ((band.typical - band.low) / range) * 100
+    return `
+      <div class="space-y-2">
+        <div class="relative h-2 rounded-full bg-border overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-r from-accent/30 via-gold to-accent/30"></div>
+          <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-accent border-2 border-bg shadow-md"
+               style="left: calc(${typicalPct.toFixed(1)}% - 6px)"></div>
+        </div>
+        <div class="flex items-center justify-between text-xs text-muted">
+          <span>${fmtUSD(band.low)}</span>
+          <span class="font-semibold text-accent">${fmtUSD(band.typical)}</span>
+          <span>${fmtUSD(band.high)}</span>
+        </div>
+      </div>
+    `
+  }
+
+  function renderResult(r: Result): string {
+    const ups = r.factorsUp.map((f) => `<li class="flex items-start gap-2"><span class="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500"></span><span>${escape(f)}</span></li>`).join('')
+    const downs = r.factorsDown.map((f) => `<li class="flex items-start gap-2"><span class="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500"></span><span>${escape(f)}</span></li>`).join('')
+    const recs = r.recommendations.map((f) => `<li class="flex items-start gap-2"><span class="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-gold"></span><span>${escape(f)}</span></li>`).join('')
+
+    const comps = r.comparables.map((c) => `
+      <div class="p-4 rounded-xl border border-border bg-bg">
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <div class="font-semibold text-text leading-snug min-w-0">${escape(c.description)}</div>
+          <div class="flex-shrink-0 text-right">
+            <div class="text-sm font-bold text-accent">${fmtUSD(c.totalPriceUSD)}</div>
+            <div class="text-xs text-muted">${c.surfaceM2} m² · ${fmtUSDperM2(c.pricePerM2USD)}</div>
+          </div>
+        </div>
+        <p class="text-xs text-muted leading-relaxed">${escape(c.reason)}</p>
+      </div>
+    `).join('')
+
+    return `
+      <div class="bg-elevated border border-border rounded-2xl p-6">
+        <div class="flex items-start justify-between gap-3 mb-5 flex-wrap">
+          <div>
+            <div class="section-eyebrow mb-1">Valuación sugerida</div>
+            <h3 class="text-2xl font-bold">Precio total estimado</h3>
+          </div>
+          ${confidenceBadge(r.confidence)}
+        </div>
+
+        <div class="bg-accent text-white rounded-2xl p-6 mb-5 relative overflow-hidden">
+          <div class="absolute -top-1/2 right-0 w-64 aspect-square bg-gold/20 rounded-full blur-3xl"></div>
+          <div class="relative">
+            <div class="text-xs uppercase tracking-wider text-gold mb-1">Precio típico de mercado</div>
+            <div class="text-4xl md:text-5xl font-bold tracking-tightest mb-4">${fmtUSD(r.totalPriceUSD.typical)}</div>
+            ${renderBandBar(r.totalPriceUSD)}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+          <div class="p-4 rounded-xl border border-border">
+            <div class="text-xs text-muted mb-1">Mínimo</div>
+            <div class="text-lg font-bold">${fmtUSD(r.totalPriceUSD.low)}</div>
+            <div class="text-xs text-muted">${fmtUSDperM2(r.pricePerM2USD.low)}</div>
+          </div>
+          <div class="p-4 rounded-xl border border-accent bg-accent/5">
+            <div class="text-xs text-accent mb-1">Típico</div>
+            <div class="text-lg font-bold text-accent">${fmtUSD(r.totalPriceUSD.typical)}</div>
+            <div class="text-xs text-muted">${fmtUSDperM2(r.pricePerM2USD.typical)}</div>
+          </div>
+          <div class="p-4 rounded-xl border border-border">
+            <div class="text-xs text-muted mb-1">Máximo</div>
+            <div class="text-lg font-bold">${fmtUSD(r.totalPriceUSD.high)}</div>
+            <div class="text-xs text-muted">${fmtUSDperM2(r.pricePerM2USD.high)}</div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-bg border border-border">
+          <div class="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Lectura de mercado</div>
+          <p class="text-sm text-text/90 leading-relaxed">${escape(r.marketSummary)}</p>
+        </div>
+      </div>
+
+      <div class="bg-elevated border border-border rounded-2xl p-6">
+        <div class="section-eyebrow mb-3">Comparables del mercado</div>
+        <h3 class="text-xl font-bold mb-4">Propiedades similares en la zona</h3>
+        <div class="grid grid-cols-1 gap-3">${comps}</div>
+      </div>
+
+      ${ups || downs ? `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        ${ups ? `
+        <div class="bg-elevated border border-border rounded-2xl p-6">
+          <div class="flex items-center gap-2 mb-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(34 197 94)" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            <h3 class="font-bold">Suman al precio</h3>
+          </div>
+          <ul class="space-y-2 text-sm">${ups}</ul>
+        </div>` : ''}
+        ${downs ? `
+        <div class="bg-elevated border border-border rounded-2xl p-6">
+          <div class="flex items-center gap-2 mb-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(239 68 68)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <h3 class="font-bold">Restan al precio</h3>
+          </div>
+          <ul class="space-y-2 text-sm">${downs}</ul>
+        </div>` : ''}
+      </div>
+      ` : ''}
+
+      <div class="bg-elevated border border-border rounded-2xl p-6">
+        <div class="section-eyebrow mb-3">Estrategia comercial</div>
+        <h3 class="text-xl font-bold mb-3">Cómo salir al mercado</h3>
+        <p class="text-sm text-text/90 leading-relaxed mb-4">${escape(r.commercialStrategy)}</p>
+        ${recs ? `
+          <div class="pt-4 border-t border-border">
+            <div class="text-xs font-semibold uppercase tracking-wider text-muted mb-3">Recomendaciones antes de publicar</div>
+            <ul class="space-y-2 text-sm">${recs}</ul>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-text/80 leading-relaxed">
+        <strong class="text-amber-600">Importante:</strong> ${escape(r.caveats)}
+      </div>
+    `
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+
+    const features = Array.from(form.querySelectorAll<HTMLInputElement>('input[name="feature"]:checked')).map((i) => i.value)
+
+    const payload = {
+      type: (document.getElementById('f-type') as HTMLSelectElement).value,
+      state: (document.getElementById('f-state') as HTMLSelectElement).value,
+      location: str('f-location'),
+      surfaceTotalM2: num('f-surface-total'),
+      surfaceCoveredM2: num('f-surface-covered'),
+      rooms: num('f-rooms'),
+      bedrooms: num('f-bedrooms'),
+      bathrooms: num('f-bathrooms'),
+      ageYears: num('f-age'),
+      expensesArs: num('f-expenses'),
+      features,
+      notes: str('f-notes'),
+    }
+
+    if (!payload.location) {
+      errorBox.textContent = 'Necesitamos zona/barrio para valuar.'
+      errorBox.classList.remove('hidden')
+      return
+    }
+    if (!payload.surfaceTotalM2) {
+      errorBox.textContent = 'Necesitamos la superficie total en m².'
+      errorBox.classList.remove('hidden')
+      return
+    }
+
+    submitBtn.disabled = true
+    submitLabel.textContent = 'Analizando…'
+    empty.classList.add('hidden')
+    errorBox.classList.add('hidden')
+    result.classList.add('hidden')
+    loading.classList.remove('hidden')
+
+    try {
+      const res = await fetch('/api/valuar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        let msg = data.error || 'Error desconocido'
+        if (data.hint) msg += ` — ${data.hint}`
+        errorBox.textContent = msg
+        errorBox.classList.remove('hidden')
+        empty.classList.remove('hidden')
+        return
+      }
+      result.innerHTML = renderResult(data as Result)
+      result.classList.remove('hidden')
+    } catch (err) {
+      errorBox.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
+      errorBox.classList.remove('hidden')
+      empty.classList.remove('hidden')
+    } finally {
+      loading.classList.add('hidden')
+      submitBtn.disabled = false
+      submitLabel.textContent = 'Valuar con IA'
+    }
+  })
+</script>

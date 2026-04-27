@@ -1,0 +1,51 @@
+---
+import { VALORES } from '../data/site'
+---
+
+<section class="section">
+  <div class="container-app">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+      <div class="lg:col-span-5 lg:sticky lg:top-28 reveal">
+        <div class="section-eyebrow mb-4">¿Por qué nosotros?</div>
+        <h2 class="section-title mb-6">
+          Conocimiento local con<br />
+          <span class="gradient-text-accent">alcance internacional.</span>
+        </h2>
+        <p class="text-lg text-muted leading-relaxed mb-8">
+          Acompañamos a propietarios, inversores y compradores con la solidez de una de las marcas inmobiliarias más reconocidas del mundo y la cercanía de un equipo argentino que entiende tu mercado.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href="/la-empresa" class="btn-primary">
+            Conocé la empresa
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+          <a href="/tecnologia" class="btn-ghost">
+            Ver stack tecnológico →
+          </a>
+        </div>
+      </div>
+
+      <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+        {VALORES.map((v, i) => (
+          <div class={`card reveal reveal-delay-${(i % 4) + 1}`}>
+            <div class="flex items-start justify-between mb-4">
+              <span class="text-5xl font-display font-black gradient-text-accent leading-none">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span class="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-accent">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+            </div>
+            <h3 class="text-lg font-bold mb-2">{v.title}</h3>
+            <p class="text-sm text-muted leading-relaxed">{v.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

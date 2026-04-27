@@ -1,0 +1,113 @@
+---
+import { CONTACT } from '../data/site'
+---
+
+<section class="section">
+  <div class="container-app">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <aside class="lg:col-span-5">
+        <div class="section-eyebrow mb-3">Hablemos</div>
+        <h2 class="section-title mb-6">Información de contacto</h2>
+        <p class="text-lg text-muted leading-relaxed mb-8">
+          Visitanos en nuestra oficina del centro porteño o escribinos por el canal que prefieras. Respondemos en horario comercial.
+        </p>
+
+        <ul class="space-y-5">
+          <li class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Oficina</div>
+              <div class="text-text">{CONTACT.address.line1}</div>
+              <div class="text-text">{CONTACT.address.line2}</div>
+            </div>
+          </li>
+
+          <li class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold uppercase tracking-wider text-muted mb-1">WhatsApp</div>
+              <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="text-text hover:text-accent transition-colors">
+                {CONTACT.phone_display}
+              </a>
+            </div>
+          </li>
+
+          <li class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Email</div>
+              <a href={`mailto:${CONTACT.email}`} class="text-text hover:text-accent transition-colors break-all">
+                {CONTACT.email}
+              </a>
+            </div>
+          </li>
+        </ul>
+      </aside>
+
+      <div class="lg:col-span-7">
+        <form
+          action="/contacto"
+          method="post"
+          class="bg-elevated border border-border rounded-2xl p-6 lg:p-8 space-y-5"
+        >
+          <h3 class="text-2xl font-bold mb-2">Envianos tu mensaje</h3>
+          <p class="text-sm text-muted mb-2">Te respondemos en menos de 24 hs hábiles.</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label for="fullname" class="text-xs font-semibold uppercase tracking-wider text-muted">Nombre completo</label>
+              <input type="text" id="fullname" name="fullname" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label for="phone" class="text-xs font-semibold uppercase tracking-wider text-muted">Teléfono</label>
+              <input type="tel" id="phone" name="phone" class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label for="email" class="text-xs font-semibold uppercase tracking-wider text-muted">Email</label>
+              <input type="email" id="email" name="email" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label for="subject" class="text-xs font-semibold uppercase tracking-wider text-muted">Asunto</label>
+              <select id="subject" name="subject" class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all">
+                <option>Consulta general</option>
+                <option>Quiero comprar</option>
+                <option>Quiero vender / tasar</option>
+                <option>Emprendimientos</option>
+                <option>Unirme al equipo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="message" class="text-xs font-semibold uppercase tracking-wider text-muted">Mensaje</label>
+            <textarea id="message" name="message" rows="5" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all resize-none"></textarea>
+          </div>
+
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-xs text-muted">Tus datos son tratados con confidencialidad.</p>
+            <button type="submit" class="btn-primary">
+              Enviar mensaje →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

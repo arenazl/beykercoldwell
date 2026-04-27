@@ -1,0 +1,288 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CONTACT } from '../data/site'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Inversores', url: '/inversores' },
+]
+
+const tesis = [
+  {
+    title: 'Mercado fragmentado',
+    desc: 'El sector inmobiliario en Latam sigue dominado por jugadores tradicionales con baja adopción tecnológica. Hay espacio para una marca AI-native.',
+  },
+  {
+    title: 'Margen estructural',
+    desc: 'Combinación de fee inicial + regalías + fee tecnológico recurrente + revenue share futuro de tokenización: cuatro líneas de ingreso por oficina.',
+  },
+  {
+    title: 'Defensibilidad por software',
+    desc: 'No es una marca con CRM tercerizado. Es una compañía de software con red de distribución física. El stack propio es el moat.',
+  },
+  {
+    title: 'Escalabilidad geográfica',
+    desc: 'Modelo replicable Argentina → Latam → Hispanoamérica global. Cada nueva oficina amortiza el desarrollo de plataforma.',
+  },
+]
+
+const milestones = [
+  { year: 'Año 1', title: 'Oficina laboratorio', desc: 'Flagship operando en Argentina, métricas de productividad validadas, manualización completa.' },
+  { year: 'Año 2', title: 'Primeras 10 franquicias', desc: 'Apertura controlada en Argentina. Validación del modelo replicable y del fee tecnológico.' },
+  { year: 'Año 3', title: 'Expansión Latam', desc: 'Uruguay, Paraguay, Chile, Perú. 30+ oficinas activas. Roadmap de tokenización en piloto.' },
+  { year: 'Año 4', title: 'Hispanoamérica', desc: 'México, Miami hispano, España. 50+ oficinas. Línea de tokenización con primeros activos colocados.' },
+  { year: 'Año 5', title: 'Compañía consolidada', desc: '80+ oficinas, plataforma maduran, posibles rondas de capital adicional o exit estratégico.' },
+]
+
+const proyeccion = [
+  { label: 'Oficinas activas', y1: '1', y3: '30', y5: '80+' },
+  { label: 'Fee inicial promedio', y1: '—', y3: 'USD 20k', y5: 'USD 25k' },
+  { label: 'Regalías promedio / oficina / mes', y1: '—', y3: 'USD 3k', y5: 'USD 5k' },
+  { label: 'Fee tecnológico / oficina / mes', y1: '—', y3: 'USD 800', y5: 'USD 1.000' },
+  { label: 'Revenue tokenización', y1: '—', y3: 'Piloto', y5: 'En escala' },
+]
+
+const riesgos = [
+  { title: 'Marca vacía', mit: 'Cultura interna fuerte y obsesión por resultados medibles desde día uno.' },
+  { title: '"Humo tech" sin producto', mit: 'Producto real validado en oficina laboratorio antes de franquiciar.' },
+  { title: 'Sin brokers líderes', mit: 'Selección estricta de primeros franquiciados con experiencia y capital.' },
+  { title: 'Sin CTO fuerte', mit: 'Búsqueda activa de CTO con experiencia en SaaS B2B antes de Serie A.' },
+]
+
+const uso = [
+  { pct: '35%', label: 'Producto y stack IA', desc: 'CTO, equipo de ingeniería, infraestructura cloud, modelos de IA.' },
+  { pct: '25%', label: 'Oficina laboratorio', desc: 'Flagship operativa, equipo comercial, validación de playbook.' },
+  { pct: '20%', label: 'Branding y marketing', desc: 'Identidad premium internacional, lanzamiento, captación de primeros brokers.' },
+  { pct: '10%', label: 'Legal franquicia', desc: 'Contrato franquicia, marco regulatorio, registros de marca multi-país.' },
+  { pct: '10%', label: 'Capital de trabajo', desc: 'Operación durante los primeros 12 meses hasta breakeven de la flagship.' },
+]
+---
+
+<Layout
+  title="Inversores · Pitch + roadmap"
+  description="Tesis de inversión, roadmap a 5 años, uso de fondos y proyecciones de la red inmobiliaria AI-native."
+  schemaType="WebPage"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="relative border-b border-border overflow-hidden">
+    <div class="absolute inset-0 -z-10 bg-accent"></div>
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute -bottom-1/2 left-0 w-[600px] aspect-square bg-gold/30 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container-app py-20 lg:py-28 text-white">
+      <div class="max-w-3xl">
+        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gold mb-4">Inversores</div>
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tightest leading-[1.02] mb-6">
+          Una compañía de software con red de distribución física.
+        </h1>
+        <p class="text-lg lg:text-xl text-white/85 leading-relaxed mb-8 max-w-2xl">
+          No es una franquicia inmobiliaria más. Es una proptech con stack propio, ingresos recurrentes y un
+          modelo de expansión continental ya pensado.
+        </p>
+        <div class="flex flex-wrap items-center gap-3">
+          <a href="#contacto" class="btn-gold">
+            Solicitar deck completo
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+          <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-200 active:scale-95">
+            Conversación directa
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Tesis</div>
+        <h2 class="section-title">Por qué este modelo gana</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {tesis.map((t, i) => (
+          <div class="card">
+            <div class="text-3xl font-display font-bold text-gold mb-3">{String(i + 1).padStart(2, '0')}</div>
+            <h3 class="text-xl font-bold mb-2">{t.title}</h3>
+            <p class="text-sm text-muted leading-relaxed">{t.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Roadmap</div>
+        <h2 class="section-title">5 años, 5 hitos</h2>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-3">
+        {milestones.map((m) => (
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start p-6 rounded-2xl border border-border bg-elevated">
+            <div class="sm:col-span-3">
+              <div class="text-xs uppercase tracking-wider text-muted mb-1">Hito</div>
+              <div class="text-2xl font-bold text-accent">{m.year}</div>
+            </div>
+            <div class="sm:col-span-9">
+              <div class="text-lg font-bold mb-1">{m.title}</div>
+              <p class="text-sm text-muted leading-relaxed">{m.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Proyecciones</div>
+        <h2 class="section-title">Trayectoria a 5 años</h2>
+        <p class="text-muted mt-4 leading-relaxed">
+          Cifras orientativas para conversación inicial. El deck completo desglosa supuestos, cohortes y modelos de sensibilidad.
+        </p>
+      </div>
+
+      <div class="max-w-4xl mx-auto overflow-hidden rounded-2xl border border-border">
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-elevated">
+              <tr>
+                <th class="text-left px-6 py-4 font-semibold text-text">Métrica</th>
+                <th class="text-right px-6 py-4 font-semibold text-muted">Año 1</th>
+                <th class="text-right px-6 py-4 font-semibold text-muted">Año 3</th>
+                <th class="text-right px-6 py-4 font-semibold text-accent">Año 5</th>
+              </tr>
+            </thead>
+            <tbody class="bg-bg">
+              {proyeccion.map((p, i) => (
+                <tr class={i % 2 === 0 ? '' : 'bg-elevated/40'}>
+                  <td class="px-6 py-4 font-medium text-text">{p.label}</td>
+                  <td class="px-6 py-4 text-right text-muted">{p.y1}</td>
+                  <td class="px-6 py-4 text-right text-muted">{p.y3}</td>
+                  <td class="px-6 py-4 text-right font-bold text-accent">{p.y5}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Uso de fondos</div>
+        <h2 class="section-title">Cómo se invierte la ronda inicial</h2>
+        <p class="text-muted mt-4 leading-relaxed">
+          Ronda objetivo: USD 250.000 (Low Smart Launch) hasta USD 500.000+ (Mid Growth). Cifras del Low Smart Launch:
+        </p>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-3">
+        {uso.map((u) => (
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center p-6 rounded-2xl border border-border bg-elevated">
+            <div class="sm:col-span-2">
+              <div class="text-3xl font-bold text-gold">{u.pct}</div>
+            </div>
+            <div class="sm:col-span-10">
+              <div class="text-lg font-bold mb-1">{u.label}</div>
+              <p class="text-sm text-muted leading-relaxed">{u.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="section-eyebrow mb-3">Transparencia</div>
+        <h2 class="section-title">Riesgos y mitigaciones</h2>
+        <p class="text-muted mt-4 leading-relaxed">
+          Toda inversión tiene riesgo. Estos son los principales y cómo se mitigan en el plan de ejecución.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        {riesgos.map((r) => (
+          <div class="card">
+            <div class="flex items-start gap-3 mb-3">
+              <div class="flex-shrink-0 w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 9v4M12 17h.01M3 21h18L12 3 3 21z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold leading-snug">{r.title}</h3>
+            </div>
+            <p class="text-sm text-muted leading-relaxed">
+              <span class="font-semibold text-text">Mitigación: </span>{r.mit}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="contacto" class="section bg-accent text-white relative overflow-hidden">
+    <div class="absolute inset-0 -z-0">
+      <div class="absolute -top-1/2 right-0 w-[600px] aspect-square bg-gold/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container-app relative">
+      <div class="max-w-3xl mx-auto bg-white/5 border border-white/20 backdrop-blur-sm rounded-2xl p-6 lg:p-10">
+        <div class="text-center mb-8">
+          <div class="text-xs font-semibold uppercase tracking-[0.2em] text-gold mb-3">Solicitar deck completo</div>
+          <h2 class="text-3xl md:text-5xl font-bold tracking-tightest leading-[1.05] mb-3">Conversemos</h2>
+          <p class="text-white/80">Te enviamos el deck con detalle de modelo, supuestos y proyecciones bajo NDA.</p>
+        </div>
+
+        <form class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-gold">Nombre</label>
+              <input type="text" required class="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-gold" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-gold">Email</label>
+              <input type="email" required class="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-gold" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-gold">Fondo / empresa</label>
+              <input type="text" class="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-gold" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-gold">Ticket de interés</label>
+              <select class="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:border-gold">
+                <option class="bg-accent">USD 25k – 100k</option>
+                <option class="bg-accent">USD 100k – 250k</option>
+                <option class="bg-accent">USD 250k+</option>
+                <option class="bg-accent">Por definir</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-gold">Mensaje</label>
+            <textarea rows="4" class="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-gold resize-none"></textarea>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="submit" class="btn-gold">Solicitar deck</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>

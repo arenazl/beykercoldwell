@@ -1,0 +1,66 @@
+---
+const themes = [
+  { id: 'coldwell-classic', label: 'Coldwell Classic' },
+  { id: 'coldwell-dark', label: 'Coldwell Dark' },
+  { id: 'minimal-light', label: 'Minimal Light' },
+  { id: 'premium-dark', label: 'Premium Dark' },
+  { id: 'warm-earth', label: 'Warm Earth' },
+]
+---
+
+<div class="relative">
+  <button
+    id="theme-trigger"
+    type="button"
+    class="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted hover:text-accent hover:border-accent/40 transition-all"
+    aria-label="Cambiar tema"
+    title="Tema visual"
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
+    </svg>
+  </button>
+
+  <div
+    id="theme-menu"
+    class="hidden absolute right-0 top-12 w-52 bg-elevated border border-border rounded-xl shadow-2xl p-2 z-50 animate-fade-in"
+  >
+    {themes.map((t) => (
+      <button
+        type="button"
+        data-theme-id={t.id}
+        class="theme-option w-full text-left px-3 py-2 rounded-lg text-sm text-text hover:bg-bg transition-colors"
+      >
+        {t.label}
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  const trigger = document.getElementById('theme-trigger')
+  const menu = document.getElementById('theme-menu')
+  const opts = document.querySelectorAll<HTMLButtonElement>('.theme-option')
+
+  trigger?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    menu?.classList.toggle('hidden')
+  })
+  document.addEventListener('click', () => menu?.classList.add('hidden'))
+
+  opts.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.themeId
+      if (!id) return
+      document.documentElement.setAttribute('data-theme', id)
+      localStorage.setItem('cb-theme', id)
+      menu?.classList.add('hidden')
+    })
+  })
+</script>

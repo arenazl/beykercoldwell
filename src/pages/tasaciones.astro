@@ -1,0 +1,134 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { CONTACT } from '../data/site'
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Tasación', url: '/tasaciones' },
+]
+
+const pasos = [
+  {
+    n: '01',
+    title: 'Relevamiento',
+    desc: 'Coordinamos una visita o videollamada para conocer la propiedad, su estado y características diferenciales.',
+  },
+  {
+    n: '02',
+    title: 'Análisis Comparativo de Mercado',
+    desc: 'Cruzamos data de operaciones recientes en la zona, oferta competitiva y tiempos de venta promedio.',
+  },
+  {
+    n: '03',
+    title: 'Informe profesional',
+    desc: 'Te entregamos un reporte con valor sugerido, rango de mercado y estrategia comercial recomendada.',
+  },
+]
+---
+
+<Layout
+  title="Tasación profesional · Coldwell Banker Beyker"
+  description="Tasamos tu propiedad con un Análisis Comparativo de Mercado (ACM) basado en datos reales de tu zona."
+  schemaType="Service"
+  breadcrumbs={breadcrumbs}
+>
+  <section class="border-b border-border bg-elevated/30">
+    <div class="container-app py-16 lg:py-20">
+      <a href="/tasaciones-ia" class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20 hover:bg-accent hover:text-white transition-all duration-200 active:scale-95">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
+        </svg>
+        ¿Querés una estimación al instante? Probá la valuación con IA →
+      </a>
+      <div class="max-w-3xl">
+        <div class="section-eyebrow mb-3">Servicio</div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tightest mb-6">
+          Tasación profesional<br />
+          <span class="text-accent">basada en datos.</span>
+        </h1>
+        <p class="text-lg text-muted leading-relaxed">
+          Una tasación seria es la diferencia entre vender en tiempo razonable o quedar fuera del mercado.
+          Trabajamos con un Análisis Comparativo de Mercado (ACM) sobre operaciones reales de tu zona.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-app">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {pasos.map((p) => (
+          <div class="card">
+            <div class="text-4xl font-display font-bold text-accent/30 mb-4">{p.n}</div>
+            <h2 class="text-xl font-bold mb-3">{p.title}</h2>
+            <p class="text-sm text-muted leading-relaxed">{p.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-elevated/40 border-y border-border">
+    <div class="container-app">
+      <div class="max-w-3xl mx-auto bg-elevated border border-border rounded-2xl p-6 lg:p-10">
+        <div class="text-center mb-8">
+          <div class="section-eyebrow mb-3">Pedí tu tasación</div>
+          <h2 class="section-title mb-3">Sin costo, sin compromiso</h2>
+          <p class="text-muted">Te respondemos en menos de 24 hs hábiles.</p>
+        </div>
+
+        <form class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Nombre</label>
+              <input type="text" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Teléfono</label>
+              <input type="tel" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Email</label>
+            <input type="email" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Tipo de propiedad</label>
+              <select class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent">
+                <option>Departamento</option>
+                <option>Casa</option>
+                <option>PH</option>
+                <option>Local / Oficina</option>
+                <option>Lote</option>
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Superficie aproximada</label>
+              <input type="number" placeholder="m²" class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Dirección / Barrio</label>
+            <input type="text" required class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent" />
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Comentarios</label>
+            <textarea rows="4" class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent resize-none"></textarea>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <a href={CONTACT.whatsapp_link} target="_blank" rel="noopener" class="text-sm text-accent hover:underline">
+              o escribinos por WhatsApp →
+            </a>
+            <button type="submit" class="btn-primary">Solicitar tasación</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>
