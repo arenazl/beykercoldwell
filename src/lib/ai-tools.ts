@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { Property } from '../data/properties'
+import { CATALOG_INDEX_FULL, CATALOG_STATS } from './catalog-index'
+import { APP_SECTIONS } from '../data/app-knowledge'
 
 const apiKey = process.env.GEMINI_API_KEY ?? import.meta.env.GEMINI_API_KEY
 const modelName =
@@ -55,50 +57,90 @@ export interface AssistantReply {
 }
 
 /**
- * Asistente conversacional generalista. Recibe historial corto y catálogo
- * compacto; devuelve respuesta + IDs de propiedades sugeridas (subset del
- * catálogo que se le pasó) para que el front renderice cards.
+ * Asistente conversacional generalista. Le mandamos:
+ *  1. CATALOG_INDEX_FULL: las 9.240 propiedades en formato pipe-separated
+ *     (≈110k tokens, entra en Gemini 2.5 Flash 1M).
+ *  2. CATALOG_STATS: agregaciones (counts por ciudad, tipo, operación, cruz).
+ *  3. APP_SECTIONS: todas las páginas del sitio con su propósito + intents.
+ *  4. Historial de conversación.
+ *
+ * La IA decide qué propiedades sugerir y a qué sección redirigir, sin
+ * pre-filtrado por algoritmo. La regla #9 del proyecto prohíbe parchear
+ * features data-driven con hardcode — el fix va en cómo se le serializa
+ * el contexto al modelo.
  */
 export async function assistantChat(
-  history: AssistantMsg[],
-  catalogPreview: Property[]
+  history: AssistantMsg[]
 ): Promise<AssistantReply> {
   const model = genJsonModel(0.4)
-  const compact = catalogPreview.slice(0, 80).map(compactProperty)
 
   const transcript = history
     .slice(-8)
     .map((m) => `${m.role === 'user' ? 'CLIENTE' : 'BEYKER'}: ${m.text}`)
     .join('\n')
 
-  const prompt = `Sos "Beyker IA", asistente virtual de Coldwell Banker Beyker (inmobiliaria, CABA y GBA Argentina). Hablás en español rioplatense (vos, tonada porteña), tono profesional pero cercano. Tu rol: guiar al cliente, entender qué busca y orientarlo dentro del catálogo o derivarlo a un asesor humano.
+  const sections = APP_SECTIONS
+    .map((s) => `  ${s.href}  →  ${s.label}: ${s.purpose}  [intents: ${s.intents.join(', ')}]`)
+    .join('\n')
 
-Catálogo disponible (${compact.length} propiedades, subset relevante):
-${JSON.stringify(compact)}
+  const prompt = `Sos "Beyker IA", asistente virtual de Coldwell Banker Beyker (inmobiliaria, Argentina). Hablás en español rioplatense (vos), tono profesional y cercano. Tu rol: entender qué busca el cliente y, según corresponda:
+  (a) sugerir 1-3 propiedades concretas del catálogo (devolviendo sus IDs reales),
+  (b) redirigirlo a la sección correcta del sitio,
+  (c) o derivarlo a un asesor humano.
 
-Conversación hasta ahora:
+═══════════════════════════════════════════════
+SECCIONES DEL SITIO (cada una con su href, propósito y los pedidos que la disparan):
+
+${sections}
+
+═══════════════════════════════════════════════
+ESTADÍSTICAS DEL CATÁLOGO (para responder "¿tienen X en Y?" sin recorrer todo):
+- Total propiedades: ${PROPERTIES_TOTAL}
+- Por tipo: ${JSON.stringify(CATALOG_STATS.byType)}
+- Por operación: ${JSON.stringify(CATALOG_STATS.byOp)}
+- Por ciudad (top 30 por volumen): ${JSON.stringify(topN(CATALOG_STATS.byCity, 30))}
+
+═══════════════════════════════════════════════
+CATÁLOGO COMPLETO — todas las propiedades en formato pipe-separated.
+Una línea por propiedad. Header en la primera línea. Usá esto como tu fuente de verdad para sugerir IDs.
+
+\`\`\`
+${CATALOG_INDEX_FULL}
+\`\`\`
+
+═══════════════════════════════════════════════
+CONVERSACIÓN:
 ${transcript}
 
-Respondé en JSON:
+═══════════════════════════════════════════════
+Respondé en JSON exacto:
 {
-  "reply": "Tu respuesta al cliente. Máx 3 oraciones. Si recomendás propiedades, mencioná SOLO 1-3 IDs y describilas brevemente. No inventes propiedades.",
+  "reply": "Respuesta al cliente. Máx 3 oraciones. Si sugerís propiedades, mencionalas brevemente (no listes los IDs en el reply, eso va en suggestedPropertyIds).",
   "intent": "comprar" | "alquilar" | "tasar" | "invertir" | "consulta" | "derivar",
-  "suggestedPropertyIds": ["array de IDs del catálogo, 0 a 3, solo si son MUY relevantes a lo último que pidió"],
+  "suggestedPropertyIds": ["máx 3 IDs reales del catálogo de arriba, solo si son MUY relevantes a lo último que pidió. [] si no aplica."],
   "followUp": "Pregunta corta para seguir guiando, o null si ya cerraste con CTA",
-  "cta": { "label": "string corto", "href": "/buscar" | "/tasaciones-ia" | "/credito" | "/contacto" | "/match-ia" } o null
+  "cta": { "label": "Texto corto del botón", "href": "ruta de la lista de SECCIONES de arriba" } | null
 }
 
-Reglas:
-- Si menciona vender o tasar → CTA a /tasaciones-ia.
-- Si menciona crédito hipotecario → CTA a /credito.
-- Si pide ver propiedades con criterios concretos → CTA a /buscar.
-- Si parece perdido o no sabe qué busca → CTA a /match-ia.
-- Si pide hablar con humano o tema delicado → intent "derivar" + CTA a /contacto.
-- NO inventes precios, ubicaciones ni IDs. Si no hay match en el catálogo, decilo.
-- NO uses emojis salvo 1 por respuesta como mucho.`
+Reglas duras:
+- Los IDs sugeridos deben EXISTIR en el catálogo de arriba. Si no encontrás match, devolvé [] y explicalo en reply.
+- El href del CTA debe ser uno de los listados en SECCIONES. No inventes rutas.
+- NO inventes precios, ubicaciones, ni features. Solo lo que está en el catálogo.
+- Si el cliente pide algo y NO existe (ej: "casa en Tristán Suárez" cuando no hay), decilo honestamente y proponé alternativa cercana o /buscar para explorar.
+- Sin emojis (máximo 1 si suma de verdad).`
 
   const r = await model.generateContent(prompt)
   return JSON.parse(r.response.text()) as AssistantReply
+}
+
+const PROPERTIES_TOTAL = (() => {
+  // Conteo desde stats para no importar PROPERTIES en este top-level.
+  return Object.values(CATALOG_STATS.byType).reduce((a, b) => a + b, 0)
+})()
+
+function topN(obj: Record<string, number>, n: number): Record<string, number> {
+  const sorted = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n)
+  return Object.fromEntries(sorted)
 }
 
 export interface MatchPreferences {

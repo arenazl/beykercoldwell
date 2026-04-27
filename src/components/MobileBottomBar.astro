@@ -1,0 +1,446 @@
+---
+const path = Astro.url.pathname
+
+const items = [
+  {
+    label: 'Inicio',
+    href: '/',
+    isActive: path === '/',
+    iconPath: 'M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5z',
+  },
+  {
+    label: 'Buscar',
+    href: '/buscar',
+    isActive: path.startsWith('/buscar'),
+    iconPath: 'M11 19a8 8 0 1 1 5.293-14M21 21l-4.293-4.293',
+  },
+  {
+    label: 'Tasar',
+    href: '/tasaciones-ia',
+    isActive: path.startsWith('/tasaciones'),
+    iconPath: 'M3 3v18h18M7 12l4-4 4 4 6-6',
+  },
+  {
+    label: 'Menú',
+    href: '#',
+    isActive: false,
+    iconPath: 'M4 6h16M4 12h16M4 18h16',
+    isMenu: true,
+  },
+]
+
+const moreLinks = [
+  { href: '/propiedades', label: 'Propiedades', desc: 'Catálogo completo' },
+  { href: '/franquicias', label: 'Franquicias', desc: 'Modelo de red AI-native' },
+  { href: '/tecnologia', label: 'Tecnología', desc: 'Stack IA del sistema' },
+  { href: '/inversores', label: 'Inversores', desc: 'Pitch + roadmap 5 años' },
+  { href: '/tasaciones', label: 'Tasación profesional', desc: 'Con visita presencial' },
+  { href: '/la-empresa', label: 'La empresa', desc: 'Quiénes somos' },
+  { href: '/unite', label: 'Unite al equipo', desc: 'Asesores de elite' },
+  { href: '/contacto', label: 'Contacto', desc: 'WhatsApp / mail / oficina' },
+]
+---
+
+<nav
+  id="mobile-bottom-bar"
+  aria-label="Navegación principal"
+  class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-bg/95 backdrop-blur-xl border-t border-border pb-[env(safe-area-inset-bottom)]"
+>
+  <div class="relative flex items-end justify-around px-2 pt-2 pb-1.5">
+    {items.slice(0, 2).map((item) => (
+      <a
+        href={item.href}
+        class:list={[
+          'flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 rounded-xl transition-all active:scale-95',
+          item.isActive ? 'text-accent' : 'text-muted hover:text-text',
+        ]}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d={item.iconPath} />
+        </svg>
+        <span class="text-[10px] font-medium leading-tight">{item.label}</span>
+      </a>
+    ))}
+
+    <div class="flex-1 flex justify-center">
+      <button
+        id="mobile-mic-btn"
+        type="button"
+        aria-label="Buscar por voz"
+        class="relative -mt-7 w-16 h-16 rounded-full bg-accent text-white shadow-lg shadow-accent/30 flex items-center justify-center transition-all duration-200 active:scale-95 ring-4 ring-bg"
+      >
+        <span class="absolute inset-0 rounded-full bg-gold/40 blur-md -z-10"></span>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <line x1="12" y1="19" x2="12" y2="23" />
+          <line x1="8" y1="23" x2="16" y2="23" />
+        </svg>
+      </button>
+    </div>
+
+    {items.slice(2).map((item) => (
+      <a
+        href={item.href}
+        data-menu-trigger={item.isMenu ? 'true' : null}
+        class:list={[
+          'flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 rounded-xl transition-all active:scale-95',
+          item.isActive ? 'text-accent' : 'text-muted hover:text-text',
+        ]}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d={item.iconPath} />
+        </svg>
+        <span class="text-[10px] font-medium leading-tight">{item.label}</span>
+      </a>
+    ))}
+  </div>
+</nav>
+
+<div
+  id="mobile-menu-sheet"
+  class="lg:hidden hidden fixed inset-0 z-50"
+  aria-hidden="true"
+>
+  <div id="mobile-menu-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+  <div class="absolute bottom-0 inset-x-0 bg-bg rounded-t-3xl border-t border-border max-h-[85vh] overflow-y-auto pb-[env(safe-area-inset-bottom)] shadow-2xl">
+    <div class="sticky top-0 bg-bg/95 backdrop-blur-xl border-b border-border px-5 py-4 flex items-center justify-between">
+      <h2 class="text-lg font-bold">Menú</h2>
+      <button
+        id="mobile-menu-close"
+        type="button"
+        aria-label="Cerrar menú"
+        class="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted hover:text-text active:scale-95 transition-all"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-3 grid gap-1">
+      {moreLinks.map((link) => (
+        <a
+          href={link.href}
+          class="flex items-center gap-3 p-4 rounded-2xl hover:bg-elevated active:scale-[.98] transition-all"
+        >
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-text leading-snug">{link.label}</div>
+            <div class="text-xs text-muted leading-relaxed">{link.desc}</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-muted/50 flex-shrink-0">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+      ))}
+    </div>
+  </div>
+</div>
+
+<div
+  id="mobile-mic-overlay"
+  class="lg:hidden hidden fixed inset-0 z-50 bg-bg/95 backdrop-blur-xl flex flex-col"
+  aria-hidden="true"
+>
+  <div class="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),1rem)] pb-3 border-b border-border">
+    <h2 class="text-lg font-bold">Búsqueda por voz</h2>
+    <button
+      id="mobile-mic-close"
+      type="button"
+      aria-label="Cerrar"
+      class="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted hover:text-text active:scale-95 transition-all"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="flex-1 flex flex-col items-center justify-center px-6 gap-8 min-h-0">
+    <div id="mobile-mic-state" class="text-center">
+      <div class="text-xs uppercase tracking-[0.2em] text-muted mb-2" id="mobile-mic-stage">Tocá para hablar</div>
+      <p id="mobile-mic-transcript" class="text-2xl font-semibold leading-tight min-h-[3rem] text-text">
+        Decí qué buscás
+      </p>
+    </div>
+
+    <button
+      id="mobile-mic-trigger"
+      type="button"
+      aria-label="Iniciar grabación"
+      class="relative w-32 h-32 rounded-full bg-accent text-white flex items-center justify-center shadow-2xl shadow-accent/40 transition-all duration-200 active:scale-95"
+    >
+      <span id="mobile-mic-pulse" class="hidden absolute inset-0 rounded-full bg-accent animate-ping opacity-60"></span>
+      <span class="absolute inset-0 rounded-full bg-gold/30 blur-xl -z-10"></span>
+      <svg id="mobile-mic-trigger-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="23" />
+        <line x1="8" y1="23" x2="16" y2="23" />
+      </svg>
+    </button>
+
+    <p id="mobile-mic-hint" class="text-center text-sm text-muted max-w-xs leading-relaxed">
+      Ej: "Departamento dos ambientes en Recoleta hasta 200 mil dólares apto crédito"
+    </p>
+
+    <div id="mobile-mic-error" class="hidden p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm text-center max-w-md"></div>
+  </div>
+</div>
+
+<script>
+  const bar = document.getElementById('mobile-bottom-bar') as HTMLElement
+  const sheet = document.getElementById('mobile-menu-sheet') as HTMLElement
+  const sheetBackdrop = document.getElementById('mobile-menu-backdrop') as HTMLElement
+  const sheetClose = document.getElementById('mobile-menu-close') as HTMLButtonElement
+  const overlay = document.getElementById('mobile-mic-overlay') as HTMLElement
+  const overlayClose = document.getElementById('mobile-mic-close') as HTMLButtonElement
+  const micBtn = document.getElementById('mobile-mic-btn') as HTMLButtonElement
+  const micTrigger = document.getElementById('mobile-mic-trigger') as HTMLButtonElement
+  const micPulse = document.getElementById('mobile-mic-pulse') as HTMLElement
+  const micStage = document.getElementById('mobile-mic-stage') as HTMLElement
+  const micTranscript = document.getElementById('mobile-mic-transcript') as HTMLElement
+  const micHint = document.getElementById('mobile-mic-hint') as HTMLElement
+  const micError = document.getElementById('mobile-mic-error') as HTMLElement
+
+  if (bar && sheet && overlay) {
+    // ---------- Menú: bottom sheet ----------
+    function openSheet() {
+      sheet.classList.remove('hidden')
+      sheet.setAttribute('aria-hidden', 'false')
+      document.body.style.overflow = 'hidden'
+    }
+    function closeSheet() {
+      sheet.classList.add('hidden')
+      sheet.setAttribute('aria-hidden', 'true')
+      document.body.style.overflow = ''
+    }
+    bar.querySelectorAll<HTMLAnchorElement>('[data-menu-trigger="true"]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault()
+        openSheet()
+      })
+    })
+    sheetBackdrop?.addEventListener('click', closeSheet)
+    sheetClose?.addEventListener('click', closeSheet)
+
+    // ---------- Mic: overlay + flow ----------
+    type SpeechRec = {
+      lang: string
+      interimResults: boolean
+      maxAlternatives: number
+      continuous: boolean
+      onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null
+      onerror: ((e: { error: string }) => void) | null
+      onend: (() => void) | null
+      start: () => void
+      stop: () => void
+    }
+    const SR = ((window as unknown) as {
+      SpeechRecognition?: new () => SpeechRec
+      webkitSpeechRecognition?: new () => SpeechRec
+    }).SpeechRecognition ?? ((window as unknown) as {
+      webkitSpeechRecognition?: new () => SpeechRec
+    }).webkitSpeechRecognition
+
+    let recognition: SpeechRec | null = null
+    let recorder: MediaRecorder | null = null
+    let stream: MediaStream | null = null
+    let recording = false
+
+    function setStage(stage: string) {
+      micStage.textContent = stage
+    }
+    function setRecordingUI(on: boolean) {
+      recording = on
+      micPulse.classList.toggle('hidden', !on)
+      micTrigger.classList.toggle('bg-red-500', on)
+      micTrigger.classList.toggle('bg-accent', !on)
+      micTrigger.setAttribute('aria-label', on ? 'Detener' : 'Iniciar grabación')
+    }
+    function showMicError(msg: string) {
+      micError.textContent = msg
+      micError.classList.remove('hidden')
+      micHint.classList.add('hidden')
+    }
+    function resetMicUI() {
+      setStage('Tocá para hablar')
+      micTranscript.textContent = 'Decí qué buscás'
+      micError.classList.add('hidden')
+      micHint.classList.remove('hidden')
+      setRecordingUI(false)
+    }
+
+    function openOverlay() {
+      overlay.classList.remove('hidden')
+      overlay.setAttribute('aria-hidden', 'false')
+      document.body.style.overflow = 'hidden'
+      resetMicUI()
+    }
+    function closeOverlay() {
+      stopAll()
+      overlay.classList.add('hidden')
+      overlay.setAttribute('aria-hidden', 'true')
+      document.body.style.overflow = ''
+    }
+    function stopAll() {
+      if (recognition) {
+        try { recognition.stop() } catch {}
+        recognition = null
+      }
+      if (recorder && recorder.state !== 'inactive') {
+        try { recorder.stop() } catch {}
+      }
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop())
+        stream = null
+      }
+      setRecordingUI(false)
+    }
+
+    function gotoSearch(text: string) {
+      const q = text.trim()
+      if (!q) return
+      window.location.href = `/buscar?q=${encodeURIComponent(q)}`
+    }
+
+    function startWebSpeech(): boolean {
+      if (!SR) return false
+      const rec = new SR()
+      rec.lang = 'es-AR'
+      rec.interimResults = true
+      rec.maxAlternatives = 1
+      rec.continuous = false
+      let finalText = ''
+      rec.onresult = (e) => {
+        let interim = ''
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i]
+          if (r.isFinal) finalText += r[0].transcript
+          else interim += r[0].transcript
+        }
+        micTranscript.textContent = (finalText || interim).trim() || 'Escuchando…'
+      }
+      rec.onerror = (e) => {
+        recognition = null
+        setRecordingUI(false)
+        if (e.error === 'no-speech') return
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          showMicError('Permiso de micrófono denegado.')
+          return
+        }
+        startMediaRecorder().catch((err) => showMicError(String(err)))
+      }
+      rec.onend = () => {
+        recognition = null
+        setRecordingUI(false)
+        if (finalText.trim()) {
+          setStage('Buscando…')
+          gotoSearch(finalText.trim())
+        }
+      }
+      recognition = rec
+      setStage('Escuchando…')
+      setRecordingUI(true)
+      rec.start()
+      return true
+    }
+
+    async function startMediaRecorder() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        showMicError('Tu navegador no soporta grabación.')
+        return
+      }
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream = s
+      const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+      const mime = candidates.find((m) => MediaRecorder.isTypeSupported(m)) ?? ''
+      const r = new MediaRecorder(s, mime ? { mimeType: mime } : undefined)
+      recorder = r
+      const chunks: Blob[] = []
+      r.addEventListener('dataavailable', (e: BlobEvent) => {
+        if (e.data && e.data.size) chunks.push(e.data)
+      })
+      r.addEventListener('stop', async () => {
+        s.getTracks().forEach((t) => t.stop())
+        stream = null
+        recorder = null
+        setRecordingUI(false)
+        const blob = new Blob(chunks, { type: mime || 'audio/webm' })
+        if (blob.size === 0) return
+        setStage('Transcribiendo…')
+        try {
+          const base64 = await blobToBase64(blob)
+          const res = await fetch('/api/transcribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audio: base64, mimeType: blob.type || 'audio/webm' }),
+          })
+          const data = await res.json()
+          if (!res.ok) {
+            showMicError(data.error || 'Error transcribiendo')
+            return
+          }
+          const text = String(data.text || '').trim()
+          micTranscript.textContent = text || 'Sin texto detectado'
+          if (text) {
+            setStage('Buscando…')
+            gotoSearch(text)
+          }
+        } catch (err) {
+          showMicError('Error: ' + String((err as Error).message))
+        }
+      })
+      setStage('Grabando — tocá para parar')
+      setRecordingUI(true)
+      r.start()
+      // Hard cap 30s
+      setTimeout(() => {
+        if (recorder && recorder.state === 'recording') {
+          try { recorder.stop() } catch {}
+        }
+      }, 30_000)
+    }
+
+    function blobToBase64(blob: Blob): Promise<string> {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const result = String(reader.result || '')
+          const comma = result.indexOf(',')
+          resolve(comma >= 0 ? result.slice(comma + 1) : result)
+        }
+        reader.onerror = () => reject(reader.error || new Error('FileReader error'))
+        reader.readAsDataURL(blob)
+      })
+    }
+
+    micBtn?.addEventListener('click', () => {
+      openOverlay()
+    })
+    overlayClose?.addEventListener('click', closeOverlay)
+
+    micTrigger?.addEventListener('click', async () => {
+      micError.classList.add('hidden')
+      micHint.classList.remove('hidden')
+      if (recording) {
+        stopAll()
+        return
+      }
+      if (startWebSpeech()) return
+      try {
+        await startMediaRecorder()
+      } catch (err) {
+        showMicError('No pudimos iniciar el micrófono: ' + String((err as Error).message))
+      }
+    })
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return
+      if (!overlay.classList.contains('hidden')) closeOverlay()
+      else if (!sheet.classList.contains('hidden')) closeSheet()
+    })
+  }
+</script>

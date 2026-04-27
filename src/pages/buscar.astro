@@ -226,6 +226,14 @@ const sugerencias = [
     `
   }
 
+  // Autocompletar + autosearch desde ?q= (usado por el mic de la bottom bar mobile).
+  const params = new URLSearchParams(window.location.search)
+  const initialQ = params.get('q')?.trim()
+  if (initialQ) {
+    input.value = initialQ
+    requestAnimationFrame(() => form.requestSubmit())
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const query = input.value.trim()
