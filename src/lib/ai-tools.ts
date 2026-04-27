@@ -56,91 +56,204 @@ export interface AssistantReply {
   cta: { label: string; href: string } | null
 }
 
+interface IntentPlan {
+  intent: 'comprar' | 'alquilar' | 'tasar' | 'invertir' | 'consulta' | 'derivar'
+  /** Filtros estructurados que la IA quiere aplicar al catálogo. Todos opcionales. */
+  filters: {
+    type?: string
+    operacion?: string
+    cityIncludes?: string
+    provinceIncludes?: string
+    minPriceUSD?: number
+    maxPriceUSD?: number
+    minBedrooms?: number
+    aEstrenar?: boolean
+  }
+  /** Ruta del sitio sugerida (de APP_SECTIONS). null si va a sugerir propiedades. */
+  suggestedRoute: string | null
+}
+
+const PROPERTIES_TOTAL = Object.values(CATALOG_STATS.byType).reduce((a, b) => a + b, 0)
+
+function topN(obj: Record<string, number>, n: number): Record<string, number> {
+  const sorted = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n)
+  return Object.fromEntries(sorted)
+}
+
 /**
- * Asistente conversacional generalista. Le mandamos:
- *  1. CATALOG_INDEX_FULL: las 9.240 propiedades en formato pipe-separated
- *     (≈110k tokens, entra en Gemini 2.5 Flash 1M).
- *  2. CATALOG_STATS: agregaciones (counts por ciudad, tipo, operación, cruz).
- *  3. APP_SECTIONS: todas las páginas del sitio con su propósito + intents.
- *  4. Historial de conversación.
- *
- * La IA decide qué propiedades sugerir y a qué sección redirigir, sin
- * pre-filtrado por algoritmo. La regla #9 del proyecto prohíbe parchear
- * features data-driven con hardcode — el fix va en cómo se le serializa
- * el contexto al modelo.
+ * PASS 1 — la IA recibe stats + secciones + historial (contexto chico, ~3KB)
+ * y devuelve qué FILTROS quiere aplicar al catálogo + qué ruta sugerir.
+ * Sin recorrer 9k filas, sin tokens hardcodeados.
  */
-export async function assistantChat(
-  history: AssistantMsg[]
-): Promise<AssistantReply> {
-  const model = genJsonModel(0.4)
+async function planIntent(history: AssistantMsg[]): Promise<IntentPlan> {
+  const model = genJsonModel(0.2)
 
   const transcript = history
-    .slice(-8)
+    .slice(-6)
     .map((m) => `${m.role === 'user' ? 'CLIENTE' : 'BEYKER'}: ${m.text}`)
     .join('\n')
 
   const sections = APP_SECTIONS
-    .map((s) => `  ${s.href}  →  ${s.label}: ${s.purpose}  [intents: ${s.intents.join(', ')}]`)
+    .map((s) => `  ${s.href}  ·  ${s.label}: ${s.purpose}`)
     .join('\n')
 
-  const prompt = `Sos "Beyker IA", asistente virtual de Coldwell Banker Beyker (inmobiliaria, Argentina). Hablás en español rioplatense (vos), tono profesional y cercano. Tu rol: entender qué busca el cliente y, según corresponda:
-  (a) sugerir 1-3 propiedades concretas del catálogo (devolviendo sus IDs reales),
-  (b) redirigirlo a la sección correcta del sitio,
-  (c) o derivarlo a un asesor humano.
+  const prompt = `Sos "Beyker IA", asistente de Coldwell Banker Beyker (inmobiliaria Argentina). Tu trabajo en este paso: traducir lo último que dijo el cliente a un PLAN estructurado.
 
 ═══════════════════════════════════════════════
-SECCIONES DEL SITIO (cada una con su href, propósito y los pedidos que la disparan):
-
+SECCIONES DEL SITIO:
 ${sections}
 
 ═══════════════════════════════════════════════
-ESTADÍSTICAS DEL CATÁLOGO (para responder "¿tienen X en Y?" sin recorrer todo):
-- Total propiedades: ${PROPERTIES_TOTAL}
-- Por tipo: ${JSON.stringify(CATALOG_STATS.byType)}
-- Por operación: ${JSON.stringify(CATALOG_STATS.byOp)}
-- Por ciudad (top 30 por volumen): ${JSON.stringify(topN(CATALOG_STATS.byCity, 30))}
-
-═══════════════════════════════════════════════
-CATÁLOGO COMPLETO — todas las propiedades en formato pipe-separated.
-Una línea por propiedad. Header en la primera línea. Usá esto como tu fuente de verdad para sugerir IDs.
-
-\`\`\`
-${CATALOG_INDEX_FULL}
-\`\`\`
+CATÁLOGO disponible (${PROPERTIES_TOTAL} propiedades reales):
+- Tipos disponibles: ${JSON.stringify(Object.keys(CATALOG_STATS.byType))}
+- Operaciones: ${JSON.stringify(Object.keys(CATALOG_STATS.byOp))}
+- Top 40 ciudades por volumen: ${JSON.stringify(topN(CATALOG_STATS.byCity, 40))}
 
 ═══════════════════════════════════════════════
 CONVERSACIÓN:
 ${transcript}
 
 ═══════════════════════════════════════════════
-Respondé en JSON exacto:
+Devolvé JSON:
 {
-  "reply": "Respuesta al cliente. Máx 3 oraciones. Si sugerís propiedades, mencionalas brevemente (no listes los IDs en el reply, eso va en suggestedPropertyIds).",
   "intent": "comprar" | "alquilar" | "tasar" | "invertir" | "consulta" | "derivar",
-  "suggestedPropertyIds": ["máx 3 IDs reales del catálogo de arriba, solo si son MUY relevantes a lo último que pidió. [] si no aplica."],
-  "followUp": "Pregunta corta para seguir guiando, o null si ya cerraste con CTA",
-  "cta": { "label": "Texto corto del botón", "href": "ruta de la lista de SECCIONES de arriba" } | null
+  "filters": {
+    "type": "Casa" | "Departamento" | "PH" | "Casa Quinta" | "Lote" | "Local Comercial" | "Oficina" | null,
+    "operacion": "venta" | "alquiler" | null,
+    "cityIncludes": "substring de city que matchee, ej 'Palermo', 'La Reja', 'Pilar'. Case-insensitive. null si no se mencionó",
+    "provinceIncludes": "ej 'Capital Federal', 'G.B.A.'. null si no aplica",
+    "minPriceUSD": number | null,
+    "maxPriceUSD": number | null,
+    "minBedrooms": number | null,
+    "aEstrenar": true | false | null
+  },
+  "suggestedRoute": "una ruta exacta de SECCIONES si el cliente pide algo institucional (tasar, crédito, contacto, etc), null si va a buscar propiedades concretas"
 }
 
-Reglas duras:
-- Los IDs sugeridos deben EXISTIR en el catálogo de arriba. Si no encontrás match, devolvé [] y explicalo en reply.
-- El href del CTA debe ser uno de los listados en SECCIONES. No inventes rutas.
-- NO inventes precios, ubicaciones, ni features. Solo lo que está en el catálogo.
-- Si el cliente pide algo y NO existe (ej: "casa en Tristán Suárez" cuando no hay), decilo honestamente y proponé alternativa cercana o /buscar para explorar.
-- Sin emojis (máximo 1 si suma de verdad).`
+Reglas:
+- "casas" → type: "Casa". "departamentos", "depto" → "Departamento". Singular/plural NO importa, vos lo resolvés.
+- Si menciona vender o tasar → suggestedRoute: "/tasaciones-ia", filters: {} vacío.
+- Si menciona crédito → suggestedRoute: "/credito".
+- Si pide hablar con alguien → suggestedRoute: "/contacto", intent: "derivar".
+- Si pide ver propiedades con criterios → suggestedRoute: null, llená filters.
+- Si la ciudad/barrio no figura en top 40 pero parece AR (ej: "La Reja", "Tristán Suárez", "Caballito"), seteala igual en cityIncludes — el server matchea por substring.
+- NO inventes valores. Si algo no se mencionó, dejá null.`
+
+  const r = await model.generateContent(prompt)
+  return JSON.parse(r.response.text()) as IntentPlan
+}
+
+/**
+ * Aplicación determinística del plan al catálogo. NO usa tokens, stemming ni
+ * sinónimos hardcodeados — la IA ya resolvió eso en el pass 1. Acá solo es
+ * "SELECT * WHERE filters" sobre la lista en memoria.
+ */
+function filterCatalog(plan: IntentPlan, catalog: Property[]): Property[] {
+  const f = plan.filters
+  const norm = (s: string) =>
+    (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+  const cityNeedle = f.cityIncludes ? norm(f.cityIncludes) : ''
+  const provNeedle = f.provinceIncludes ? norm(f.provinceIncludes) : ''
+
+  return catalog.filter((p) => {
+    if (f.type && p.type !== f.type) return false
+    if (f.operacion && p.operacion && p.operacion !== f.operacion) return false
+    if (f.minPriceUSD != null && (p.priceValue ?? 0) < f.minPriceUSD) return false
+    if (f.maxPriceUSD != null && (p.priceValue ?? Infinity) > f.maxPriceUSD) return false
+    if (f.minBedrooms != null && (p.bedrooms ?? 0) < f.minBedrooms) return false
+    if (f.aEstrenar && p.antiguedadYears !== 0) return false
+
+    if (cityNeedle) {
+      // location viene como "Provincia, Ciudad". Buscamos en la ciudad
+      // (parte después de la coma) y en title como fallback.
+      const loc = norm(p.location)
+      const title = norm(p.title)
+      if (!loc.includes(cityNeedle) && !title.includes(cityNeedle)) return false
+    }
+    if (provNeedle) {
+      const loc = norm(p.location)
+      if (!loc.includes(provNeedle)) return false
+    }
+    return true
+  })
+}
+
+/**
+ * PASS 2 — la IA recibe el subset filtrado (≤30 props) + plan + historial
+ * y escribe la respuesta + elige IDs concretos.
+ */
+async function composeReply(
+  history: AssistantMsg[],
+  plan: IntentPlan,
+  matches: Property[]
+): Promise<AssistantReply> {
+  const model = genJsonModel(0.4)
+  const compact = matches.slice(0, 30).map(compactProperty)
+
+  const transcript = history
+    .slice(-6)
+    .map((m) => `${m.role === 'user' ? 'CLIENTE' : 'BEYKER'}: ${m.text}`)
+    .join('\n')
+
+  const sections = APP_SECTIONS
+    .map((s) => `  ${s.href}: ${s.label}`)
+    .join('\n')
+
+  const prompt = `Sos "Beyker IA", asistente de Coldwell Banker Beyker. Hablás en español rioplatense (vos), profesional y cercano.
+
+PLAN detectado: ${JSON.stringify(plan)}
+PROPIEDADES QUE MATCHEAN (de ${matches.length} totales que pasaron el filtro, te muestro hasta 30):
+${JSON.stringify(compact)}
+
+SECCIONES del sitio:
+${sections}
+
+CONVERSACIÓN:
+${transcript}
+
+Respondé en JSON:
+{
+  "reply": "Respuesta al cliente, máx 3 oraciones. Si hay matches, decí cuántas hay y mencioná 1-3 destacadas brevemente (no menciones IDs en el texto).",
+  "intent": "${plan.intent}",
+  "suggestedPropertyIds": ["máx 3 IDs reales de las propiedades de arriba, solo si son muy relevantes. [] si no aplica."],
+  "followUp": "Pregunta corta para seguir guiando o null",
+  "cta": { "label": "texto corto", "href": "ruta de SECCIONES" } | null
+}
+
+Reglas:
+- Si hay matches: cta = {label:"Ver todas", href:"/buscar"}.
+- Si el plan tiene suggestedRoute (no null): cta = {label:..., href: ese mismo}.
+- Si NO hay matches: decilo honestamente, proponé /buscar para explorar.
+- Los IDs sugeridos deben venir de la lista de propiedades de arriba.
+- Sin emojis (máx 1 si realmente suma).`
 
   const r = await model.generateContent(prompt)
   return JSON.parse(r.response.text()) as AssistantReply
 }
 
-const PROPERTIES_TOTAL = (() => {
-  // Conteo desde stats para no importar PROPERTIES en este top-level.
-  return Object.values(CATALOG_STATS.byType).reduce((a, b) => a + b, 0)
-})()
+/**
+ * Asistente conversacional. Pipeline 2-pass:
+ *  1. La IA traduce el pedido a un PLAN estructurado (filters + ruta sugerida).
+ *  2. El server filtra el catálogo de forma determinística según el plan.
+ *  3. La IA recibe el subset y compone la respuesta + elige IDs.
+ *
+ * Cumple regla #9: la IA decide TODO lo de dominio (qué tipo, qué barrio,
+ * cuándo redirigir, qué decir). El server solo hace lookup.
+ */
+export async function assistantChat(history: AssistantMsg[]): Promise<AssistantReply> {
+  const { PROPERTIES } = await import('../data/properties')
 
-function topN(obj: Record<string, number>, n: number): Record<string, number> {
-  const sorted = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n)
-  return Object.fromEntries(sorted)
+  const plan = await planIntent(history)
+
+  // Si la IA decidió que va a una ruta institucional (tasar, crédito, etc.),
+  // no buscamos propiedades — le pasamos lista vacía al pass 2.
+  let matches: Property[] = []
+  if (!plan.suggestedRoute) {
+    matches = filterCatalog(plan, PROPERTIES)
+  }
+
+  return composeReply(history, plan, matches)
 }
 
 export interface MatchPreferences {
