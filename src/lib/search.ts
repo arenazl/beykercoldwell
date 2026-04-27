@@ -29,9 +29,12 @@ export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult
     if (filters.type && p.type !== filters.type) pass = false
 
     if (filters.location_includes) {
-      const loc = normalize(p.location)
+      // El campo `location` viene vacío en algunas propiedades (~30% del catálogo).
+      // En esos casos el barrio suele estar en el título o en la descripción.
+      // Buscamos en los tres para no perder matches.
+      const haystack = normalize(`${p.location} ${p.title} ${p.description}`)
       const target = normalize(filters.location_includes)
-      if (!loc.includes(target)) pass = false
+      if (!target || !haystack.includes(target)) pass = false
       else hits.push(`📍 ${filters.location_includes}`)
     }
 
