@@ -3,13 +3,11 @@ import Layout from '../../layouts/Layout.astro'
 import { PROPERTIES, formatPriceUSD } from '../../data/properties'
 import { CONTACT } from '../../data/site'
 
-export async function getStaticPaths() {
-  return PROPERTIES.map((p) => ({ params: { slug: p.slug } }))
-}
+export const prerender = false
 
 const { slug } = Astro.params
-const property = PROPERTIES.find((p) => p.slug === slug)!
-// getStaticPaths enumera todos los slugs del catálogo, así que `property` siempre existe.
+const property = PROPERTIES.find((p) => p.slug === slug)
+if (!property) return Astro.redirect('/propiedades', 404)
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
