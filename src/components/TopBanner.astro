@@ -1,0 +1,221 @@
+---
+const sections = [
+  {
+    href: '/buscar',
+    hook: 'Decile a la IA qué buscás',
+    tagline: 'y filtramos las 9.240 propiedades por vos',
+    iconPath: 'M11 19a8 8 0 1 1 5.293-14M21 21l-4.293-4.293',
+  },
+  {
+    href: '/match-ia',
+    hook: 'Hacé el quiz',
+    tagline: 'y la IA te elige 3 propiedades a tu medida',
+    iconPath: 'M9 11.5l3 3 7-7M3 12a9 9 0 1 1 18 0 9 9 0 0 1-18 0z',
+  },
+  {
+    href: '/tasaciones-ia',
+    hook: '¿Cuánto vale tu propiedad?',
+    tagline: 'Estimación con IA en segundos, sin esperar al tasador',
+    iconPath: 'M3 3v18h18M7 12l4-4 4 4 6-6',
+  },
+  {
+    href: '/credito',
+    hook: 'Mirá cuánto te prestan en UVA',
+    tagline: 'antes de salir a mirar propiedades',
+    iconPath: 'M12 1v22M5 6h11a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h11',
+  },
+  {
+    href: '/comparar',
+    hook: '¿Dudás entre dos?',
+    tagline: 'Compará lado a lado y la IA te dice cuál conviene',
+    iconPath: 'M3 6h7v15H3zM14 3h7v18h-7z',
+  },
+  {
+    href: '/generar-aviso',
+    hook: 'Publicá tu propiedad con IA',
+    tagline: 'título, descripción y hashtags en 30 segundos',
+    iconPath: 'M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586',
+  },
+  {
+    href: '/barrios',
+    hook: 'Leé la guía honesta del barrio',
+    tagline: 'precios reales, perfil, contras — antes de comprar',
+    iconPath: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+  },
+]
+---
+
+<aside
+  id="top-banner"
+  aria-label="Funcionalidades destacadas"
+  class="sticky top-0 z-50 flex-shrink-0 overflow-hidden border-b border-gold/30 bg-gradient-to-r from-navy via-navy to-[rgb(var(--navy))]/90 text-white"
+>
+  <span aria-hidden="true" class="pointer-events-none absolute inset-y-0 -left-10 w-40 bg-gold/10 blur-2xl"></span>
+  <span aria-hidden="true" class="pointer-events-none absolute inset-y-0 -right-10 w-40 bg-accent/10 blur-2xl"></span>
+
+  <div class="container-app relative h-12 lg:h-14 flex items-center gap-2.5 sm:gap-3">
+    <div id="banner-track" class="flex-1 min-w-0 relative h-full">
+      {sections.map((s, i) => (
+        <a
+          href={s.href}
+          data-banner-slide={i}
+          class:list={[
+            'absolute inset-0 flex items-center gap-3 sm:gap-3.5 transition-all duration-500 ease-out group',
+            i === 0
+              ? 'opacity-100 translate-x-0 scale-100'
+              : 'opacity-0 translate-x-4 scale-95 pointer-events-none',
+          ]}
+        >
+          <span class="relative flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gold/15 ring-1 ring-gold/40 flex items-center justify-center text-gold transition-all duration-300 group-hover:bg-gold/25 group-hover:ring-gold/70 group-hover:scale-110">
+            <span aria-hidden="true" class="absolute inset-0 rounded-full bg-gold/30 blur-md -z-10 animate-pulse"></span>
+            <svg class="w-4 h-4 sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d={s.iconPath} />
+            </svg>
+          </span>
+
+          <span class="min-w-0 flex-1 truncate">
+            <span class="font-semibold text-[15px] sm:text-base tracking-tight">{s.hook}</span>
+            <span class="hidden sm:inline text-white/65 text-sm sm:text-[15px] ml-1.5">{s.tagline}</span>
+          </span>
+
+          <span class="flex-shrink-0 inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-gold opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1">
+            <span class="hidden md:inline">Probar</span>
+            <span class="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gold/15 ring-1 ring-gold/40 group-hover:bg-gold group-hover:text-navy transition-all duration-300">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </span>
+          </span>
+        </a>
+      ))}
+    </div>
+
+    <div class="hidden sm:flex flex-shrink-0 items-center gap-1.5">
+      {sections.map((_, i) => (
+        <button
+          type="button"
+          data-banner-dot={i}
+          aria-label={`Ir al destacado ${i + 1}`}
+          class:list={[
+            'h-1.5 rounded-full transition-all duration-300',
+            i === 0 ? 'w-6 bg-gold' : 'w-1.5 bg-white/30 hover:bg-white/60',
+          ]}
+        ></button>
+      ))}
+    </div>
+
+    <button
+      id="banner-close"
+      type="button"
+      aria-label="Cerrar banner"
+      class="flex-shrink-0 w-8 h-8 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all duration-200 active:scale-95 flex items-center justify-center"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  <span aria-hidden="true" id="banner-progress" class="absolute bottom-0 left-0 h-0.5 bg-gold/80 w-0"></span>
+</aside>
+
+<script>
+  const banner = document.getElementById('top-banner') as HTMLElement | null
+  if (banner) {
+    const DISMISS_KEY = 'cb-top-banner-dismissed-v2'
+    if (localStorage.getItem(DISMISS_KEY) === '1') {
+      banner.remove()
+    } else {
+      const slides = Array.from(banner.querySelectorAll<HTMLAnchorElement>('[data-banner-slide]'))
+      const dots = Array.from(banner.querySelectorAll<HTMLButtonElement>('[data-banner-dot]'))
+      const progress = document.getElementById('banner-progress') as HTMLElement
+      const closeBtn = document.getElementById('banner-close') as HTMLButtonElement
+      const total = slides.length
+      const ROTATE_MS = 5000
+      let current = 0
+      let timer: number | null = null
+      let progressStart = 0
+      let progressRaf = 0
+      let paused = false
+
+      function paint(idx: number) {
+        slides.forEach((s, i) => {
+          const active = i === idx
+          s.classList.toggle('opacity-100', active)
+          s.classList.toggle('translate-x-0', active)
+          s.classList.toggle('scale-100', active)
+          s.classList.toggle('opacity-0', !active)
+          s.classList.toggle('translate-x-4', !active)
+          s.classList.toggle('scale-95', !active)
+          s.classList.toggle('pointer-events-none', !active)
+        })
+        dots.forEach((d, i) => {
+          const active = i === idx
+          d.classList.toggle('w-6', active)
+          d.classList.toggle('bg-gold', active)
+          d.classList.toggle('w-1.5', !active)
+          d.classList.toggle('bg-white/30', !active)
+          d.classList.toggle('hover:bg-white/60', !active)
+        })
+        current = idx
+      }
+
+      function tickProgress(now: number) {
+        const elapsed = now - progressStart
+        const ratio = Math.min(elapsed / ROTATE_MS, 1)
+        progress.style.width = `${ratio * 100}%`
+        if (ratio < 1 && !paused) progressRaf = requestAnimationFrame(tickProgress)
+      }
+      function resetProgress() {
+        cancelAnimationFrame(progressRaf)
+        progress.style.transition = 'none'
+        progress.style.width = '0%'
+        void progress.offsetWidth
+        progress.style.transition = ''
+        progressStart = performance.now()
+        progressRaf = requestAnimationFrame(tickProgress)
+      }
+      function next() {
+        paint((current + 1) % total)
+        resetProgress()
+      }
+      function start() {
+        stop()
+        paused = false
+        resetProgress()
+        timer = window.setInterval(next, ROTATE_MS)
+      }
+      function stop() {
+        paused = true
+        if (timer !== null) {
+          clearInterval(timer)
+          timer = null
+        }
+        cancelAnimationFrame(progressRaf)
+      }
+
+      dots.forEach((d) => {
+        d.addEventListener('click', () => {
+          paint(Number(d.dataset.bannerDot))
+          start()
+        })
+      })
+      banner.addEventListener('mouseenter', stop)
+      banner.addEventListener('mouseleave', start)
+      closeBtn?.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        localStorage.setItem(DISMISS_KEY, '1')
+        banner.classList.add('opacity-0', 'transition-opacity', 'duration-300')
+        setTimeout(() => banner.remove(), 300)
+      })
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop()
+        else start()
+      })
+
+      start()
+    }
+  }
+</script>

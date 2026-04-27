@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css'
+import TopBanner from '../components/TopBanner.astro'
 import Header from '../components/Header.astro'
 import Footer from '../components/Footer.astro'
 import BeykerAI from '../components/BeykerAI.astro'
@@ -136,6 +137,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString()
     </script>
   </head>
   <body class="min-h-screen flex flex-col pb-20 lg:pb-0">
+    <TopBanner />
     <Header />
     <main class="flex-1">
       <slot />
