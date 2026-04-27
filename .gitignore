@@ -7,3 +7,7 @@ dist
 .DS_Store
 *.html
 !src/**/*.html
+
+# Local Netlify folder
+.netlify
+*.bak
