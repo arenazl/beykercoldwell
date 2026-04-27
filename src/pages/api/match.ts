@@ -35,11 +35,20 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   // Pre-filtrado por operación + zona (substring) para reducir token use.
+  // Para zona, igual que en search.ts: si `location` está poblado matcheamos ahí;
+  // si viene vacío (≈68% del catálogo) caemos a `title` como fallback.
   const targetOp = prefs.operacion === 'comprar' ? 'venta' : 'alquiler'
   const zonaLower = prefs.zona.toLowerCase()
   const candidates = PROPERTIES.filter((p) => {
     if (p.operacion && p.operacion !== targetOp) return false
-    if (zonaLower && !p.location.toLowerCase().includes(zonaLower)) return false
+    if (zonaLower) {
+      const loc = (p.location || '').toLowerCase()
+      if (loc) {
+        if (!loc.includes(zonaLower)) return false
+      } else {
+        if (!p.title.toLowerCase().includes(zonaLower)) return false
+      }
+    }
     return true
   }).slice(0, 120)
   const pool = candidates.length >= 6 ? candidates : PROPERTIES.filter((p) => p.operacion === targetOp).slice(0, 120)

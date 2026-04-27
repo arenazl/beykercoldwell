@@ -18,6 +18,14 @@ interface DetailEntry {
   situation?: string
   orientation?: string
   floors?: string
+  /** Localidad/barrio del bloque <span class="city"> de la ficha de detalle. */
+  city?: string
+  /** Provincia/zona del bloque <span class="province"> de la ficha de detalle. */
+  province?: string
+  /** Calle + altura del bloque <p class="map-location">. */
+  address?: string
+  lat?: number
+  lng?: number
 }
 const detailsMap: Record<string, DetailEntry> =
   ((detailsRaw as { details?: Record<string, DetailEntry> }).details) ?? {}
@@ -49,6 +57,76 @@ export interface Property extends RawProperty {
   antiguedadYears: number | null
   /** Label para mostrar en UI: "A estrenar", "5 años", null si null. */
   antiguedadLabel: string | null
+  /** true si `location` se derivó del title (el scrape lo trajo vacío). */
+  locationInferred: boolean
+}
+
+function normLoc(s: string): string {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+}
+
+/** Ciudades cuyo nombre es ambiguo y produce muchos falsos positivos en titles. */
+const AMBIGUOUS_CITIES = new Set([
+  'capital', 'centro', 'norte', 'sur', 'oeste', 'este', 'boca', 'tigre',
+])
+
+/**
+ * Detecta si `target` aparece en `text` como parte de un nombre de calle/avenida
+ * (Av Cardenal X, Perito Moreno, etc) y no como localidad. Mismo criterio que
+ * lib/search.ts pero replicado para evitar dependencia circular.
+ */
+function looksLikeStreetMatch(text: string, target: string): boolean {
+  const idx = text.indexOf(target)
+  if (idx <= 0) return false
+  const before = text.slice(Math.max(0, idx - 30), idx).toLowerCase()
+  return /(perito|cardenal|av\.?|avda\.?|avenida|calle|pje\.?|pasaje|ruta|presidente|gobernador|coronel|general|gral\.?|dr\.?|santiago|alfonso|mariano|pedro)\s*$/.test(
+    before
+  )
+}
+
+/**
+ * Construye un diccionario de "ciudad/barrio → location completa" a partir de
+ * las propiedades que SÍ traen `location` poblado. La usamos para inferir la
+ * location de propiedades que vienen con el campo vacío (≈68% del catálogo
+ * por bug del scrape) buscando esas ciudades dentro del title.
+ */
+function buildLocationDict(): Array<{ cityNorm: string; full: string; rx: RegExp }> {
+  const map = new Map<string, string>()
+  // Usamos `raw` directo porque `catalog` se declara más abajo (TDZ).
+  for (const p of (raw as CatalogShape).properties) {
+    if (!p.location?.trim()) continue
+    const parts = p.location.split(',').map((s) => s.trim()).filter(Boolean)
+    if (!parts.length) continue
+    const city = parts[parts.length - 1]
+    const cityNorm = normLoc(city)
+    if (!cityNorm || cityNorm.length < 4) continue
+    if (AMBIGUOUS_CITIES.has(cityNorm)) continue
+    if (!map.has(cityNorm)) map.set(cityNorm, p.location)
+  }
+  // Ordenar por longitud DESC: "Pilar del Este" debe pegar antes que "Pilar".
+  return [...map.entries()]
+    .sort((a, b) => b[0].length - a[0].length)
+    .map(([cityNorm, full]) => ({
+      cityNorm,
+      full,
+      rx: new RegExp(`\\b${cityNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
+    }))
+}
+
+const LOCATION_DICT = buildLocationDict()
+
+function inferLocation(title: string): string | null {
+  const t = normLoc(title)
+  if (!t) return null
+  for (const { cityNorm, rx, full } of LOCATION_DICT) {
+    if (!rx.test(t)) continue
+    if (looksLikeStreetMatch(t, cityNorm)) continue
+    return full
+  }
+  return null
 }
 
 interface CatalogShape {
@@ -118,11 +196,35 @@ export const PROPERTIES: Property[] = catalog.properties.map((p) => {
     years = ant.years
     label = ant.label
   }
+
+  // Resolución de location, en orden de confianza:
+  // 1. p.location del listing card (si viene poblado)
+  // 2. detail.province + detail.city de la ficha de detalle (estructurado, alta confianza)
+  // 3. inferLocation(title) (heurística sobre LOCATION_DICT)
+  let location = p.location
+  let locationInferred = false
+  if (!location?.trim() && detail?.city && detail?.province) {
+    location = `${detail.province}, ${detail.city}`
+  } else if (!location?.trim() && detail?.city) {
+    location = detail.city
+  } else if (!location?.trim() && detail?.province) {
+    location = detail.province
+  }
+  if (!location?.trim()) {
+    const inferred = inferLocation(p.title || '')
+    if (inferred) {
+      location = inferred
+      locationInferred = true
+    }
+  }
+
   return {
     ...p,
+    location,
     slug: `${slugify(p.title)}-${p.id}`,
     antiguedadYears: years,
     antiguedadLabel: label,
+    locationInferred,
   }
 })
 
@@ -131,6 +233,8 @@ export const CATALOG_META = {
   scrapedAt: catalog.scrapedAt,
   source: catalog.source,
   withAntiguedad: PROPERTIES.filter((p) => p.antiguedadLabel).length,
+  withLocation: PROPERTIES.filter((p) => p.location?.trim()).length,
+  locationInferred: PROPERTIES.filter((p) => p.locationInferred).length,
 }
 
 export function formatPriceUSD(value: number | null, currency = 'USD'): string {

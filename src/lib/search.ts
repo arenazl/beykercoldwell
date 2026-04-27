@@ -34,18 +34,20 @@ function looksLikeStreetMatch(text: string, target: string): boolean {
 }
 
 /**
- * Estrategia de matching de ubicación:
- * 1. Si HAY propiedades con el término en el campo `location` → usamos solo esas
- *    (alta precisión: location es la localidad estructurada).
- * 2. Si NO hay ninguna → fallback al título de cada propiedad (para barrios
- *    como "La Reja" donde el location field viene vacío). Filtramos matches
- *    que parezcan ser parte de un nombre de calle.
+ * Estrategia de matching de ubicación, propiedad a propiedad:
+ * - Si la propiedad tiene `location` poblado → matcheamos contra ese campo
+ *   (alta precisión: es la localidad estructurada del scrape).
+ * - Si `location` viene vacío (≈68% del catálogo por bug del scrape) → fallback
+ *   a buscar el término en `title`, filtrando matches que parezcan parte de un
+ *   nombre de calle (Perito Moreno, Cardenal X, etc).
+ *
+ * La decisión es por propiedad, no global: así no perdemos propiedades con
+ * location bien rotulada cuando otras del mismo término vienen con location
+ * vacío (caso típico: "Moreno" tenía 1 con location y 10 sin location).
  */
-function matchesLocation(p: Property, target: string, hasLocationMatches: boolean): boolean {
+function matchesLocation(p: Property, target: string): boolean {
   const locNorm = normalize(p.location)
-  if (locNorm.includes(target)) return true
-  if (hasLocationMatches) return false
-  // Fallback solo cuando location field nunca matcheó en TODO el catálogo.
+  if (locNorm) return locNorm.includes(target)
   const title = normalize(p.title)
   if (!title.includes(target)) return false
   if (looksLikeStreetMatch(title, target)) return false
@@ -55,12 +57,7 @@ function matchesLocation(p: Property, target: string, hasLocationMatches: boolea
 export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult[] {
   const results: SearchResult[] = []
 
-  // Pre-cómputo: ¿algún property tiene el término en el campo `location`?
-  // Si sí, no usamos fallback a title (evita falsos positivos por calle).
   const target = filters.location_includes ? normalize(filters.location_includes) : ''
-  const hasLocationMatches = target
-    ? PROPERTIES.some((p) => normalize(p.location).includes(target))
-    : false
 
   for (const p of PROPERTIES) {
     const hits: string[] = []
@@ -70,7 +67,7 @@ export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult
     if (filters.type && p.type !== filters.type) pass = false
 
     if (target) {
-      if (!matchesLocation(p, target, hasLocationMatches)) pass = false
+      if (!matchesLocation(p, target)) pass = false
       else hits.push(`📍 ${filters.location_includes}`)
     }
 

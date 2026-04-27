@@ -77,6 +77,31 @@ function parseDetail(html) {
     out.lat = Number(geo[1])
     out.lng = Number(geo[2])
   }
+
+  // Coordenadas también pueden venir en URL del iframe de Google Maps
+  if (out.lat == null) {
+    const mapsUrl = html.match(/maps\/embed\/v1\/place[^"]*q=(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (mapsUrl) {
+      out.lat = Number(mapsUrl[1])
+      out.lng = Number(mapsUrl[2])
+    }
+  }
+
+  // Ubicación estructurada (city + province) del bloque <p class="map-location">.
+  // Mucho más confiable que el campo `location` de la card del listado, que
+  // viene vacío en 68% del catálogo.
+  const cityMatch = html.match(/<span\s+class="city[^"]*"[^>]*>\s*([^<]+?)\s*<\/span>/i)
+  const provMatch = html.match(/<span\s+class="province[^"]*"[^>]*>\s*([^<]+?)\s*<\/span>/i)
+  if (cityMatch) out.city = stripTags(cityMatch[1])
+  if (provMatch) out.province = stripTags(provMatch[1])
+
+  // Dirección (calle + altura) — útil para mostrar en cards.
+  const addrMatch = html.match(/<p\s+class="map-location"[^>]*>([\s\S]*?)<\/p>/i)
+  if (addrMatch) {
+    const inner = addrMatch[1].replace(/<i[^>]*>[\s\S]*?<\/i>/gi, '').replace(/<span[^>]*>[\s\S]*?<\/span>/gi, '')
+    const addr = stripTags(inner)
+    if (addr) out.address = addr
+  }
   // Antigüedad numérica derivada del valor textual
   if (out.antiquity) {
     const t = out.antiquity.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
