@@ -18,8 +18,49 @@ function normalize(s: string): string {
     .replace(/[̀-ͯ]/g, '')
 }
 
+/**
+ * Detecta si el match en title/description es probablemente parte del nombre
+ * de una calle (Perito Moreno, Av X, Cardenal Y) y NO la localidad/barrio.
+ * Devuelve true si el match parece spurious (parte de un nombre de calle).
+ */
+function looksLikeStreetMatch(text: string, target: string): boolean {
+  const idx = text.indexOf(target)
+  if (idx <= 0) return false
+  // Tomamos las ~25 chars previas y vemos si terminan en un prefijo de calle.
+  const before = text.slice(Math.max(0, idx - 30), idx).toLowerCase()
+  return /(perito|cardenal|av\.?|avda\.?|avenida|calle|pje\.?|pasaje|ruta|presidente|gobernador|coronel|general|gral\.?|dr\.?|santiago|alfonso|mariano|pedro)\s*$/.test(
+    before
+  )
+}
+
+/**
+ * Estrategia de matching de ubicación:
+ * 1. Si HAY propiedades con el término en el campo `location` → usamos solo esas
+ *    (alta precisión: location es la localidad estructurada).
+ * 2. Si NO hay ninguna → fallback al título de cada propiedad (para barrios
+ *    como "La Reja" donde el location field viene vacío). Filtramos matches
+ *    que parezcan ser parte de un nombre de calle.
+ */
+function matchesLocation(p: Property, target: string, hasLocationMatches: boolean): boolean {
+  const locNorm = normalize(p.location)
+  if (locNorm.includes(target)) return true
+  if (hasLocationMatches) return false
+  // Fallback solo cuando location field nunca matcheó en TODO el catálogo.
+  const title = normalize(p.title)
+  if (!title.includes(target)) return false
+  if (looksLikeStreetMatch(title, target)) return false
+  return true
+}
+
 export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult[] {
   const results: SearchResult[] = []
+
+  // Pre-cómputo: ¿algún property tiene el término en el campo `location`?
+  // Si sí, no usamos fallback a title (evita falsos positivos por calle).
+  const target = filters.location_includes ? normalize(filters.location_includes) : ''
+  const hasLocationMatches = target
+    ? PROPERTIES.some((p) => normalize(p.location).includes(target))
+    : false
 
   for (const p of PROPERTIES) {
     const hits: string[] = []
@@ -28,13 +69,8 @@ export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult
     if (filters.operacion && p.operacion && p.operacion !== filters.operacion) pass = false
     if (filters.type && p.type !== filters.type) pass = false
 
-    if (filters.location_includes) {
-      // El campo `location` viene vacío en algunas propiedades (~30% del catálogo).
-      // En esos casos el barrio suele estar en el título o en la descripción.
-      // Buscamos en los tres para no perder matches.
-      const haystack = normalize(`${p.location} ${p.title} ${p.description}`)
-      const target = normalize(filters.location_includes)
-      if (!target || !haystack.includes(target)) pass = false
+    if (target) {
+      if (!matchesLocation(p, target, hasLocationMatches)) pass = false
       else hits.push(`📍 ${filters.location_includes}`)
     }
 
