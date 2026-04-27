@@ -171,6 +171,8 @@ const estilos = [
 </style>
 
 <script>
+  import { startThinking } from '../lib/thinking-rotator'
+
   const form = document.getElementById('match-form') as HTMLFormElement
   const submit = document.getElementById('match-submit') as HTMLButtonElement
   const label = document.getElementById('match-label') as HTMLSpanElement
@@ -201,7 +203,15 @@ const estilos = [
     const notas = (fd.get('notas') as string) || ''
 
     submit.disabled = true
-    label.textContent = 'Pensando…'
+    const stopThinking = startThinking(label, {
+      messages: [
+        'Analizando tu perfil',
+        'Cruzando con el catálogo',
+        'Eligiendo tus 3 ideales',
+        'Estás en el mejor sitio',
+        'Casi listo',
+      ],
+    })
 
     try {
       const res = await fetch('/api/match', {
@@ -264,6 +274,7 @@ const estilos = [
       errorBox.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
       errorBox.classList.remove('hidden')
     } finally {
+      stopThinking()
       submit.disabled = false
       label.textContent = 'Encontrar mis 3 ideales'
     }

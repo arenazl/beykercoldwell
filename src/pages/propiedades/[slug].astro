@@ -219,9 +219,30 @@ const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${enco
     return d.innerHTML
   }
 
+  let _thinkingTimer = null
+  function startThinking(el, messages) {
+    let i = 0
+    el.textContent = `${messages[0]}…`
+    _thinkingTimer = window.setInterval(() => {
+      i = (i + 1) % messages.length
+      el.textContent = `${messages[i]}…`
+    }, 1500)
+  }
+  function stopThinking() {
+    if (_thinkingTimer !== null) {
+      clearInterval(_thinkingTimer)
+      _thinkingTimer = null
+    }
+  }
+
   btn?.addEventListener('click', async () => {
     btn.disabled = true
-    btn.textContent = 'Pensando…'
+    startThinking(btn, [
+      'Analizando la propiedad',
+      'Buscando pros y contras',
+      'Pensando para vos',
+      'Casi listo',
+    ])
     err.classList.add('hidden')
     empty.classList.add('hidden')
 
@@ -233,8 +254,11 @@ const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${enco
       })
       const data = await res.json()
       if (!res.ok) {
+        stopThinking()
         err.textContent = data.error || 'Error desconocido'
         err.classList.remove('hidden')
+        btn.disabled = false
+        btn.textContent = 'Reintentar'
         return
       }
 
@@ -266,9 +290,11 @@ const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${enco
           <ul class="text-sm space-y-1.5 text-text/90">${(data.preguntasParaAgente || []).map((x, i) => `<li class="flex gap-2"><span class="text-accent flex-shrink-0">${i + 1}.</span><span>${escapeHtml(x)}</span></li>`).join('')}</ul>
         </div>
       `
+      stopThinking()
       content.classList.remove('hidden')
       btn.style.display = 'none'
     } catch (e) {
+      stopThinking()
       err.textContent = 'Error: ' + String(e.message)
       err.classList.remove('hidden')
       btn.disabled = false

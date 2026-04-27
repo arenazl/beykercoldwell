@@ -156,6 +156,8 @@ const sugerencias = [
 </Layout>
 
 <script>
+  import { startThinking } from '../lib/thinking-rotator'
+
   const form = document.getElementById('ai-form') as HTMLFormElement
   const input = document.getElementById('query') as HTMLInputElement
   const submitBtn = document.getElementById('ai-submit') as HTMLButtonElement
@@ -240,7 +242,15 @@ const sugerencias = [
     if (!query) return
 
     submitBtn.disabled = true
-    submitLabel.textContent = 'Pensando…'
+    const stopThinking = startThinking(submitLabel, {
+      messages: [
+        'Buscando propiedades',
+        'Filtrando el catálogo',
+        'Estás en el mejor sitio',
+        'Procesando con IA',
+        'Casi listo',
+      ],
+    })
     error.classList.add('hidden')
     status.classList.add('hidden')
     empty.classList.add('hidden')
@@ -298,6 +308,7 @@ const sugerencias = [
       error.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
       error.classList.remove('hidden')
     } finally {
+      stopThinking()
       submitBtn.disabled = false
       submitLabel.textContent = 'Buscar'
     }

@@ -94,6 +94,8 @@ const sample = PROPERTIES.slice(0, 36)
 </style>
 
 <script>
+  import { startThinking } from '../lib/thinking-rotator'
+
   const checks = document.querySelectorAll<HTMLInputElement>('.cmp-check')
   const counter = document.getElementById('count') as HTMLSpanElement
   const btn = document.getElementById('compare-btn') as HTMLButtonElement
@@ -138,7 +140,14 @@ const sample = PROPERTIES.slice(0, 36)
     errorBox.classList.add('hidden')
     result.classList.add('hidden')
     btn.disabled = true
-    lbl.textContent = 'Pensando…'
+    const stopThinking = startThinking(lbl, {
+      messages: [
+        'Comparando propiedades',
+        'Pesando pros y contras',
+        'Eligiendo la mejor opción',
+        'Casi listo',
+      ],
+    })
 
     try {
       const res = await fetch('/api/comparar', {
@@ -213,6 +222,7 @@ const sample = PROPERTIES.slice(0, 36)
       errorBox.textContent = 'Error: ' + String((err as Error).message)
       errorBox.classList.remove('hidden')
     } finally {
+      stopThinking()
       btn.disabled = false
       lbl.textContent = 'Comparar con IA'
     }

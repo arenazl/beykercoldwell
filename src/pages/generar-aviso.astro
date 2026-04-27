@@ -104,6 +104,8 @@ const featureOptions = [
 </Layout>
 
 <script>
+  import { startThinking } from '../lib/thinking-rotator'
+
   const form = document.getElementById('gen-form') as HTMLFormElement
   const submit = document.getElementById('gen-submit') as HTMLButtonElement
   const label = document.getElementById('gen-label') as HTMLSpanElement
@@ -134,7 +136,15 @@ const featureOptions = [
     errorBox.classList.add('hidden')
     result.classList.add('hidden')
     submit.disabled = true
-    label.textContent = 'Pensando…'
+    const stopThinking = startThinking(label, {
+      messages: [
+        'Redactando el aviso',
+        'Eligiendo palabras clave',
+        'Estilo Coldwell Banker',
+        'Pulido final',
+        'Casi listo',
+      ],
+    })
 
     const fd = new FormData(form)
     const features = fd.getAll('feature').map(String)
@@ -219,6 +229,7 @@ const featureOptions = [
       errorBox.textContent = 'Error: ' + String((err as Error).message)
       errorBox.classList.remove('hidden')
     } finally {
+      stopThinking()
       submit.disabled = false
       label.textContent = 'Generar aviso'
     }
