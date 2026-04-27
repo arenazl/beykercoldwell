@@ -44,6 +44,12 @@ export const POST: APIRoute = async ({ request }) => {
   if (!body.location || typeof body.location !== 'string' || !body.location.trim()) {
     return badRequest('location requerido')
   }
+  if (!body.street || typeof body.street !== 'string' || !body.street.trim()) {
+    return badRequest('street (calle) requerido')
+  }
+  if (!body.streetNumber || typeof body.streetNumber !== 'string' || !body.streetNumber.trim()) {
+    return badRequest('streetNumber (altura) requerido')
+  }
   if (!body.surfaceTotalM2 || typeof body.surfaceTotalM2 !== 'number' || body.surfaceTotalM2 <= 0) {
     return badRequest('surfaceTotalM2 debe ser un número positivo')
   }
@@ -51,6 +57,10 @@ export const POST: APIRoute = async ({ request }) => {
   const input: ValuatorInput = {
     type: body.type,
     location: body.location.trim(),
+    street: body.street.trim(),
+    streetNumber: body.streetNumber.trim(),
+    floor: body.floor?.trim() || undefined,
+    unit: body.unit?.trim() || undefined,
     surfaceTotalM2: body.surfaceTotalM2,
     surfaceCoveredM2: body.surfaceCoveredM2,
     rooms: body.rooms,
@@ -60,6 +70,7 @@ export const POST: APIRoute = async ({ request }) => {
     state: body.state,
     features: Array.isArray(body.features) ? body.features.filter((f) => typeof f === 'string') : [],
     expensesArs: body.expensesArs,
+    orientation: body.orientation?.trim() || undefined,
     notes: body.notes,
   }
 

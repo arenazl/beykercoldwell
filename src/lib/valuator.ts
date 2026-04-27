@@ -23,6 +23,10 @@ export type PropertyState = 'a estrenar' | 'excelente' | 'bueno' | 'regular' | '
 export interface ValuatorInput {
   type: PropertyType
   location: string
+  street: string
+  streetNumber: string
+  floor?: string
+  unit?: string
   surfaceTotalM2: number
   surfaceCoveredM2?: number
   rooms?: number
@@ -32,6 +36,7 @@ export interface ValuatorInput {
   state: PropertyState
   features: string[]
   expensesArs?: number
+  orientation?: string
   notes?: string
 }
 
@@ -110,7 +115,8 @@ Reglas duras:
 
 Datos de la propiedad a valuar:
 - Tipo: ${input.type}
-- Ubicación: ${input.location}
+- Dirección exacta: ${input.street} ${input.streetNumber}${input.floor ? `, piso ${input.floor}` : ''}${input.unit ? `, depto ${input.unit}` : ''}
+- Zona / Barrio / Ciudad: ${input.location}
 - Superficie total: ${input.surfaceTotalM2} m²
 ${input.surfaceCoveredM2 ? `- Superficie cubierta: ${input.surfaceCoveredM2} m²` : ''}
 ${input.rooms ? `- Ambientes: ${input.rooms}` : ''}
@@ -120,7 +126,10 @@ ${input.ageYears != null ? `- Antigüedad: ${input.ageYears} años` : ''}
 - Estado: ${input.state}
 ${input.features.length ? `- Características: ${input.features.join(', ')}` : ''}
 ${input.expensesArs ? `- Expensas mensuales (ARS): ${input.expensesArs.toLocaleString('es-AR')}` : ''}
-${input.notes ? `- Notas adicionales: ${input.notes.replace(/"/g, '\\"')}` : ''}`
+${input.orientation ? `- Orientación: ${input.orientation}` : ''}
+${input.notes ? `- Notas adicionales: ${input.notes.replace(/"/g, '\\"')}` : ''}
+
+Tené en cuenta para el ajuste fino: la altura de la calle (cuadra específica), el piso (mejor cotización a mayor altura por luz/vistas en general, salvo último piso con problemas), la orientación (norte / contrafrente / lateral), y la posición exacta dentro del barrio (si es zona premium del barrio o periférica).`
 
   const result = await model.generateContent(prompt)
   const txt = result.response.text()

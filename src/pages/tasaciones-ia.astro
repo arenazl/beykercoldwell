@@ -79,6 +79,45 @@ const featureOptions = [
                  class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
         </div>
 
+        <div class="grid grid-cols-3 gap-3">
+          <div class="col-span-2 flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Calle</label>
+            <input id="f-street" type="text" required placeholder="Ej: Av. Callao"
+                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Altura</label>
+            <input id="f-street-number" type="text" required placeholder="1240"
+                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Piso</label>
+            <input id="f-floor" type="text" placeholder="5"
+                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Depto</label>
+            <input id="f-unit" type="text" placeholder="A"
+                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Orientación</label>
+            <select id="f-orientation" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
+              <option value="">—</option>
+              <option value="Norte">Norte</option>
+              <option value="Sur">Sur</option>
+              <option value="Este">Este</option>
+              <option value="Oeste">Oeste</option>
+              <option value="Frente">Frente</option>
+              <option value="Contrafrente">Contrafrente</option>
+              <option value="Lateral">Lateral</option>
+            </select>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold uppercase tracking-wider text-muted">Sup. total (m²)</label>
@@ -390,6 +429,11 @@ const featureOptions = [
       type: (document.getElementById('f-type') as HTMLSelectElement).value,
       state: (document.getElementById('f-state') as HTMLSelectElement).value,
       location: str('f-location'),
+      street: str('f-street'),
+      streetNumber: str('f-street-number'),
+      floor: str('f-floor'),
+      unit: str('f-unit'),
+      orientation: (document.getElementById('f-orientation') as HTMLSelectElement).value || undefined,
       surfaceTotalM2: num('f-surface-total'),
       surfaceCoveredM2: num('f-surface-covered'),
       rooms: num('f-rooms'),
@@ -403,6 +447,11 @@ const featureOptions = [
 
     if (!payload.location) {
       errorBox.textContent = 'Necesitamos zona/barrio para valuar.'
+      errorBox.classList.remove('hidden')
+      return
+    }
+    if (!payload.street || !payload.streetNumber) {
+      errorBox.textContent = 'Necesitamos calle y altura para valuar con precisión.'
       errorBox.classList.remove('hidden')
       return
     }
