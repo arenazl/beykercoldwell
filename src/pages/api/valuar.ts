@@ -44,12 +44,9 @@ export const POST: APIRoute = async ({ request }) => {
   if (!body.location || typeof body.location !== 'string' || !body.location.trim()) {
     return badRequest('location requerido')
   }
-  if (!body.street || typeof body.street !== 'string' || !body.street.trim()) {
-    return badRequest('street (calle) requerido')
-  }
-  if (!body.streetNumber || typeof body.streetNumber !== 'string' || !body.streetNumber.trim()) {
-    return badRequest('streetNumber (altura) requerido')
-  }
+  // street + streetNumber son nice-to-have. Con location + lat/lng el
+  // valuator tiene contexto de sobra. No bloqueamos el flujo si Nominatim
+  // no los devolvió (algunas calles sin altura, lotes, zonas rurales).
   if (!body.surfaceTotalM2 || typeof body.surfaceTotalM2 !== 'number' || body.surfaceTotalM2 <= 0) {
     return badRequest('surfaceTotalM2 debe ser un número positivo')
   }
@@ -57,8 +54,8 @@ export const POST: APIRoute = async ({ request }) => {
   const input: ValuatorInput = {
     type: body.type,
     location: body.location.trim(),
-    street: body.street.trim(),
-    streetNumber: body.streetNumber.trim(),
+    street: (body.street ?? '').trim(),
+    streetNumber: (body.streetNumber ?? '').trim(),
     floor: body.floor?.trim() || undefined,
     unit: body.unit?.trim() || undefined,
     surfaceTotalM2: body.surfaceTotalM2,

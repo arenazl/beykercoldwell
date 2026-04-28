@@ -312,6 +312,24 @@ const { required = false } = Astro.props
     return r.displayName.split(',')[0]?.trim() || r.displayName
   }
 
+  /**
+   * Extrae la altura. Nominatim a veces no la devuelve en `house_number`
+   * aunque el cliente sí la haya tipeado (ej: "Avenida Santa Fe 1700"
+   * matchea contra una entrada genérica de la calle). Probamos tres
+   * fuentes en orden: campo estructurado → displayName → query original.
+   */
+  function deriveHouseNumber(r: AddressResult, query: string): string {
+    if (r.houseNumber) return r.houseNumber
+    // Primer token numérico del displayName (Nominatim suele devolver
+    // "1700, Avenida Santa Fe, ...").
+    const fromDisplay = r.displayName.match(/^(\d{1,5})\b/)
+    if (fromDisplay) return fromDisplay[1]
+    // Último número de la query del usuario, si tipeó altura.
+    const fromQuery = query.match(/\b(\d{1,5})\b\s*$/)
+    if (fromQuery) return fromQuery[1]
+    return ''
+  }
+
   function formatBarrioLine(r: AddressResult): string {
     return r.city || ''
   }
@@ -330,7 +348,9 @@ const { required = false } = Astro.props
     fAddress.value = r.displayName
     fLocation.value = [r.city, r.province].filter(Boolean).join(', ') || r.displayName
     fStreet.value = r.street ?? ''
-    fStreetNum.value = r.houseNumber ?? ''
+    // Si Nominatim no devolvió house_number, intentamos extraerlo del
+    // displayName y como último recurso de lo que el usuario tipeó.
+    fStreetNum.value = deriveHouseNumber(r, search.value)
     fLat.value = String(r.lat)
     fLng.value = String(r.lng)
     if (r.province) fProvince.value = r.province
