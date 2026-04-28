@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { getMarketAnchor, formatAnchorForPrompt } from './market-anchors'
+import { getMarketAnchor, formatAnchorForPrompt, type MarketAnchor } from './market-anchors'
 
 const apiKey = process.env.GEMINI_API_KEY ?? import.meta.env.GEMINI_API_KEY
 const modelName =
@@ -60,6 +60,8 @@ export interface ValuatorOutput {
   commercialStrategy: string
   recommendations: string[]
   caveats: string
+  /** Ancla del catálogo propio usada para el cálculo. null si no hubo match suficiente. */
+  anchor: MarketAnchor | null
 }
 
 export async function valuateProperty(input: ValuatorInput): Promise<ValuatorOutput> {
@@ -159,5 +161,6 @@ Tené en cuenta para el ajuste fino: la altura de la calle (cuadra específica),
     throw new Error('Respuesta inválida del modelo: faltan bandas de precio')
   }
 
+  parsed.anchor = anchor
   return parsed
 }
