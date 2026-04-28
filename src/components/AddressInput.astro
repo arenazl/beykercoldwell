@@ -1,0 +1,232 @@
+---
+/**
+ * Input de dirección con autocomplete contra Nominatim (OSM). Sólo deja
+ * "verificada" una dirección cuando el usuario eligió una sugerencia de
+ * la lista — si tipea libre no avanza. Eso es lo que pidió el usuario.
+ *
+ * Mantiene los IDs `f-location`, `f-street`, `f-street-number` como
+ * <input type="hidden"> para que el payload existente de /api/valuar
+ * siga funcionando sin cambios. Suma `f-address`, `f-lat`, `f-lng`.
+ *
+ * Uso:
+ *   <AddressInput required />
+ */
+interface Props {
+  required?: boolean
+}
+const { required = false } = Astro.props
+---
+
+<div id="address-input" class="relative" data-verified="false">
+  <label class="text-xs font-semibold uppercase tracking-wider text-muted block mb-1.5">
+    Dirección
+  </label>
+
+  <div class="relative">
+    <input
+      id="f-address-search"
+      type="text"
+      autocomplete="off"
+      placeholder="Empezá a tipear: Av. Callao 1240, Recoleta…"
+      required={required}
+      class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent transition-colors"
+    />
+    <svg
+      aria-hidden="true"
+      class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.2"
+    >
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+
+    <span
+      id="f-address-status"
+      class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 hidden"
+      aria-hidden="true"
+    >
+      <!-- Spinner mientras busca -->
+      <span
+        id="f-address-spinner"
+        class="hidden w-4 h-4 rounded-full border-2 border-muted/40 border-t-accent animate-spin"
+      ></span>
+      <!-- Check verde cuando hay match seleccionado -->
+      <svg
+        id="f-address-check"
+        class="hidden w-4 h-4 text-green-500"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="3"
+      >
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </span>
+  </div>
+
+  <!-- Hint debajo del input -->
+  <p id="f-address-hint" class="text-[11px] text-muted mt-1.5 leading-snug">
+    Elegí una de las sugerencias para verificar la ubicación.
+  </p>
+
+  <!-- Lista de sugerencias -->
+  <ul
+    id="f-address-suggestions"
+    role="listbox"
+    class="hidden absolute z-30 left-0 right-0 mt-1 max-h-72 overflow-y-auto bg-elevated border border-border rounded-xl shadow-2xl"
+  ></ul>
+
+  <!-- Hidden fields que consume el form / payload del wizard -->
+  <input type="hidden" id="f-location" name="f-location" />
+  <input type="hidden" id="f-street" name="f-street" />
+  <input type="hidden" id="f-street-number" name="f-street-number" />
+  <input type="hidden" id="f-address" name="f-address" />
+  <input type="hidden" id="f-lat" name="f-lat" />
+  <input type="hidden" id="f-lng" name="f-lng" />
+</div>
+
+<script>
+  import { searchAddresses, type AddressResult } from '../lib/address-search'
+
+  const root = document.getElementById('address-input') as HTMLDivElement
+  const search = document.getElementById('f-address-search') as HTMLInputElement
+  const list = document.getElementById('f-address-suggestions') as HTMLUListElement
+  const hint = document.getElementById('f-address-hint') as HTMLParagraphElement
+  const status = document.getElementById('f-address-status') as HTMLSpanElement
+  const spinner = document.getElementById('f-address-spinner') as HTMLSpanElement
+  const check = document.getElementById('f-address-check') as HTMLElement
+  const fLocation = document.getElementById('f-location') as HTMLInputElement
+  const fStreet = document.getElementById('f-street') as HTMLInputElement
+  const fStreetNum = document.getElementById('f-street-number') as HTMLInputElement
+  const fAddress = document.getElementById('f-address') as HTMLInputElement
+  const fLat = document.getElementById('f-lat') as HTMLInputElement
+  const fLng = document.getElementById('f-lng') as HTMLInputElement
+
+  let debounce: number | undefined
+  let activeController: AbortController | null = null
+
+  function setBusy(busy: boolean) {
+    status.classList.toggle('hidden', !busy && root.dataset.verified !== 'true')
+    spinner.classList.toggle('hidden', !busy)
+    if (busy) check.classList.add('hidden')
+  }
+
+  function setVerified(r: AddressResult) {
+    root.dataset.verified = 'true'
+    fAddress.value = r.displayName
+    fLocation.value = [r.city, r.province].filter(Boolean).join(', ') || r.displayName
+    fStreet.value = r.street ?? ''
+    fStreetNum.value = r.houseNumber ?? ''
+    fLat.value = String(r.lat)
+    fLng.value = String(r.lng)
+    search.value = r.displayName
+    list.classList.add('hidden')
+    status.classList.remove('hidden')
+    spinner.classList.add('hidden')
+    check.classList.remove('hidden')
+    hint.textContent = '✓ Dirección verificada'
+    hint.classList.remove('text-muted')
+    hint.classList.add('text-green-600')
+    // Notificar al wizard que la dirección ahora es válida.
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+
+  function clearVerified() {
+    root.dataset.verified = 'false'
+    fAddress.value = ''
+    fLocation.value = ''
+    fStreet.value = ''
+    fStreetNum.value = ''
+    fLat.value = ''
+    fLng.value = ''
+    check.classList.add('hidden')
+    status.classList.add('hidden')
+    hint.textContent = 'Elegí una de las sugerencias para verificar la ubicación.'
+    hint.classList.add('text-muted')
+    hint.classList.remove('text-green-600')
+  }
+
+  function renderSuggestions(items: AddressResult[]) {
+    if (items.length === 0) {
+      list.innerHTML = `
+        <li class="px-4 py-3 text-sm text-muted">
+          Sin coincidencias. Probá con otra forma — ej: "Av. Callao 1240, Recoleta".
+        </li>
+      `
+      list.classList.remove('hidden')
+      return
+    }
+    list.innerHTML = items
+      .map(
+        (r, i) => `
+        <li role="option" data-idx="${i}"
+            class="px-4 py-2.5 cursor-pointer hover:bg-accent/10 transition-colors border-b border-border last:border-b-0">
+          <div class="flex items-start gap-2">
+            <svg class="flex-shrink-0 w-4 h-4 text-accent mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span class="text-sm text-text leading-snug">${escapeHtml(r.displayName)}</span>
+          </div>
+        </li>`,
+      )
+      .join('')
+    list.classList.remove('hidden')
+    list.querySelectorAll<HTMLLIElement>('[data-idx]').forEach((li) => {
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault() // evita que el input pierda el foco antes del click
+        const idx = Number(li.dataset.idx)
+        const item = items[idx]
+        if (item) setVerified(item)
+      })
+    })
+  }
+
+  function escapeHtml(s: string): string {
+    const d = document.createElement('div')
+    d.textContent = s
+    return d.innerHTML
+  }
+
+  search.addEventListener('input', () => {
+    // Cualquier edición manual invalida la verificación previa.
+    if (root.dataset.verified === 'true') clearVerified()
+
+    if (debounce) window.clearTimeout(debounce)
+    if (activeController) activeController.abort()
+
+    const q = search.value.trim()
+    if (q.length < 3) {
+      list.classList.add('hidden')
+      setBusy(false)
+      return
+    }
+
+    setBusy(true)
+    debounce = window.setTimeout(async () => {
+      activeController = new AbortController()
+      try {
+        const items = await searchAddresses(q, activeController.signal)
+        renderSuggestions(items)
+      } catch {
+        // Si fue abort por nueva tecla, ignorar. Otro error: no mostramos.
+      } finally {
+        setBusy(false)
+      }
+    }, 400)
+  })
+
+  search.addEventListener('blur', () => {
+    // Pequeño delay para permitir que el mousedown del item dispare antes.
+    setTimeout(() => list.classList.add('hidden'), 150)
+  })
+
+  search.addEventListener('focus', () => {
+    if (list.children.length > 0 && root.dataset.verified !== 'true') {
+      list.classList.remove('hidden')
+    }
+  })
+</script>

@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Stepper from '../components/Stepper.astro'
+import AddressInput from '../components/AddressInput.astro'
 import { CONTACT } from '../data/site'
 
 const breadcrumbs = [
@@ -53,7 +54,7 @@ const featureOptions = [
 
   <section class="container-app py-8">
     <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <form id="val-form" class="lg:col-span-5 flex flex-col scroll-mt-32">
+      <form id="val-form" class="lg:col-span-5 flex flex-col scroll-mt-32" data-wa-phone={CONTACT.phone_e164}>
         <!-- Wizard header con progreso — sin recuadro, full width -->
         <header class="mb-4 flex-shrink-0">
           <div class="flex items-center justify-between mb-2">
@@ -88,25 +89,9 @@ const featureOptions = [
             </div>
           </div>
 
-          <!-- Step 2: Ubicación -->
-          <div data-wiz-step="2" data-wiz-title="¿Dónde está?" data-wiz-required="f-location,f-street,f-street-number" class="wiz-step hidden space-y-4">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Zona / Barrio / Ciudad</label>
-              <input id="f-location" type="text" required placeholder="Ej: Recoleta, CABA"
-                     class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-            </div>
-            <div class="grid grid-cols-3 gap-3">
-              <div class="col-span-2 flex flex-col gap-1.5">
-                <label class="text-xs font-semibold uppercase tracking-wider text-muted">Calle</label>
-                <input id="f-street" type="text" required placeholder="Ej: Av. Callao"
-                       class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-              </div>
-              <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-semibold uppercase tracking-wider text-muted">Altura</label>
-                <input id="f-street-number" type="text" required placeholder="1240"
-                       class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-              </div>
-            </div>
+          <!-- Step 2: Ubicación — un solo campo con autocomplete verificado contra OSM/Nominatim -->
+          <div data-wiz-step="2" data-wiz-title="¿Dónde está?" data-wiz-verified-required="true" class="wiz-step hidden">
+            <AddressInput required />
           </div>
 
           <!-- Step 3: Detalles del lugar (opcional) -->
@@ -313,6 +298,23 @@ const featureOptions = [
     font-size: 0.875rem;
   }
 
+  /* Entrada del bloque de resultado */
+  .val-result-anim {
+    animation: val-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes val-enter {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  /* Pop del check verde */
+  .val-check-pop {
+    animation: val-pop 0.5s cubic-bezier(0.22, 1.5, 0.36, 1) 0.2s both;
+  }
+  @keyframes val-pop {
+    from { opacity: 0; transform: scale(0); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
   .wiz-step {
     animation: wiz-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -405,6 +407,8 @@ const featureOptions = [
     function validateStep(n: number): boolean {
       const el = steps.find((s) => Number(s.dataset.wizStep) === n)
       if (!el) return true
+
+      // Requerimientos por id (campo común).
       const requiredIds = (el.dataset.wizRequired || '').split(',').filter(Boolean)
       for (const id of requiredIds) {
         const input = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null
@@ -418,6 +422,25 @@ const featureOptions = [
           return false
         }
       }
+
+      // Requerimiento especial: dirección verificada contra Nominatim.
+      // El step lo declara con `data-wiz-verified-required="true"` y el
+      // componente AddressInput setea data-verified en su root.
+      if (el.dataset.wizVerifiedRequired === 'true') {
+        const addr = document.getElementById('address-input') as HTMLDivElement | null
+        if (!addr || addr.dataset.verified !== 'true') {
+          validation.textContent = 'Elegí una dirección de la lista para verificarla.'
+          validation.classList.remove('hidden')
+          const search = document.getElementById('f-address-search') as HTMLInputElement | null
+          if (search) {
+            search.focus()
+            search.classList.add('wiz-shake')
+            setTimeout(() => search.classList.remove('wiz-shake'), 500)
+          }
+          return false
+        }
+      }
+
       return true
     }
 
@@ -526,110 +549,273 @@ const featureOptions = [
     `
   }
 
-  function renderResult(r: Result): string {
-    const ups = r.factorsUp.map((f) => `<li class="flex items-start gap-2"><span class="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500"></span><span>${escape(f)}</span></li>`).join('')
-    const downs = r.factorsDown.map((f) => `<li class="flex items-start gap-2"><span class="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500"></span><span>${escape(f)}</span></li>`).join('')
-    const recs = r.recommendations.map((f) => `<li class="flex items-start gap-2"><span class="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-gold"></span><span>${escape(f)}</span></li>`).join('')
+  /** Forma del payload que se envía a /api/valuar y se reusa para los CTAs. */
+  type ValuationPayload = {
+    type: string
+    state: string
+    location?: string
+    street?: string
+    streetNumber?: string
+    address?: string
+    lat?: number
+    lng?: number
+    floor?: string
+    unit?: string
+    orientation?: string
+    surfaceTotalM2?: number
+    surfaceCoveredM2?: number
+    rooms?: number
+    bedrooms?: number
+    bathrooms?: number
+    ageYears?: number
+    expensesArs?: number
+    features: string[]
+    notes?: string
+  }
 
-    const comps = r.comparables.map((c) => `
-      <div class="p-4 rounded-xl border border-border bg-bg">
-        <div class="flex items-start justify-between gap-3 mb-2">
-          <div class="font-semibold text-text leading-snug min-w-0">${escape(c.description)}</div>
-          <div class="flex-shrink-0 text-right">
-            <div class="text-sm font-bold text-accent">${fmtUSD(c.totalPriceUSD)}</div>
-            <div class="text-xs text-muted">${c.surfaceM2} m² · ${fmtUSDperM2(c.pricePerM2USD)}</div>
-          </div>
-        </div>
-        <p class="text-xs text-muted leading-relaxed">${escape(c.reason)}</p>
-      </div>
-    `).join('')
+  /**
+   * Genera un código corto de tracking para que el asesor identifique este
+   * caso al recibir el mensaje. No es seguridad, es solo correlación humana.
+   */
+  function makeTrackingCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let out = 'BEY-'
+    for (let i = 0; i < 4; i++) out += chars[Math.floor(Math.random() * chars.length)]
+    return out
+  }
+
+  /**
+   * Resultado bloqueado: mostramos que la cotización está lista, los números
+   * borroneados, y 2 CTAs (asesor o mail). El detalle real (banda + comps +
+   * factores) queda guardado en el lib y se desbloquea cuando el cliente
+   * eligió una vía de contacto.
+   */
+  function renderResult(r: Result, payload: ValuationPayload): string {
+    const code = makeTrackingCode()
+    const addressLabel = payload.address || payload.location || ''
+    const summaryLine = `${payload.type || 'Propiedad'}${payload.surfaceTotalM2 ? ` · ${payload.surfaceTotalM2} m²` : ''}${addressLabel ? ` · ${addressLabel}` : ''}`
 
     return `
-      <div class="bg-elevated border border-border rounded-2xl p-6">
-        <div class="flex items-start justify-between gap-3 mb-5 flex-wrap">
-          <div>
-            <div class="section-eyebrow mb-1">Valuación sugerida</div>
-            <h3 class="text-2xl font-bold">Precio total estimado</h3>
+      <div class="bg-elevated border border-border rounded-2xl p-6 relative overflow-hidden val-result-anim">
+        <span aria-hidden="true" class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-accent/10 blur-3xl"></span>
+
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center val-check-pop">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(34 197 94)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs uppercase tracking-wider text-green-600 font-semibold">Cotización creada con éxito</div>
+              <h3 class="text-xl sm:text-2xl font-bold leading-tight">Tu cotización ya está lista</h3>
+            </div>
           </div>
-          ${confidenceBadge(r.confidence)}
+
+          <p class="text-sm text-muted mb-4 leading-relaxed">
+            Calculamos la banda de precio para <span class="text-text font-semibold">${escape(summaryLine)}</span>.
+            Para ver los números, elegí cómo querés recibirla.
+          </p>
+
+          <!-- Banda borroneada -->
+          <div class="relative rounded-2xl overflow-hidden mb-5">
+            <div class="bg-accent text-white rounded-2xl p-5 select-none" data-locked-content
+                 style="filter: blur(10px); pointer-events: none;">
+              <div class="text-xs uppercase tracking-wider text-gold mb-1">Precio típico de mercado</div>
+              <div class="text-4xl md:text-5xl font-bold tracking-tightest mb-4">${fmtUSD(r.totalPriceUSD.typical)}</div>
+              ${renderBandBar(r.totalPriceUSD)}
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="px-4 py-2 rounded-full bg-bg/90 border border-border text-xs font-semibold text-text shadow-lg backdrop-blur-sm flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Desbloqueá tu valuación
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-5" data-locked-content style="filter: blur(8px); pointer-events: none;">
+            <div class="p-3 rounded-xl border border-border text-center">
+              <div class="text-[10px] text-muted mb-0.5">Mínimo</div>
+              <div class="text-sm font-bold">${fmtUSD(r.totalPriceUSD.low)}</div>
+            </div>
+            <div class="p-3 rounded-xl border border-accent bg-accent/5 text-center">
+              <div class="text-[10px] text-accent mb-0.5">Típico</div>
+              <div class="text-sm font-bold text-accent">${fmtUSD(r.totalPriceUSD.typical)}</div>
+            </div>
+            <div class="p-3 rounded-xl border border-border text-center">
+              <div class="text-[10px] text-muted mb-0.5">Máximo</div>
+              <div class="text-sm font-bold">${fmtUSD(r.totalPriceUSD.high)}</div>
+            </div>
+          </div>
+
+          <!-- 2 vías de desbloqueo -->
+          <div class="space-y-3" id="unlock-ctas">
+            <a id="cta-asesor"
+               href="#"
+               class="block w-full p-4 rounded-2xl border-2 border-accent bg-accent/5 hover:bg-accent/10 active:scale-[0.99] transition-all group">
+              <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-accent text-bg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1 text-left">
+                  <div class="font-bold text-text">Hablar con un asesor</div>
+                  <div class="text-xs text-muted">Te abre WhatsApp con tu caso ya cargado · respuesta en minutos</div>
+                </div>
+                <svg class="flex-shrink-0 w-4 h-4 text-accent transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
+            </a>
+
+            <button type="button" id="cta-email-toggle"
+                    class="block w-full p-4 rounded-2xl border border-border hover:border-accent/40 hover:bg-accent/5 active:scale-[0.99] transition-all group text-left">
+              <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-elevated border border-border flex items-center justify-center text-accent">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-bold text-text">Recibirla por mail</div>
+                  <div class="text-xs text-muted">Te mandamos la cotización completa al instante</div>
+                </div>
+                <svg class="flex-shrink-0 w-4 h-4 text-muted transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
+            </button>
+
+            <form id="cta-email-form" class="hidden p-4 rounded-2xl border border-accent/40 bg-accent/5">
+              <label for="cta-email-input" class="text-xs font-semibold uppercase tracking-wider text-muted block mb-2">Tu mail</label>
+              <div class="flex gap-2">
+                <input id="cta-email-input" type="email" required placeholder="vos@mail.com"
+                       class="flex-1 px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+                <button type="submit" id="cta-email-submit" class="btn-primary justify-center whitespace-nowrap">
+                  Enviar
+                </button>
+              </div>
+              <p id="cta-email-feedback" class="hidden text-xs mt-2"></p>
+            </form>
+          </div>
+
+          <p class="text-[11px] text-muted mt-4 leading-snug">
+            Código de seguimiento: <span class="font-mono font-semibold text-text">${code}</span>
+          </p>
         </div>
-
-        <div class="bg-accent text-white rounded-2xl p-6 mb-5 relative overflow-hidden">
-          <div class="absolute -top-1/2 right-0 w-64 aspect-square bg-gold/20 rounded-full blur-3xl"></div>
-          <div class="relative">
-            <div class="text-xs uppercase tracking-wider text-gold mb-1">Precio típico de mercado</div>
-            <div class="text-4xl md:text-5xl font-bold tracking-tightest mb-4">${fmtUSD(r.totalPriceUSD.typical)}</div>
-            ${renderBandBar(r.totalPriceUSD)}
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-          <div class="p-4 rounded-xl border border-border">
-            <div class="text-xs text-muted mb-1">Mínimo</div>
-            <div class="text-lg font-bold">${fmtUSD(r.totalPriceUSD.low)}</div>
-            <div class="text-xs text-muted">${fmtUSDperM2(r.pricePerM2USD.low)}</div>
-          </div>
-          <div class="p-4 rounded-xl border border-accent bg-accent/5">
-            <div class="text-xs text-accent mb-1">Típico</div>
-            <div class="text-lg font-bold text-accent">${fmtUSD(r.totalPriceUSD.typical)}</div>
-            <div class="text-xs text-muted">${fmtUSDperM2(r.pricePerM2USD.typical)}</div>
-          </div>
-          <div class="p-4 rounded-xl border border-border">
-            <div class="text-xs text-muted mb-1">Máximo</div>
-            <div class="text-lg font-bold">${fmtUSD(r.totalPriceUSD.high)}</div>
-            <div class="text-xs text-muted">${fmtUSDperM2(r.pricePerM2USD.high)}</div>
-          </div>
-        </div>
-
-        <div class="p-4 rounded-xl bg-bg border border-border">
-          <div class="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Lectura de mercado</div>
-          <p class="text-sm text-text/90 leading-relaxed">${escape(r.marketSummary)}</p>
-        </div>
-      </div>
-
-      <div class="bg-elevated border border-border rounded-2xl p-6">
-        <div class="section-eyebrow mb-3">Comparables del mercado</div>
-        <h3 class="text-xl font-bold mb-4">Propiedades similares en la zona</h3>
-        <div class="grid grid-cols-1 gap-3">${comps}</div>
-      </div>
-
-      ${ups || downs ? `
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        ${ups ? `
-        <div class="bg-elevated border border-border rounded-2xl p-6">
-          <div class="flex items-center gap-2 mb-3">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(34 197 94)" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-            <h3 class="font-bold">Suman al precio</h3>
-          </div>
-          <ul class="space-y-2 text-sm">${ups}</ul>
-        </div>` : ''}
-        ${downs ? `
-        <div class="bg-elevated border border-border rounded-2xl p-6">
-          <div class="flex items-center gap-2 mb-3">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(239 68 68)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            <h3 class="font-bold">Restan al precio</h3>
-          </div>
-          <ul class="space-y-2 text-sm">${downs}</ul>
-        </div>` : ''}
-      </div>
-      ` : ''}
-
-      <div class="bg-elevated border border-border rounded-2xl p-6">
-        <div class="section-eyebrow mb-3">Estrategia comercial</div>
-        <h3 class="text-xl font-bold mb-3">Cómo salir al mercado</h3>
-        <p class="text-sm text-text/90 leading-relaxed mb-4">${escape(r.commercialStrategy)}</p>
-        ${recs ? `
-          <div class="pt-4 border-t border-border">
-            <div class="text-xs font-semibold uppercase tracking-wider text-muted mb-3">Recomendaciones antes de publicar</div>
-            <ul class="space-y-2 text-sm">${recs}</ul>
-          </div>
-        ` : ''}
-      </div>
-
-      <div class="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-text/80 leading-relaxed">
-        <strong class="text-amber-600">Importante:</strong> ${escape(r.caveats)}
       </div>
     `
+  }
+
+  /**
+   * Conecta los CTAs del resultado bloqueado:
+   *  - Asesor → WhatsApp con mensaje pre-llenado (datos del wizard + código).
+   *  - Mail → POST a /api/valuacion-email con todo. Al ok, desbloquea la banda.
+   */
+  function wireResultCTAs(r: Result, payload: ValuationPayload) {
+    const ctaAsesor = document.getElementById('cta-asesor') as HTMLAnchorElement | null
+    const ctaEmailToggle = document.getElementById('cta-email-toggle') as HTMLButtonElement | null
+    const ctaEmailForm = document.getElementById('cta-email-form') as HTMLFormElement | null
+    const ctaEmailInput = document.getElementById('cta-email-input') as HTMLInputElement | null
+    const ctaEmailSubmit = document.getElementById('cta-email-submit') as HTMLButtonElement | null
+    const ctaEmailFeedback = document.getElementById('cta-email-feedback') as HTMLParagraphElement | null
+
+    const phone = (form.dataset.waPhone || '').replace(/\D+/g, '')
+    const codeMatch = result.querySelector('.font-mono')
+    const code = codeMatch?.textContent?.trim() ?? ''
+
+    function unlockBands() {
+      result.querySelectorAll<HTMLElement>('[data-locked-content]').forEach((el) => {
+        el.style.transition = 'filter 0.6s ease-out'
+        el.style.filter = 'blur(0px)'
+        el.style.pointerEvents = 'auto'
+      })
+      // Ocultar el badge "Desbloqueá tu valuación" tras desbloquear
+      const lockBadge = result.querySelector('.absolute.inset-0.flex.items-center.justify-center.pointer-events-none')
+      if (lockBadge && lockBadge.parentElement) {
+        ;(lockBadge as HTMLElement).style.transition = 'opacity 0.4s'
+        ;(lockBadge as HTMLElement).style.opacity = '0'
+        setTimeout(() => (lockBadge as HTMLElement).remove(), 400)
+      }
+    }
+
+    if (ctaAsesor) {
+      const lines = [
+        `Hola, soy de la web. Acabo de pedir una cotización (${code}) y querría que me ayuden.`,
+        '',
+        '— Datos cargados —',
+        `Tipo: ${payload.type || 's/d'} (${payload.state || 's/d'})`,
+        payload.address ? `Dirección: ${payload.address}` : null,
+        payload.surfaceTotalM2 ? `Superficie total: ${payload.surfaceTotalM2} m²` : null,
+        payload.surfaceCoveredM2 ? `Cubierta: ${payload.surfaceCoveredM2} m²` : null,
+        payload.rooms ? `Ambientes: ${payload.rooms}` : null,
+        payload.bedrooms != null ? `Dormitorios: ${payload.bedrooms}` : null,
+        payload.bathrooms != null ? `Baños: ${payload.bathrooms}` : null,
+        payload.ageYears != null ? `Antigüedad: ${payload.ageYears} años` : null,
+        payload.expensesArs ? `Expensas: ARS ${payload.expensesArs.toLocaleString('es-AR')}` : null,
+        payload.features.length ? `Características: ${payload.features.join(', ')}` : null,
+        '',
+        `Banda calculada: ${fmtUSD(r.totalPriceUSD.low)} – ${fmtUSD(r.totalPriceUSD.typical)} – ${fmtUSD(r.totalPriceUSD.high)}`,
+      ].filter(Boolean) as string[]
+      const text = encodeURIComponent(lines.join('\n'))
+      ctaAsesor.href = phone ? `https://wa.me/${phone}?text=${text}` : '#'
+      ctaAsesor.target = '_blank'
+      ctaAsesor.rel = 'noopener'
+      ctaAsesor.addEventListener('click', () => {
+        // Cliente eligió WhatsApp → desbloqueamos para que vea su número
+        // mientras vuelve a la página.
+        setTimeout(unlockBands, 200)
+      })
+    }
+
+    if (ctaEmailToggle && ctaEmailForm && ctaEmailInput) {
+      ctaEmailToggle.addEventListener('click', () => {
+        ctaEmailToggle.classList.add('hidden')
+        ctaEmailForm.classList.remove('hidden')
+        ctaEmailInput.focus()
+      })
+    }
+
+    if (ctaEmailForm && ctaEmailInput && ctaEmailSubmit && ctaEmailFeedback) {
+      ctaEmailForm.addEventListener('submit', async (ev) => {
+        ev.preventDefault()
+        const email = ctaEmailInput.value.trim()
+        if (!email) return
+        setBtnLoading(ctaEmailSubmit, true)
+        ctaEmailFeedback.classList.add('hidden')
+        try {
+          const res = await fetch('/api/valuacion-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code, payload, valuation: r }),
+          })
+          const data = await res.json().catch(() => ({}))
+          if (!res.ok) {
+            ctaEmailFeedback.textContent = data.error || 'No pudimos enviar el mail. Probá de nuevo.'
+            ctaEmailFeedback.className = 'text-xs mt-2 text-red-500'
+            ctaEmailFeedback.classList.remove('hidden')
+            return
+          }
+          ctaEmailFeedback.textContent = '✓ Te lo enviamos. Revisá tu bandeja de entrada (y spam).'
+          ctaEmailFeedback.className = 'text-xs mt-2 text-green-600 font-semibold'
+          ctaEmailFeedback.classList.remove('hidden')
+          ctaEmailInput.disabled = true
+          ctaEmailSubmit.disabled = true
+          unlockBands()
+        } catch (err) {
+          ctaEmailFeedback.textContent = 'Sin conexión: ' + String((err as Error).message)
+          ctaEmailFeedback.className = 'text-xs mt-2 text-red-500'
+          ctaEmailFeedback.classList.remove('hidden')
+        } finally {
+          setBtnLoading(ctaEmailSubmit, false)
+        }
+      })
+    }
   }
 
   form.addEventListener('submit', async (e) => {
@@ -637,12 +823,15 @@ const featureOptions = [
 
     const features = Array.from(form.querySelectorAll<HTMLInputElement>('input[name="feature"]:checked')).map((i) => i.value)
 
-    const payload = {
+    const payload: ValuationPayload = {
       type: (document.getElementById('f-type') as HTMLSelectElement).value,
       state: (document.getElementById('f-state') as HTMLSelectElement).value,
       location: str('f-location'),
       street: str('f-street'),
       streetNumber: str('f-street-number'),
+      address: str('f-address'),
+      lat: num('f-lat'),
+      lng: num('f-lng'),
       floor: str('f-floor'),
       unit: str('f-unit'),
       orientation: (document.getElementById('f-orientation') as HTMLSelectElement).value || undefined,
@@ -658,12 +847,7 @@ const featureOptions = [
     }
 
     if (!payload.location) {
-      errorBox.textContent = 'Necesitamos zona/barrio para valuar.'
-      errorBox.classList.remove('hidden')
-      return
-    }
-    if (!payload.street || !payload.streetNumber) {
-      errorBox.textContent = 'Necesitamos calle y altura para valuar con precisión.'
+      errorBox.textContent = 'Necesitamos una dirección verificada para valuar.'
       errorBox.classList.remove('hidden')
       return
     }
@@ -695,8 +879,10 @@ const featureOptions = [
         empty.classList.remove('hidden')
         return
       }
-      result.innerHTML = renderResult(data as Result)
+      const valData = data as Result
+      result.innerHTML = renderResult(valData, payload)
       result.classList.remove('hidden')
+      wireResultCTAs(valData, payload)
     } catch (err) {
       errorBox.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
       errorBox.classList.remove('hidden')

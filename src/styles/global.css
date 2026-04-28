@@ -362,7 +362,7 @@
   background: rgb(var(--accent) / 0.5);
 }
 
-/* Línea fina dorada bajo la nav cuando se hace scroll */
-[data-scrolled='true'] header {
+/* Línea fina dorada bajo la nav cuando se hace scroll (solo header del sitio) */
+[data-scrolled='true'] body > header {
   box-shadow: 0 1px 0 0 rgb(var(--accent) / 0.15), 0 4px 20px -2px rgb(0 0 0 / 0.3);
 }
