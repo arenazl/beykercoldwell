@@ -103,6 +103,36 @@ export function applyFilters(filters: AISearchFilters, limit = 120): SearchRespo
       else if (p.antiguedadLabel) hits.push(`🏛 ${p.antiguedadLabel}`)
     }
 
+    // Keywords obligatorias y excluidas. Computamos haystack una sola vez
+    // si alguno de los tres sets necesita matchear contra título+desc.
+    const needsHaystack =
+      pass &&
+      ((filters.keywordsRequired?.length ?? 0) > 0 ||
+        (filters.keywordsExcluded?.length ?? 0) > 0 ||
+        (filters.keywords?.length ?? 0) > 0)
+    const haystack = needsHaystack ? normalize(`${p.title} ${p.description}`) : ''
+
+    if (pass && filters.keywordsRequired?.length) {
+      for (const kw of filters.keywordsRequired) {
+        const needle = normalize(kw)
+        if (needle && !haystack.includes(needle)) {
+          pass = false
+          break
+        }
+      }
+      if (pass) hits.push(...filters.keywordsRequired.map((k) => `★ ${k}`))
+    }
+
+    if (pass && filters.keywordsExcluded?.length) {
+      for (const kw of filters.keywordsExcluded) {
+        const needle = normalize(kw)
+        if (needle && haystack.includes(needle)) {
+          pass = false
+          break
+        }
+      }
+    }
+
     if (!pass) continue
 
     let score = 1

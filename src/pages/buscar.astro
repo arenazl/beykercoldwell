@@ -125,6 +125,7 @@ const sugerencias = [
             <div id="ai-summary" class="text-text font-semibold mb-1"></div>
             <div id="ai-meta" class="text-xs text-muted leading-relaxed"></div>
             <div id="ai-followup" class="hidden mt-3 text-sm text-accent border-t border-border/50 pt-3"></div>
+            <div id="ai-followup-chips" class="hidden mt-2 flex flex-wrap gap-2"></div>
           </div>
         </div>
       </div>
@@ -197,6 +198,7 @@ const sugerencias = [
   const suggestTitle = document.getElementById('ai-suggest-title') as HTMLHeadingElement
   const suggestMessage = document.getElementById('ai-suggest-message') as HTMLParagraphElement
   const suggestChips = document.getElementById('ai-suggest-chips') as HTMLDivElement
+  const followupChips = document.getElementById('ai-followup-chips') as HTMLDivElement
 
   type AnyFilters = Record<string, unknown> & { type?: string; location_includes?: string; summary?: string }
   let lastFilters: AnyFilters | null = null
@@ -305,6 +307,8 @@ const sugerencias = [
     empty.classList.add('hidden')
     outOfScope.classList.add('hidden')
     suggest.classList.add('hidden')
+    followupChips.classList.add('hidden')
+    followupChips.innerHTML = ''
     results.innerHTML = ''
 
     try {
@@ -358,6 +362,24 @@ const sugerencias = [
       } else {
         followup.classList.add('hidden')
       }
+
+      if (data.missing?.operacion?.length) {
+        for (const opt of data.missing.operacion as { value: string; count: number }[]) {
+          const btn = document.createElement('button')
+          btn.type = 'button'
+          btn.className =
+            'px-3.5 py-1.5 rounded-full text-xs border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent/70 transition-all duration-200 active:scale-95 capitalize'
+          btn.innerHTML = `${opt.value} <span class="opacity-70">(${opt.count})</span>`
+          btn.addEventListener('click', () => {
+            const loc = f.location_includes ? ` en ${f.location_includes}` : ''
+            const newSummary = `Te muestro propiedades en ${opt.value}${loc}.`
+            runSearch({ filters: { ...f, operacion: opt.value, summary: newSummary } })
+          })
+          followupChips.appendChild(btn)
+        }
+        followupChips.classList.remove('hidden')
+      }
+
       status.classList.remove('hidden')
       status.scrollIntoView({ behavior: 'smooth', block: 'start' })
 

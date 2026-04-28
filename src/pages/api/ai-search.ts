@@ -93,6 +93,28 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
+    // Dimensiones faltantes: cuando el usuario no precisó `operacion` y los
+    // resultados muestran variedad real (hay venta y alquiler), exponemos las
+    // opciones para que la UI las renderice como chips actionables al lado del
+    // follow_up. 100% data-driven: si solo hay una operación en los matches,
+    // no preguntamos.
+    let missing: { operacion?: { value: string; count: number }[] } | undefined
+    if (!filters.operacion && results.length > 0) {
+      const opCounts = new Map<string, number>()
+      for (const r of results) {
+        if (r.property.operacion) {
+          opCounts.set(r.property.operacion, (opCounts.get(r.property.operacion) ?? 0) + 1)
+        }
+      }
+      if (opCounts.size > 1) {
+        missing = {
+          operacion: [...opCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([value, count]) => ({ value, count })),
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         filters,
@@ -104,6 +126,7 @@ export const POST: APIRoute = async ({ request }) => {
           property: r.property,
         })),
         ...(suggest && { suggest }),
+        ...(missing && { missing }),
       }),
       { headers: { 'Content-Type': 'application/json' } }
     )

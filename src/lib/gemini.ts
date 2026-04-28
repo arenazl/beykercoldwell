@@ -37,7 +37,14 @@ export interface AISearchFilters {
   maxAntiguedad?: number
   /** true = solo "a estrenar" o "en pozo" */
   aEstrenar?: boolean
+  /** Keywords con scoring "soft" — suman puntos al ranking pero no descartan. */
   keywords?: string[]
+  /** Keywords obligatorias — TODAS deben aparecer en title+description.
+   * Usar para requerimientos duros: "tiene que tener pileta", "con cochera". */
+  keywordsRequired?: string[]
+  /** Keywords prohibidas — NINGUNA puede aparecer. Usar para negaciones:
+   * "sin reciclar", "que no esté en pozo", "no balcón francés". */
+  keywordsExcluded?: string[]
   summary: string
   follow_up?: string
   /** true cuando el cliente pide algo fuera del alcance del catálogo (ej: ubicación en otro país). */
@@ -89,7 +96,9 @@ Devolvé JSON con esta forma exacta:
   "maxSurfaceM2": number | null,
   "maxAntiguedad": number | null,
   "aEstrenar": true | false | null,
-  "keywords": ["palabras clave a buscar en title+description, ej: 'apto credito', 'pileta', 'cochera', 'amenities'"],
+  "keywords": ["palabras 'soft' que ranquean mejor si aparecen, pero no descartan. Ej: 'amenities', 'luminoso'. Defaultear acá si no estás seguro de si es requisito duro."],
+  "keywordsRequired": ["palabras OBLIGATORIAS — todas tienen que aparecer en title+description. Usar para requerimientos duros que el cliente expresó como condición. Ej: 'pileta' si dijo 'CON pileta', 'cochera' si dijo 'que tenga cochera', 'apto credito' si dijo 'apto crédito'."],
+  "keywordsExcluded": ["palabras PROHIBIDAS — ninguna puede aparecer. Usar para negaciones explícitas. Ej: 'pozo' si dijo 'que NO esté en pozo', 'reciclar' si dijo 'sin reciclar'."],
   "summary": "Resumen amigable de lo que entendiste, en 1 oración. Tutealo (vos), tono argentino.",
   "follow_up": "Pregunta corta si la consulta es ambigua o falta info clave (ej: '¿Para vivir o invertir?'). null si no hace falta.",
   "out_of_scope": true | false,
