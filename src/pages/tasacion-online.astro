@@ -823,12 +823,17 @@ const featureOptions = [
             ctaEmailFeedback.classList.remove('hidden')
             return
           }
-          ctaEmailFeedback.textContent = '✓ Te lo enviamos. Revisá tu bandeja de entrada (y spam).'
-          ctaEmailFeedback.className = 'text-xs mt-2 text-green-600 font-semibold'
+          // Mensaje de éxito GRANDE — la cotización va al mail, no la
+          // mostramos in-page. Las bandas siguen borroneadas.
+          ctaEmailFeedback.innerHTML =
+            '<span class="text-base">📬 ¡Ya tenés tu cotización lista en el correo!</span>' +
+            `<br><span class="text-xs text-muted">La enviamos a <strong>${ctaEmailInput.value.trim()}</strong>. Revisá tu bandeja (y spam).</span>`
+          ctaEmailFeedback.className = 'mt-3 text-green-600 font-bold text-center'
           ctaEmailFeedback.classList.remove('hidden')
           ctaEmailInput.disabled = true
           ctaEmailSubmit.disabled = true
-          unlockBands()
+          // Importante: NO llamamos a unlockBands(). La idea es que el cliente
+          // reciba la cotización por mail y no la vea acá in-page.
         } catch (err) {
           ctaEmailFeedback.textContent = 'Sin conexión: ' + String((err as Error).message)
           ctaEmailFeedback.className = 'text-xs mt-2 text-red-500'
