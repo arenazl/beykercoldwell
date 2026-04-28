@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import Stepper from '../components/Stepper.astro'
 import AddressInput from '../components/AddressInput.astro'
+import Select from '../components/Select.astro'
 import { CONTACT } from '../data/site'
 
 const breadcrumbs = [
@@ -77,15 +78,11 @@ const featureOptions = [
           <div data-wiz-step="1" data-wiz-title="¿Qué propiedad querés valuar?" class="wiz-step grid grid-cols-2 gap-3">
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold uppercase tracking-wider text-muted">Tipo</label>
-              <select id="f-type" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
-                {types.map((t) => <option value={t}>{t}</option>)}
-              </select>
+              <Select id="f-type" options={types} selected={types[0]} required triggerClass="px-3 py-2.5 text-sm" />
             </div>
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold uppercase tracking-wider text-muted">Estado</label>
-              <select id="f-state" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
-                {states.map((s) => <option value={s.value}>{s.label}</option>)}
-              </select>
+              <Select id="f-state" options={states} selected={states[0].value} required triggerClass="px-3 py-2.5 text-sm" />
             </div>
           </div>
 
@@ -109,16 +106,21 @@ const featureOptions = [
               </div>
               <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold uppercase tracking-wider text-muted">Orientación</label>
-                <select id="f-orientation" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
-                  <option value="">—</option>
-                  <option value="Norte">Norte</option>
-                  <option value="Sur">Sur</option>
-                  <option value="Este">Este</option>
-                  <option value="Oeste">Oeste</option>
-                  <option value="Frente">Frente</option>
-                  <option value="Contrafrente">Contrafrente</option>
-                  <option value="Lateral">Lateral</option>
-                </select>
+                <Select
+                  id="f-orientation"
+                  placeholder="—"
+                  triggerClass="px-3 py-2.5 text-sm"
+                  options={[
+                    { value: '', label: '—' },
+                    { value: 'Norte', label: 'Norte' },
+                    { value: 'Sur', label: 'Sur' },
+                    { value: 'Este', label: 'Este' },
+                    { value: 'Oeste', label: 'Oeste' },
+                    { value: 'Frente', label: 'Frente' },
+                    { value: 'Contrafrente', label: 'Contrafrente' },
+                    { value: 'Lateral', label: 'Lateral' },
+                  ]}
+                />
               </div>
             </div>
             <p class="text-xs text-muted mt-3">Si no aplica (casa, lote, etc.) podés saltar este paso.</p>

@@ -1,5 +1,6 @@
 ---
 import { CONTACT } from '../data/site'
+import Select from './Select.astro'
 ---
 
 <section class="section">
@@ -85,13 +86,18 @@ import { CONTACT } from '../data/site'
             </div>
             <div class="flex flex-col gap-1.5">
               <label for="subject" class="text-xs font-semibold uppercase tracking-wider text-muted">Asunto</label>
-              <select id="subject" name="subject" class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all">
-                <option>Consulta general</option>
-                <option>Quiero comprar</option>
-                <option>Quiero vender / tasar</option>
-                <option>Emprendimientos</option>
-                <option>Unirme al equipo</option>
-              </select>
+              <Select
+                id="subject"
+                name="subject"
+                selected="Consulta general"
+                options={[
+                  'Consulta general',
+                  'Quiero comprar',
+                  'Quiero vender / tasar',
+                  'Emprendimientos',
+                  'Unirme al equipo',
+                ]}
+              />
             </div>
           </div>
 

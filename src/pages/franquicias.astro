@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import Select from '../components/Select.astro'
 import { CONTACT } from '../data/site'
 
 const breadcrumbs = [
@@ -329,21 +330,31 @@ const etapas = [
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold uppercase tracking-wider text-muted">Experiencia inmobiliaria</label>
-              <select class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent">
-                <option>Broker con oficina activa</option>
-                <option>Asesor con cartera propia</option>
-                <option>Inversor sin operación inmobiliaria</option>
-                <option>Otro</option>
-              </select>
+              <Select
+                id="franq-experiencia"
+                name="experiencia"
+                selected="Broker con oficina activa"
+                options={[
+                  'Broker con oficina activa',
+                  'Asesor con cartera propia',
+                  'Inversor sin operación inmobiliaria',
+                  'Otro',
+                ]}
+              />
             </div>
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold uppercase tracking-wider text-muted">Capital disponible</label>
-              <select class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent">
-                <option>USD 20k – 50k</option>
-                <option>USD 50k – 150k</option>
-                <option>USD 150k+</option>
-                <option>Prefiero conversarlo</option>
-              </select>
+              <Select
+                id="franq-capital"
+                name="capital"
+                selected="USD 20k – 50k"
+                options={[
+                  'USD 20k – 50k',
+                  'USD 50k – 150k',
+                  'USD 150k+',
+                  'Prefiero conversarlo',
+                ]}
+              />
             </div>
           </div>
 

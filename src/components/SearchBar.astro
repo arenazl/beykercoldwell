@@ -1,5 +1,6 @@
 ---
 import { FILTERS } from '../data/properties'
+import Select from './Select.astro'
 ---
 
 <form
@@ -26,51 +27,49 @@ import { FILTERS } from '../data/properties'
       <label for="operacion" class="text-xs font-semibold uppercase tracking-wider text-muted">
         Operación
       </label>
-      <select
+      <Select
         id="operacion"
         name="operacion"
-        class="w-full px-4 py-3 rounded-xl bg-bg border border-border text-text
-               focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-      >
-        <option value="">Todas</option>
-        {FILTERS.operaciones.map((op) => (
-          <option value={op}>{op === 'venta' ? 'Venta' : 'Alquiler'}</option>
-        ))}
-      </select>
+        placeholder="Todas"
+        options={[
+          { value: '', label: 'Todas' },
+          ...FILTERS.operaciones.map((op) => ({
+            value: op,
+            label: op === 'venta' ? 'Venta' : 'Alquiler',
+          })),
+        ]}
+      />
     </div>
 
     <div class="flex flex-col gap-1.5">
       <label for="tipo" class="text-xs font-semibold uppercase tracking-wider text-muted">
         Tipo
       </label>
-      <select
+      <Select
         id="tipo"
         name="tipo"
-        class="w-full px-4 py-3 rounded-xl bg-bg border border-border text-text
-               focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-      >
-        <option value="">Todos</option>
-        {FILTERS.tipos.map((t) => (
-          <option value={t}>{t}</option>
-        ))}
-      </select>
+        placeholder="Todos"
+        options={[
+          { value: '', label: 'Todos' },
+          ...FILTERS.tipos.map((t) => ({ value: t, label: t })),
+        ]}
+      />
     </div>
 
     <div class="flex flex-col gap-1.5">
       <label for="ubicacion" class="text-xs font-semibold uppercase tracking-wider text-muted">
         Ubicación
       </label>
-      <select
+      <Select
         id="ubicacion"
         name="ubicacion"
-        class="w-full px-4 py-3 rounded-xl bg-bg border border-border text-text
-               focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-      >
-        <option value="">Todas</option>
-        {FILTERS.ubicaciones.map((u) => (
-          <option value={u}>{u}</option>
-        ))}
-      </select>
+        placeholder="Todas"
+        searchable
+        options={[
+          { value: '', label: 'Todas' },
+          ...FILTERS.ubicaciones.map((u) => ({ value: u, label: u })),
+        ]}
+      />
     </div>
   </div>
 

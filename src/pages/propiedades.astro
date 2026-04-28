@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import PropertyCard from '../components/PropertyCard.astro'
+import Select from '../components/Select.astro'
 import {
   PROPERTIES,
   FILTERS,
@@ -317,31 +318,39 @@ const breadcrumbs = [
 
           <div class="space-y-2">
             <label class="text-sm font-semibold block">Precio (USD)</label>
-            <select
+            <Select
+              id="filter-precio"
               name="precio"
-              class="w-full px-3 py-2.5 rounded-xl bg-bg border border-border text-sm focus:outline-none focus:border-accent transition-colors"
-            >
-              <option value="">Todos</option>
-              {FILTERS.precios.map((p) => {
-                const v = `${p.min ?? ''}-${p.max ?? ''}`
-                return <option value={v} selected={v === precioRaw}>{p.label}</option>
-              })}
-            </select>
+              selected={precioRaw}
+              placeholder="Todos"
+              triggerClass="px-3 py-2.5 text-sm"
+              options={[
+                { value: '', label: 'Todos' },
+                ...FILTERS.precios.map((p) => ({
+                  value: `${p.min ?? ''}-${p.max ?? ''}`,
+                  label: p.label,
+                })),
+              ]}
+            />
           </div>
 
           <div class="space-y-2">
             <label class="text-sm font-semibold block">Antigüedad</label>
-            <select
+            <Select
+              id="filter-antiguedad"
               name="antiguedad"
-              class="w-full px-3 py-2.5 rounded-xl bg-bg border border-border text-sm focus:outline-none focus:border-accent transition-colors"
-            >
-              <option value="" selected={ant === ''}>Cualquiera</option>
-              <option value="0" selected={ant === '0'}>A estrenar / en pozo</option>
-              <option value="5" selected={ant === '5'}>Hasta 5 años</option>
-              <option value="10" selected={ant === '10'}>Hasta 10 años</option>
-              <option value="20" selected={ant === '20'}>Hasta 20 años</option>
-              <option value="50" selected={ant === '50'}>Hasta 50 años</option>
-            </select>
+              selected={ant}
+              placeholder="Cualquiera"
+              triggerClass="px-3 py-2.5 text-sm"
+              options={[
+                { value: '', label: 'Cualquiera' },
+                { value: '0', label: 'A estrenar / en pozo' },
+                { value: '5', label: 'Hasta 5 años' },
+                { value: '10', label: 'Hasta 10 años' },
+                { value: '20', label: 'Hasta 20 años' },
+                { value: '50', label: 'Hasta 50 años' },
+              ]}
+            />
             <p class="text-[11px] text-muted leading-snug">
               Dato disponible en {((CATALOG_META.withAntiguedad ?? 0) / CATALOG_META.total * 100).toFixed(0)}% del catálogo.
             </p>
@@ -389,15 +398,15 @@ const breadcrumbs = [
 
         <div class="flex items-center gap-2">
           <label for="sort-select" class="text-xs uppercase tracking-wider text-muted font-semibold">Ordenar</label>
-          <select
+          <Select
             id="sort-select"
-            class="px-3 py-2 rounded-xl bg-elevated border border-border text-sm focus:outline-none focus:border-accent transition-colors cursor-pointer"
-            data-sort-current={sort}
-          >
-            {sortOptions.map((o) => (
-              <option value={urlWithSort(o.value)} selected={o.value === sort}>{o.label}</option>
-            ))}
-          </select>
+            selected={urlWithSort(sort)}
+            triggerClass="px-3 py-2 bg-elevated text-sm cursor-pointer"
+            options={sortOptions.map((o) => ({
+              value: urlWithSort(o.value),
+              label: o.label,
+            }))}
+          />
         </div>
       </div>
 

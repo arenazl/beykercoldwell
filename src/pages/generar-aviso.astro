@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Stepper from '../components/Stepper.astro'
+import Select from '../components/Select.astro'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
@@ -46,9 +47,7 @@ const featureOptions = [
       <form id="gen-form" class="lg:col-span-2 card-static space-y-4">
         <div>
           <label class="text-sm font-semibold mb-2 block">Tipo</label>
-          <select id="type" name="type" required class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60">
-            {types.map((t) => <option value={t}>{t}</option>)}
-          </select>
+          <Select id="type" name="type" options={types} selected={types[0]} required />
         </div>
         <div>
           <label class="text-sm font-semibold mb-2 block">Ubicación</label>

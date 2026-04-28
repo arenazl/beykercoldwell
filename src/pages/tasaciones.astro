@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import Select from '../components/Select.astro'
 import { CONTACT } from '../data/site'
 
 const breadcrumbs = [
@@ -97,13 +98,18 @@ const pasos = [
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold uppercase tracking-wider text-muted">Tipo de propiedad</label>
-              <select class="px-4 py-3 rounded-xl bg-bg border border-border focus:outline-none focus:border-accent">
-                <option>Departamento</option>
-                <option>Casa</option>
-                <option>PH</option>
-                <option>Local / Oficina</option>
-                <option>Lote</option>
-              </select>
+              <Select
+                id="tasaciones-tipo"
+                name="tipo"
+                selected="Departamento"
+                options={[
+                  'Departamento',
+                  'Casa',
+                  'PH',
+                  'Local / Oficina',
+                  'Lote',
+                ]}
+              />
             </div>
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold uppercase tracking-wider text-muted">Superficie aproximada</label>

@@ -1,0 +1,298 @@
+---
+/**
+ * Select moderno reusable. Reemplaza al `<select>` nativo (que abre con
+ * el dropdown del SO, prehistórico). Renderiza un trigger styleado +
+ * popover propio con animación, keyboard nav y filtro opcional.
+ *
+ * Internamente sigue habiendo un `<input type="hidden">` con el
+ * `id`/`name` que recibís — para que FormData / getElementById sigan
+ * funcionando como con un select. Dispatch de evento `change` cuando
+ * cambia, igual que un select nativo.
+ *
+ * Uso:
+ *   <Select
+ *     id="f-type"
+ *     options={['Departamento', 'Casa', 'PH']}
+ *     selected="Departamento"
+ *     required
+ *   />
+ *
+ *   <Select
+ *     id="ubicacion"
+ *     name="ubicacion"
+ *     options={zonas.map(z => ({ value: z, label: z }))}
+ *     placeholder="Todas"
+ *     searchable
+ *   />
+ */
+type Option = string | { value: string; label: string }
+
+interface NormalizedOption {
+  value: string
+  label: string
+}
+
+interface Props {
+  id: string
+  name?: string
+  options: readonly Option[]
+  selected?: string
+  placeholder?: string
+  required?: boolean
+  searchable?: boolean
+  /** Clases extra para el trigger (padding/colores/etc). */
+  triggerClass?: string
+}
+
+const {
+  id,
+  name = id,
+  options,
+  selected = '',
+  placeholder = 'Elegí…',
+  required = false,
+  searchable = false,
+  triggerClass = '',
+} = Astro.props
+
+const normalized: NormalizedOption[] = options.map((o: Option) =>
+  typeof o === 'string' ? { value: o, label: o } : o,
+)
+const selectedOption = normalized.find((o) => o.value === selected)
+---
+
+<div class="ms-root relative w-full" data-ms>
+  <button
+    type="button"
+    class:list={[
+      'ms-trigger w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-bg border border-border text-text hover:border-accent/40 focus:outline-none focus:border-accent transition-colors text-left',
+      triggerClass,
+    ]}
+    data-ms-trigger
+    aria-haspopup="listbox"
+    aria-expanded="false"
+  >
+    <span
+      class:list={[
+        'ms-label flex-1 truncate',
+        selectedOption ? 'text-text' : 'text-muted',
+      ]}
+      data-ms-label
+    >
+      {selectedOption?.label ?? placeholder}
+    </span>
+    <svg
+      class="ms-chevron flex-shrink-0 w-4 h-4 text-muted transition-transform duration-200"
+      data-ms-chevron
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  </button>
+
+  <div
+    class="ms-panel hidden absolute z-40 left-0 right-0 mt-1 bg-elevated border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+    data-ms-panel
+  >
+    {searchable && (
+      <div class="p-2 border-b border-border">
+        <input
+          type="text"
+          autocomplete="off"
+          placeholder="Buscar…"
+          class="ms-search w-full px-3 py-2 bg-bg rounded-lg border border-border text-sm text-text placeholder:text-muted/60 focus:outline-none focus:border-accent transition-colors"
+          data-ms-search
+        />
+      </div>
+    )}
+    <ul role="listbox" class="ms-list max-h-64 overflow-y-auto" data-ms-list>
+      {normalized.map((o) => (
+        <li
+          role="option"
+          data-ms-value={o.value}
+          data-ms-label={o.label}
+          aria-selected={o.value === selected ? 'true' : 'false'}
+          class:list={[
+            'ms-option px-4 py-2.5 cursor-pointer transition-colors border-b border-border last:border-b-0 text-sm',
+            o.value === selected
+              ? 'bg-accent/10 text-accent font-semibold'
+              : 'text-text hover:bg-accent/10',
+          ]}
+        >
+          {o.label}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <input
+    type="hidden"
+    id={id}
+    name={name}
+    value={selected}
+    required={required}
+    data-ms-input
+  />
+</div>
+
+<script>
+  type MsRoot = HTMLDivElement & { __msInit?: boolean }
+
+  function initSelect(root: MsRoot) {
+    if (root.__msInit) return
+    root.__msInit = true
+
+    const trigger = root.querySelector('[data-ms-trigger]') as HTMLButtonElement
+    const panel = root.querySelector('[data-ms-panel]') as HTMLDivElement
+    const search = root.querySelector('[data-ms-search]') as HTMLInputElement | null
+    const list = root.querySelector('[data-ms-list]') as HTMLUListElement
+    const labelEl = root.querySelector('[data-ms-label]') as HTMLSpanElement
+    const input = root.querySelector('[data-ms-input]') as HTMLInputElement
+    const chevron = root.querySelector('[data-ms-chevron]') as unknown as SVGElement
+    const allOptions = Array.from(
+      list.querySelectorAll<HTMLLIElement>('[data-ms-value]'),
+    )
+
+    function isOpen() {
+      return !panel.classList.contains('hidden')
+    }
+    function open() {
+      // Cerrar otros selects abiertos en la página.
+      document
+        .querySelectorAll<HTMLDivElement>('[data-ms]')
+        .forEach((other) => {
+          if (other !== root) {
+            const otherPanel = other.querySelector(
+              '[data-ms-panel]',
+            ) as HTMLDivElement
+            const otherChev = other.querySelector(
+              '[data-ms-chevron]',
+            ) as unknown as SVGElement
+            otherPanel.classList.add('hidden')
+            otherChev.classList.remove('rotate-180')
+            const otherTrigger = other.querySelector(
+              '[data-ms-trigger]',
+            ) as HTMLButtonElement
+            otherTrigger.setAttribute('aria-expanded', 'false')
+          }
+        })
+
+      panel.classList.remove('hidden')
+      chevron.classList.add('rotate-180')
+      trigger.setAttribute('aria-expanded', 'true')
+      if (search) {
+        search.value = ''
+        renderFilter('')
+        setTimeout(() => search.focus(), 30)
+      }
+    }
+    function close() {
+      panel.classList.add('hidden')
+      chevron.classList.remove('rotate-180')
+      trigger.setAttribute('aria-expanded', 'false')
+    }
+    function normalize(s: string) {
+      return s
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .trim()
+    }
+    function renderFilter(q: string) {
+      const norm = normalize(q)
+      let visible = 0
+      allOptions.forEach((li) => {
+        const txt = normalize(li.dataset.msLabel ?? '')
+        const match = !norm || txt.includes(norm)
+        li.style.display = match ? '' : 'none'
+        if (match) visible++
+      })
+      let emptyEl = list.querySelector(
+        '[data-ms-empty]',
+      ) as HTMLLIElement | null
+      if (visible === 0) {
+        if (!emptyEl) {
+          emptyEl = document.createElement('li')
+          emptyEl.dataset.msEmpty = 'true'
+          emptyEl.className = 'px-4 py-3 text-sm text-muted'
+          emptyEl.textContent = 'Sin coincidencias.'
+          list.appendChild(emptyEl)
+        }
+        emptyEl.style.display = ''
+      } else if (emptyEl) {
+        emptyEl.style.display = 'none'
+      }
+    }
+    function selectOption(value: string, lbl: string) {
+      input.value = value
+      labelEl.textContent = lbl
+      labelEl.classList.remove('text-muted')
+      labelEl.classList.add('text-text')
+      allOptions.forEach((li) => {
+        const sel = li.dataset.msValue === value
+        li.classList.toggle('bg-accent/10', sel)
+        li.classList.toggle('text-accent', sel)
+        li.classList.toggle('font-semibold', sel)
+        li.classList.toggle('text-text', !sel)
+        li.setAttribute('aria-selected', sel ? 'true' : 'false')
+      })
+      close()
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    trigger.addEventListener('click', () => {
+      if (isOpen()) close()
+      else open()
+    })
+    if (search) {
+      search.addEventListener('input', () => renderFilter(search.value))
+      search.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          close()
+          trigger.focus()
+        } else if (e.key === 'Enter') {
+          e.preventDefault()
+          const first = allOptions.find((li) => li.style.display !== 'none')
+          if (first) selectOption(first.dataset.msValue!, first.dataset.msLabel!)
+        }
+      })
+    }
+    allOptions.forEach((li) => {
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault()
+        selectOption(li.dataset.msValue!, li.dataset.msLabel!)
+      })
+    })
+    document.addEventListener('mousedown', (e) => {
+      if (!root.contains(e.target as Node)) close()
+    })
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) {
+        close()
+        trigger.focus()
+      }
+    })
+  }
+
+  function initAll() {
+    document
+      .querySelectorAll<MsRoot>('[data-ms]')
+      .forEach(initSelect)
+  }
+
+  initAll()
+  // Re-init si Astro inserta nuevos selects dinámicamente.
+  if ('MutationObserver' in window) {
+    new MutationObserver(initAll).observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
+  }
+</script>

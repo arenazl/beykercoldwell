@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import Select from '../components/Select.astro'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
@@ -70,30 +71,32 @@ const breadcrumbs = [
 
         <div>
           <label class="text-sm font-semibold mb-2 block">Cuota máxima sobre ingreso</label>
-          <select
+          <Select
             id="pct"
             name="cuotaMaxPctIngreso"
-            class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
-          >
-            <option value="20">20% (conservador)</option>
-            <option value="25" selected>25% (estándar bancario)</option>
-            <option value="30">30% (agresivo)</option>
-          </select>
+            selected="25"
+            options={[
+              { value: '20', label: '20% (conservador)' },
+              { value: '25', label: '25% (estándar bancario)' },
+              { value: '30', label: '30% (agresivo)' },
+            ]}
+          />
         </div>
 
         <div>
           <label class="text-sm font-semibold mb-2 block">Plazo</label>
-          <select
+          <Select
             id="plazo"
             name="plazoAnios"
-            class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
-          >
-            <option value="10">10 años</option>
-            <option value="15">15 años</option>
-            <option value="20" selected>20 años</option>
-            <option value="25">25 años</option>
-            <option value="30">30 años</option>
-          </select>
+            selected="20"
+            options={[
+              { value: '10', label: '10 años' },
+              { value: '15', label: '15 años' },
+              { value: '20', label: '20 años' },
+              { value: '25', label: '25 años' },
+              { value: '30', label: '30 años' },
+            ]}
+          />
         </div>
 
         <button type="submit" id="credito-submit" class="btn-primary w-full justify-center">
