@@ -1,20 +1,24 @@
 import type { APIRoute } from 'astro'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 export const prerender = false
 
 /**
- * Recibe la cotización + mail del cliente y la envía vía Resend.
+ * Recibe la cotización + mail del cliente y la envía vía SMTP.
+ * Usa el mismo provider que el resto de los proyectos del user
+ * (Brevo SMTP — ver D:\Code\APP_GUIDE\STACK_GLOBAL.md sección 4).
  *
- * Env vars:
- *   RESEND_API_KEY  → API key de Resend (requerido para envío real)
- *   MAIL_FROM       → "Beyker <noreply@beykerbienesraices.com.ar>" o
- *                      similar. Default: onboarding@resend.dev
- *                      (válido sin domain verification, sólo envía al
- *                      mail dueño de la cuenta de Resend — ideal testing).
- *   NOTIFY_EMAIL    → opcional: copia al asesor de la inmobiliaria.
+ * Env vars (canónicas, mismas que consorcios / sugerenciasMun):
+ *   SMTP_HOST       → smtp-relay.brevo.com
+ *   SMTP_PORT       → 587
+ *   SMTP_USER       → a14e87001@smtp-brevo.com
+ *   SMTP_PASSWORD   → API key del SMTP (xkeysib-...)
+ *   SMTP_FROM       → arenazl@gmail.com (mientras no haya dominio verificado)
+ *   SMTP_FROM_NAME  → Coldwell Banker Beyker
+ *   NOTIFY_EMAIL    → opcional: BCC al asesor
  *
- * Si no hay RESEND_API_KEY, loguea en consola y devuelve ok (dev mode).
+ * Si falta alguna env var de SMTP, loguea estructurado y devuelve
+ * {sent:false} para no romper el flujo en dev.
  */
 
 interface Band {
@@ -243,6 +247,10 @@ function buildEmailText(code: string, payload: PayloadLite, v: ValuationLite): s
     .join('\n')
 }
 
+function readEnv(name: string): string | undefined {
+  return (process.env[name] ?? import.meta.env[name]) as string | undefined
+}
+
 export const POST: APIRoute = async ({ request }) => {
   let body: {
     email?: string
@@ -272,26 +280,27 @@ export const POST: APIRoute = async ({ request }) => {
   const payload = body.payload ?? {}
   const valuation = body.valuation ?? {}
 
-  const apiKey = process.env.RESEND_API_KEY ?? import.meta.env.RESEND_API_KEY
-  const fromEmail =
-    process.env.MAIL_FROM ??
-    import.meta.env.MAIL_FROM ??
-    'Coldwell Banker Beyker <onboarding@resend.dev>'
-  const notifyEmail = process.env.NOTIFY_EMAIL ?? import.meta.env.NOTIFY_EMAIL
+  const SMTP_HOST = readEnv('SMTP_HOST')
+  const SMTP_PORT = Number(readEnv('SMTP_PORT') ?? '587')
+  const SMTP_USER = readEnv('SMTP_USER')
+  const SMTP_PASSWORD = readEnv('SMTP_PASSWORD')
+  const SMTP_FROM = readEnv('SMTP_FROM') ?? SMTP_USER
+  const SMTP_FROM_NAME = readEnv('SMTP_FROM_NAME') ?? 'Coldwell Banker Beyker'
+  const NOTIFY_EMAIL = readEnv('NOTIFY_EMAIL')
 
   const html = buildEmailHtml({ code, payload, valuation })
   const text = buildEmailText(code, payload, valuation)
   const subject = `Tu cotización Beyker — ${code}`
 
-  // Modo dev / sin Resend → log estructurado y respuesta ok igual.
-  if (!apiKey) {
+  // Modo dev / sin SMTP → log estructurado y respuesta ok igual.
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD) {
     console.log(
       JSON.stringify({
-        kind: 'valuacion_email_skipped_no_resend_key',
+        kind: 'valuacion_email_skipped_no_smtp',
         ts: new Date().toISOString(),
         code,
         email,
-        notifyEmail: notifyEmail ?? null,
+        notifyEmail: NOTIFY_EMAIL ?? null,
       }),
     )
     return new Response(
@@ -299,43 +308,51 @@ export const POST: APIRoute = async ({ request }) => {
         ok: true,
         code,
         sent: false,
-        hint: 'RESEND_API_KEY no configurada — el mail no se envió. Agregala a Netlify env.',
+        hint: 'SMTP_HOST / SMTP_USER / SMTP_PASSWORD no configurados — el mail no se envió.',
       }),
       { headers: { 'Content-Type': 'application/json' } },
     )
   }
 
   try {
-    const resend = new Resend(apiKey)
-    const { error } = await resend.emails.send({
-      from: fromEmail,
-      to: [email],
-      ...(notifyEmail ? { bcc: [notifyEmail] } : {}),
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465, // 465 = SSL implícito; 587 = STARTTLS
+      auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
+    })
+
+    const info = await transporter.sendMail({
+      from: `${SMTP_FROM_NAME} <${SMTP_FROM}>`,
+      to: email,
+      ...(NOTIFY_EMAIL ? { bcc: NOTIFY_EMAIL } : {}),
       subject,
       html,
       text,
     })
 
-    if (error) {
-      console.error('[valuacion-email] resend error', error)
-      return new Response(
-        JSON.stringify({ error: 'No pudimos enviar el mail.', detail: error.message }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } },
-      )
-    }
+    console.log(
+      JSON.stringify({
+        kind: 'valuacion_email_sent',
+        ts: new Date().toISOString(),
+        code,
+        email,
+        messageId: info.messageId,
+      }),
+    )
 
     return new Response(
       JSON.stringify({ ok: true, code, sent: true }),
       { headers: { 'Content-Type': 'application/json' } },
     )
   } catch (err) {
-    console.error('[valuacion-email] exception', err)
+    console.error('[valuacion-email] smtp error', err)
     return new Response(
       JSON.stringify({
-        error: 'Error procesando el envío',
+        error: 'No pudimos enviar el mail.',
         detail: String((err as Error).message),
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
+      { status: 502, headers: { 'Content-Type': 'application/json' } },
     )
   }
 }
