@@ -131,6 +131,22 @@ const sugerencias = [
 
       <div id="ai-error" class="hidden mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
 
+      <div id="ai-suggest" class="hidden mb-6 p-6 rounded-2xl glass scroll-mt-32">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v4M12 16h.01" />
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 id="ai-suggest-title" class="font-bold text-text mb-1"></h3>
+            <p id="ai-suggest-message" class="text-sm text-muted leading-relaxed mb-3"></p>
+            <div id="ai-suggest-chips" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+
       <div id="ai-out-of-scope" class="hidden mb-6 p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 scroll-mt-32">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center">
@@ -177,6 +193,13 @@ const sugerencias = [
   const empty = document.getElementById('ai-empty') as HTMLDivElement
   const outOfScope = document.getElementById('ai-out-of-scope') as HTMLDivElement
   const outOfScopeMessage = document.getElementById('ai-out-of-scope-message') as HTMLParagraphElement
+  const suggest = document.getElementById('ai-suggest') as HTMLDivElement
+  const suggestTitle = document.getElementById('ai-suggest-title') as HTMLHeadingElement
+  const suggestMessage = document.getElementById('ai-suggest-message') as HTMLParagraphElement
+  const suggestChips = document.getElementById('ai-suggest-chips') as HTMLDivElement
+
+  type AnyFilters = Record<string, unknown> & { type?: string; location_includes?: string; summary?: string }
+  let lastFilters: AnyFilters | null = null
 
   document.querySelectorAll<HTMLButtonElement>('.suggestion').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -243,11 +266,30 @@ const sugerencias = [
     requestAnimationFrame(() => form.requestSubmit())
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const query = input.value.trim()
-    if (!query) return
+  function renderSuggest(originalType: string, location: string | undefined, alternatives: { type: string; count: number }[], baseFilters: AnyFilters) {
+    suggestTitle.textContent = `Se encontraron 0 ${originalType.toLowerCase()}${location ? ' en ' + location : ''}.`
+    const top = alternatives.slice(0, 4)
+    const ctx = location ? `En ${location}` : 'Pero'
+    suggestMessage.textContent = `${ctx} sí tenemos otros tipos de propiedad. ¿Querés ver alguno?`
+    suggestChips.innerHTML = ''
+    for (const alt of top) {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className =
+        'px-4 py-2 rounded-full text-sm border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/60 transition-all duration-200 active:scale-95'
+      btn.innerHTML = `${alt.type} <span class="opacity-70">(${alt.count})</span>`
+      btn.addEventListener('click', () => {
+        const newSummary = `Te muestro los ${alt.type} en ${location ?? 'el catálogo'}.`
+        const newFilters: AnyFilters = { ...baseFilters, type: alt.type, summary: newSummary }
+        runSearch({ filters: newFilters })
+      })
+      suggestChips.appendChild(btn)
+    }
+    suggest.classList.remove('hidden')
+    suggest.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
+  async function runSearch(payload: { query?: string; filters?: AnyFilters }) {
     setBtnLoading(submitBtn, true)
     const stopThinking = startThinking(submitLabel, {
       messages: [
@@ -262,13 +304,14 @@ const sugerencias = [
     status.classList.add('hidden')
     empty.classList.add('hidden')
     outOfScope.classList.add('hidden')
+    suggest.classList.add('hidden')
     results.innerHTML = ''
 
     try {
       const res = await fetch('/api/ai-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
 
@@ -280,6 +323,7 @@ const sugerencias = [
       }
 
       const f = data.filters
+      lastFilters = f
 
       if (f.out_of_scope) {
         outOfScopeMessage.textContent = f.out_of_scope_message ||
@@ -297,8 +341,17 @@ const sugerencias = [
       if (f.maxPriceUSD) parts.push(`hasta USD ${f.maxPriceUSD.toLocaleString('es-AR')}`)
       if (f.minBedrooms) parts.push(`${f.minBedrooms}+ dorm.`)
       if (f.keywords?.length) parts.push(...f.keywords.map((k: string) => `“${k}”`))
-      meta.textContent = `${data.total} propiedad${data.total === 1 ? '' : 'es'} encontrada${data.total === 1 ? '' : 's'}` +
-        (parts.length ? ' · ' + parts.join(' · ') : '')
+      const total: number = data.total
+      const rendered: number = data.rendered ?? data.results.length
+      let countText: string
+      if (rendered === 0) {
+        countText = '0 propiedades encontradas'
+      } else if (total > rendered) {
+        countText = `${total.toLocaleString('es-AR')} propiedades · mostramos las ${rendered} más relevantes`
+      } else {
+        countText = `${total} propiedad${total === 1 ? '' : 'es'} encontrada${total === 1 ? '' : 's'}`
+      }
+      meta.textContent = countText + (parts.length ? ' · ' + parts.join(' · ') : '')
       if (f.follow_up) {
         followup.textContent = '💬 ' + f.follow_up
         followup.classList.remove('hidden')
@@ -310,8 +363,12 @@ const sugerencias = [
 
       const sortbarWrap = document.getElementById('ai-sortbar-wrap') as HTMLDivElement
       if (data.results.length === 0) {
-        empty.classList.remove('hidden')
         sortbarWrap.classList.add('hidden')
+        if (data.suggest?.reason === 'no_results_for_type' && Array.isArray(data.suggest.alternatives) && data.suggest.alternatives.length) {
+          renderSuggest(data.suggest.original_type, f.location_includes, data.suggest.alternatives, f)
+        } else {
+          empty.classList.remove('hidden')
+        }
       } else {
         results.innerHTML = data.results.map(renderCard).join('')
         sortbarWrap.classList.remove('hidden')
@@ -325,6 +382,13 @@ const sugerencias = [
       setBtnLoading(submitBtn, false)
       submitLabel.textContent = 'Buscar'
     }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const query = input.value.trim()
+    if (!query) return
+    await runSearch({ query })
   })
 
   // ======================
