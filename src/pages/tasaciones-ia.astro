@@ -53,7 +53,7 @@ const featureOptions = [
 
   <section class="container-app py-12">
     <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <form id="val-form" class="lg:col-span-5 flex flex-col">
+      <form id="val-form" class="lg:col-span-5 flex flex-col scroll-mt-32">
         <!-- Wizard header con progreso — sin recuadro, full width -->
         <header class="mb-6 flex-shrink-0">
           <div class="flex items-center justify-between mb-3">
@@ -355,6 +355,15 @@ const featureOptions = [
       nextBtn.classList.toggle('hidden', isLast)
       submitBtn.classList.toggle('hidden', !isLast)
       current = n
+
+      // Asegurar que el header del paso quede visible por encima de los
+      // sticky bars (TopBanner + nav). Solo si no es el primer paso o si el
+      // form se salió del viewport — evita scroll innecesario.
+      if (n > 1) {
+        requestAnimationFrame(() => {
+          formEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      }
     }
 
     function validateStep(n: number): boolean {
