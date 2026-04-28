@@ -219,6 +219,24 @@ const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${enco
     return d.innerHTML
   }
 
+  // Helper inline (este script es define:vars, no admite imports).
+  // Mantiene el mismo contrato que src/lib/btn-loading.ts.
+  function setBtnLoading(b, loading) {
+    if (!b) return
+    b.disabled = loading
+    b.classList.toggle('is-loading', loading)
+    b.setAttribute('aria-busy', loading ? 'true' : 'false')
+    const existing = b.querySelector(':scope > .btn-spinner')
+    if (loading && !existing) {
+      const sp = document.createElement('span')
+      sp.className = 'btn-spinner'
+      sp.setAttribute('aria-hidden', 'true')
+      b.prepend(sp)
+    } else if (!loading && existing) {
+      existing.remove()
+    }
+  }
+
   let _thinkingTimer = null
   function startThinking(el, messages) {
     let i = 0
@@ -236,7 +254,7 @@ const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${enco
   }
 
   btn?.addEventListener('click', async () => {
-    btn.disabled = true
+    setBtnLoading(btn, true)
     startThinking(btn, [
       'Analizando la propiedad',
       'Buscando pros y contras',
@@ -257,7 +275,7 @@ const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${enco
         stopThinking()
         err.textContent = data.error || 'Error desconocido'
         err.classList.remove('hidden')
-        btn.disabled = false
+        setBtnLoading(btn, false)
         btn.textContent = 'Reintentar'
         return
       }
@@ -291,6 +309,7 @@ const waLink = `https://wa.me/${CONTACT.phone_e164.replace('+', '')}?text=${enco
         </div>
       `
       stopThinking()
+      setBtnLoading(btn, false)
       content.classList.remove('hidden')
       btn.style.display = 'none'
     } catch (e) {

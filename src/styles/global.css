@@ -161,6 +161,29 @@
            text-muted hover:text-text hover:bg-elevated transition-all duration-200;
   }
 
+  /* Estado loading universal: la lib/btn-loading agrega `.is-loading` y
+     prepende `<span class="btn-spinner">`. Funciona sobre cualquier botón. */
+  .is-loading {
+    pointer-events: none;
+    cursor: wait;
+    opacity: 0.85;
+  }
+  /* En estado loading ocultamos íconos sueltos para que el spinner sea
+     el único elemento gráfico — evita botones con flecha + spinner. */
+  .is-loading > svg { display: none; }
+  .btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 9999px;
+    animation: btn-spin 0.7s linear infinite;
+    flex-shrink: 0;
+    vertical-align: -2px;
+  }
+  @keyframes btn-spin { to { transform: rotate(360deg); } }
+
   .container-app {
     @apply max-w-7xl mx-auto px-6 lg:px-10;
   }

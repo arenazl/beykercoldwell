@@ -151,7 +151,7 @@ const featureOptions = [
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold uppercase tracking-wider text-muted">Expensas (ARS)</label>
-            <input id="f-expenses" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            <input id="f-expenses" type="text" inputmode="numeric" autocomplete="off" data-money-mask placeholder="80.000" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
           </div>
         </div>
 
@@ -234,6 +234,11 @@ const featureOptions = [
 </Layout>
 
 <script>
+  import { initMoneyMasks, unmaskMoney } from '../lib/money-mask'
+  import { setBtnLoading } from '../lib/btn-loading'
+
+  initMoneyMasks()
+
   type Band = { low: number; typical: number; high: number }
   type Comparable = {
     description: string
@@ -440,7 +445,7 @@ const featureOptions = [
       bedrooms: num('f-bedrooms'),
       bathrooms: num('f-bathrooms'),
       ageYears: num('f-age'),
-      expensesArs: num('f-expenses'),
+      expensesArs: unmaskMoney((document.getElementById('f-expenses') as HTMLInputElement | null)?.value) ?? undefined,
       features,
       notes: str('f-notes'),
     }
@@ -461,7 +466,7 @@ const featureOptions = [
       return
     }
 
-    submitBtn.disabled = true
+    setBtnLoading(submitBtn, true)
     submitLabel.textContent = 'Analizando…'
     empty.classList.add('hidden')
     errorBox.classList.add('hidden')
@@ -491,7 +496,7 @@ const featureOptions = [
       empty.classList.remove('hidden')
     } finally {
       loading.classList.add('hidden')
-      submitBtn.disabled = false
+      setBtnLoading(submitBtn, false)
       submitLabel.textContent = 'Valuar con IA'
     }
   })

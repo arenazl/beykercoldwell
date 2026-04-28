@@ -41,9 +41,10 @@ const breadcrumbs = [
           <input
             id="ingreso"
             name="ingresoMensualARS"
-            type="number"
-            min="0"
-            step="50000"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            data-money-mask
             required
             placeholder="2.500.000"
             class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
@@ -56,11 +57,12 @@ const breadcrumbs = [
           <input
             id="ahorro"
             name="ahorroUSD"
-            type="number"
-            min="0"
-            step="1000"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            data-money-mask
             required
-            placeholder="50000"
+            placeholder="50.000"
             class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60"
           />
           <p class="text-xs text-muted mt-1">El banco financia hasta ~75% del valor.</p>
@@ -117,12 +119,17 @@ const breadcrumbs = [
 </Layout>
 
 <script>
+  import { initMoneyMasks, unmaskMoney } from '../lib/money-mask'
+  import { setBtnLoading } from '../lib/btn-loading'
+
   const form = document.getElementById('credito-form') as HTMLFormElement
   const submit = document.getElementById('credito-submit') as HTMLButtonElement
   const label = document.getElementById('credito-label') as HTMLSpanElement
   const empty = document.getElementById('credito-empty') as HTMLDivElement
   const errorBox = document.getElementById('credito-error') as HTMLDivElement
   const result = document.getElementById('credito-result') as HTMLDivElement
+
+  initMoneyMasks()
 
   function escapeHtml(s: string): string {
     const d = document.createElement('div')
@@ -143,13 +150,13 @@ const breadcrumbs = [
     empty.classList.add('hidden')
     errorBox.classList.add('hidden')
     result.classList.add('hidden')
-    submit.disabled = true
+    setBtnLoading(submit, true)
     label.textContent = 'Calculando…'
 
     const fd = new FormData(form)
     const payload = {
-      ingresoMensualARS: Number(fd.get('ingresoMensualARS')),
-      ahorroUSD: Number(fd.get('ahorroUSD')),
+      ingresoMensualARS: unmaskMoney(fd.get('ingresoMensualARS') as string) ?? 0,
+      ahorroUSD: unmaskMoney(fd.get('ahorroUSD') as string) ?? 0,
       cuotaMaxPctIngreso: Number(fd.get('cuotaMaxPctIngreso')),
       plazoAnios: Number(fd.get('plazoAnios')),
     }
@@ -233,7 +240,7 @@ const breadcrumbs = [
       errorBox.textContent = 'Error: ' + String((err as Error).message)
       errorBox.classList.remove('hidden')
     } finally {
-      submit.disabled = false
+      setBtnLoading(submit, false)
       label.textContent = 'Calcular'
     }
   })

@@ -39,13 +39,13 @@ const sample = PROPERTIES.slice(0, 36)
 
   <section class="container-app py-12">
     <div class="max-w-6xl mx-auto">
-      <div class="sticky top-20 z-10 mb-8 p-4 rounded-2xl glass-strong flex items-center justify-between gap-4">
+      <div class="sticky top-20 z-10 mb-8 p-4 rounded-2xl glass-strong flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div class="text-sm">
           <span class="text-muted">Seleccionadas:</span>
           <span id="count" class="font-bold text-accent">0</span>
           <span class="text-muted"> / 3</span>
         </div>
-        <button id="compare-btn" type="button" disabled class="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
+        <button id="compare-btn" type="button" disabled class="btn-primary w-full sm:w-auto justify-center whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
           <span id="compare-label">Comparar con IA</span>
         </button>
       </div>
@@ -95,6 +95,7 @@ const sample = PROPERTIES.slice(0, 36)
 
 <script>
   import { startThinking } from '../lib/thinking-rotator'
+  import { setBtnLoading } from '../lib/btn-loading'
 
   const checks = document.querySelectorAll<HTMLInputElement>('.cmp-check')
   const counter = document.getElementById('count') as HTMLSpanElement
@@ -139,7 +140,7 @@ const sample = PROPERTIES.slice(0, 36)
     if (ids.length < 2 || ids.length > 3) return
     errorBox.classList.add('hidden')
     result.classList.add('hidden')
-    btn.disabled = true
+    setBtnLoading(btn, true)
     const stopThinking = startThinking(lbl, {
       messages: [
         'Comparando propiedades',
@@ -223,7 +224,7 @@ const sample = PROPERTIES.slice(0, 36)
       errorBox.classList.remove('hidden')
     } finally {
       stopThinking()
-      btn.disabled = false
+      setBtnLoading(btn, false)
       lbl.textContent = 'Comparar con IA'
     }
   })

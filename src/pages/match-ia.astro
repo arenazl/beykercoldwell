@@ -94,10 +94,11 @@ const estilos = [
             <input
               id="presupuesto"
               name="presupuesto"
-              type="number"
-              min="0"
-              step="10000"
-              placeholder="200000"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              data-money-mask
+              placeholder="200.000"
               class="w-full px-5 py-3.5 rounded-xl border border-border bg-elevated text-text placeholder:text-muted/60 focus:outline-none focus:border-accent/60"
             />
           </div>
@@ -172,6 +173,10 @@ const estilos = [
 
 <script>
   import { startThinking } from '../lib/thinking-rotator'
+  import { initMoneyMasks, unmaskMoney } from '../lib/money-mask'
+  import { setBtnLoading } from '../lib/btn-loading'
+
+  initMoneyMasks()
 
   const form = document.getElementById('match-form') as HTMLFormElement
   const submit = document.getElementById('match-submit') as HTMLButtonElement
@@ -197,12 +202,12 @@ const estilos = [
     const fd = new FormData(form)
     const operacion = (fd.get('operacion') as string) || 'comprar'
     const zona = ((fd.get('zona') as string) || '').trim()
-    const presupuesto = Number(fd.get('presupuesto') || 0) || null
+    const presupuesto = unmaskMoney(fd.get('presupuesto') as string)
     const ambientes = Number(fd.get('ambientes') || 0) || null
     const estilo = fd.getAll('estilo').map(String)
     const notas = (fd.get('notas') as string) || ''
 
-    submit.disabled = true
+    setBtnLoading(submit, true)
     const stopThinking = startThinking(label, {
       messages: [
         'Analizando tu perfil',
@@ -275,7 +280,7 @@ const estilos = [
       errorBox.classList.remove('hidden')
     } finally {
       stopThinking()
-      submit.disabled = false
+      setBtnLoading(submit, false)
       label.textContent = 'Encontrar mis 3 ideales'
     }
   })
