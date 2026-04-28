@@ -34,12 +34,12 @@ export const SOCIAL = {
 
 export const NAV = [
   { label: 'Inicio', href: '/' },
-  { label: 'Búsqueda inteligente', href: '/buscar' },
-  { label: 'Match guiado', href: '/match-guiado' },
+  { label: 'Buscar', href: '/buscar' },
+  { label: 'Match', href: '/match-guiado' },
   { label: 'Propiedades', href: '/propiedades' },
   { label: 'Tasar', href: '/tasacion-online' },
   { label: 'Crédito', href: '/credito' },
-  { label: 'La Empresa', href: '/la-empresa' },
+  { label: 'Empresa', href: '/la-empresa' },
   { label: 'Contacto', href: '/contacto' },
 ]
 
