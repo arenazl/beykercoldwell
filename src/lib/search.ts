@@ -54,7 +54,20 @@ function matchesLocation(p: Property, target: string): boolean {
   return true
 }
 
-export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult[] {
+export interface SearchResponse {
+  /** Cantidad total de propiedades que matchean los filtros (sin slice). */
+  total: number
+  /** Top N resultados ranqueados — apto para renderizar. */
+  results: SearchResult[]
+}
+
+/**
+ * Aplica los filtros y devuelve { total, results } donde:
+ *  - total = cuántas propiedades del catálogo matchearon (real, sin tope)
+ *  - results = top `limit` por score (default 120, suficiente para
+ *    casi cualquier consulta sin saturar el render del grid)
+ */
+export function applyFilters(filters: AISearchFilters, limit = 120): SearchResponse {
   const results: SearchResult[] = []
 
   const target = filters.location_includes ? normalize(filters.location_includes) : ''
@@ -114,5 +127,8 @@ export function applyFilters(filters: AISearchFilters, limit = 24): SearchResult
   }
 
   results.sort((a, b) => b.score - a.score)
-  return results.slice(0, limit)
+  return {
+    total: results.length,
+    results: results.slice(0, limit),
+  }
 }
