@@ -53,140 +53,182 @@ const featureOptions = [
 
   <section class="container-app py-12">
     <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <form id="val-form" class="lg:col-span-5 bg-elevated border border-border rounded-2xl shadow-xl p-6 space-y-5 flex flex-col">
-        <div>
-          <div class="section-eyebrow mb-3">Datos de la propiedad</div>
-          <h2 class="text-2xl font-bold leading-snug">Contanos qué tenés</h2>
+      <form id="val-form" class="lg:col-span-5 bg-elevated border border-border rounded-2xl shadow-xl p-6 flex flex-col">
+        <!-- Wizard header con progreso -->
+        <header class="mb-5 flex-shrink-0">
+          <div class="flex items-center justify-between mb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent text-bg text-xs font-bold" id="wiz-step-num">1</span>
+              <span class="text-xs uppercase tracking-wider text-muted font-semibold">de 7</span>
+            </div>
+            <button type="button" id="wiz-skip" class="hidden text-xs font-semibold text-muted hover:text-accent transition-colors">
+              Saltar paso →
+            </button>
+          </div>
+          <h2 id="wiz-step-title" class="text-2xl font-bold leading-snug mb-3">¿Qué propiedad querés valuar?</h2>
+          <div class="h-1 rounded-full bg-border overflow-hidden">
+            <div id="wiz-progress" class="h-full bg-gradient-to-r from-gold via-accent to-accent transition-all duration-500 ease-out" style="width: 14.3%"></div>
+          </div>
+        </header>
+
+        <div id="wiz-body" class="flex-1 min-h-0">
+          <!-- Step 1: Tipo + Estado -->
+          <div data-wiz-step="1" data-wiz-title="¿Qué propiedad querés valuar?" class="wiz-step grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Tipo</label>
+              <select id="f-type" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
+                {types.map((t) => <option value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Estado</label>
+              <select id="f-state" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
+                {states.map((s) => <option value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <!-- Step 2: Ubicación -->
+          <div data-wiz-step="2" data-wiz-title="¿Dónde está?" data-wiz-required="f-location,f-street,f-street-number" class="wiz-step hidden space-y-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Zona / Barrio / Ciudad</label>
+              <input id="f-location" type="text" required placeholder="Ej: Recoleta, CABA"
+                     class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="col-span-2 flex flex-col gap-1.5">
+                <label class="text-xs font-semibold uppercase tracking-wider text-muted">Calle</label>
+                <input id="f-street" type="text" required placeholder="Ej: Av. Callao"
+                       class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold uppercase tracking-wider text-muted">Altura</label>
+                <input id="f-street-number" type="text" required placeholder="1240"
+                       class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Detalles del lugar (opcional) -->
+          <div data-wiz-step="3" data-wiz-title="Detalles del lugar (opcional)" data-wiz-skippable="true" class="wiz-step hidden">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold uppercase tracking-wider text-muted">Piso</label>
+                <input id="f-floor" type="text" placeholder="5"
+                       class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold uppercase tracking-wider text-muted">Depto</label>
+                <input id="f-unit" type="text" placeholder="A"
+                       class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold uppercase tracking-wider text-muted">Orientación</label>
+                <select id="f-orientation" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
+                  <option value="">—</option>
+                  <option value="Norte">Norte</option>
+                  <option value="Sur">Sur</option>
+                  <option value="Este">Este</option>
+                  <option value="Oeste">Oeste</option>
+                  <option value="Frente">Frente</option>
+                  <option value="Contrafrente">Contrafrente</option>
+                  <option value="Lateral">Lateral</option>
+                </select>
+              </div>
+            </div>
+            <p class="text-xs text-muted mt-3">Si no aplica (casa, lote, etc.) podés saltar este paso.</p>
+          </div>
+
+          <!-- Step 4: Tamaño -->
+          <div data-wiz-step="4" data-wiz-title="¿Qué tan grande es?" data-wiz-required="f-surface-total" class="wiz-step hidden grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Sup. total (m²)</label>
+              <input id="f-surface-total" type="number" min="1" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Sup. cubierta (m²)</label>
+              <input id="f-surface-covered" type="number" min="1" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            </div>
+          </div>
+
+          <!-- Step 5: Ambientes -->
+          <div data-wiz-step="5" data-wiz-title="¿Cuántos ambientes?" class="wiz-step hidden grid grid-cols-3 gap-3">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Ambientes</label>
+              <Stepper id="f-rooms" min={1} max={20} placeholder="3" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm.</label>
+              <Stepper id="f-bedrooms" min={0} max={15} placeholder="2" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Baños</label>
+              <Stepper id="f-bathrooms" min={0} max={10} placeholder="1" />
+            </div>
+          </div>
+
+          <!-- Step 6: Antigüedad + Expensas -->
+          <div data-wiz-step="6" data-wiz-title="Antigüedad y expensas" data-wiz-skippable="true" class="wiz-step hidden grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Antigüedad (años)</label>
+              <Stepper id="f-age" min={0} max={150} placeholder="0 = a estrenar" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Expensas (ARS)</label>
+              <input id="f-expenses" type="text" inputmode="numeric" autocomplete="off" data-money-mask placeholder="80.000" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            </div>
+          </div>
+
+          <!-- Step 7: Características + Notas + Generar -->
+          <div data-wiz-step="7" data-wiz-title="Detalles finales" class="wiz-step hidden space-y-4">
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Características (opcional)</label>
+              <div class="flex flex-wrap gap-2">
+                {featureOptions.map((f) => (
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="feature" value={f} class="peer sr-only" />
+                    <span class="inline-block px-3 py-1.5 text-xs rounded-full border border-border text-muted bg-bg transition-all hover:border-accent/40 peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent">
+                      {f}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wider text-muted">Notas (opcional)</label>
+              <textarea id="f-notes" rows="2" placeholder="Detalles relevantes: orientación, vista, planta, etc."
+                        class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent resize-none"></textarea>
+            </div>
+            <p class="text-xs text-muted leading-relaxed">
+              Valuación orientativa generada por IA. Para una tasación profesional con visita presencial,
+              <a href="/tasaciones" class="text-accent hover:underline">solicitala acá</a>.
+            </p>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Tipo</label>
-            <select id="f-type" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
-              {types.map((t) => <option value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Estado</label>
-            <select id="f-state" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
-              {states.map((s) => <option value={s.value}>{s.label}</option>)}
-            </select>
-          </div>
-        </div>
+        <div id="wiz-validation" class="hidden mt-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 text-xs"></div>
 
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold uppercase tracking-wider text-muted">Zona / Barrio / Ciudad</label>
-          <input id="f-location" type="text" required placeholder="Ej: Recoleta, CABA"
-                 class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-        </div>
-
-        <div class="grid grid-cols-3 gap-3">
-          <div class="col-span-2 flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Calle</label>
-            <input id="f-street" type="text" required placeholder="Ej: Av. Callao"
-                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Altura</label>
-            <input id="f-street-number" type="text" required placeholder="1240"
-                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-3">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Piso</label>
-            <input id="f-floor" type="text" placeholder="5"
-                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Depto</label>
-            <input id="f-unit" type="text" placeholder="A"
-                   class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Orientación</label>
-            <select id="f-orientation" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent">
-              <option value="">—</option>
-              <option value="Norte">Norte</option>
-              <option value="Sur">Sur</option>
-              <option value="Este">Este</option>
-              <option value="Oeste">Oeste</option>
-              <option value="Frente">Frente</option>
-              <option value="Contrafrente">Contrafrente</option>
-              <option value="Lateral">Lateral</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Sup. total (m²)</label>
-            <input id="f-surface-total" type="number" min="1" required class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Sup. cubierta (m²)</label>
-            <input id="f-surface-covered" type="number" min="1" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-3">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Ambientes</label>
-            <Stepper id="f-rooms" min={1} max={20} placeholder="3" />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm.</label>
-            <Stepper id="f-bedrooms" min={0} max={15} placeholder="2" />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Baños</label>
-            <Stepper id="f-bathrooms" min={0} max={10} placeholder="1" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Antigüedad (años)</label>
-            <Stepper id="f-age" min={0} max={150} placeholder="0 = a estrenar" />
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold uppercase tracking-wider text-muted">Expensas (ARS)</label>
-            <input id="f-expenses" type="text" inputmode="numeric" autocomplete="off" data-money-mask placeholder="80.000" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <label class="text-xs font-semibold uppercase tracking-wider text-muted">Características</label>
-          <div class="flex flex-wrap gap-2">
-            {featureOptions.map((f) => (
-              <label class="cursor-pointer">
-                <input type="checkbox" name="feature" value={f} class="peer sr-only" />
-                <span class="inline-block px-3 py-1.5 text-xs rounded-full border border-border text-muted bg-bg transition-all hover:border-accent/40 peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent">
-                  {f}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold uppercase tracking-wider text-muted">Notas (opcional)</label>
-          <textarea id="f-notes" rows="2" placeholder="Detalles relevantes: orientación, vista, planta, etc."
-                    class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent resize-none"></textarea>
-        </div>
-
-        <button type="submit" id="val-submit" class="btn-primary justify-center mt-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
-          </svg>
-          <span id="val-submit-label">Valuar con IA</span>
-        </button>
-
-        <p class="text-xs text-muted leading-relaxed text-center">
-          Valuación orientativa generada por IA. Para una tasación profesional con visita presencial,
-          <a href="/tasaciones" class="text-accent hover:underline">solicitala acá</a>.
-        </p>
+        <!-- Wizard footer / nav -->
+        <footer class="mt-6 flex-shrink-0 flex items-center justify-between gap-3">
+          <button type="button" id="wiz-prev" class="btn-secondary disabled:opacity-30 disabled:pointer-events-none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Atrás
+          </button>
+          <button type="button" id="wiz-next" class="btn-primary">
+            Siguiente
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+          <button type="submit" id="val-submit" class="btn-primary hidden">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
+            </svg>
+            <span id="val-submit-label">Valuar con IA</span>
+          </button>
+        </footer>
       </form>
 
       <div class="lg:col-span-7 min-w-0">
@@ -234,6 +276,31 @@ const featureOptions = [
   </section>
 </Layout>
 
+<style>
+  .wiz-step {
+    animation: wiz-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .wiz-step.wiz-back {
+    animation: wiz-enter-back 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes wiz-enter {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes wiz-enter-back {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .wiz-shake {
+    animation: wiz-shake 0.4s ease-in-out;
+  }
+  @keyframes wiz-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+</style>
+
 <script>
   import { initMoneyMasks, unmaskMoney } from '../lib/money-mask'
   import { setBtnLoading } from '../lib/btn-loading'
@@ -241,6 +308,98 @@ const featureOptions = [
 
   initMoneyMasks()
   initSteppers()
+
+  // ====================================================================
+  // Wizard: navegación paso a paso
+  // ====================================================================
+  ;(() => {
+    const formEl = document.getElementById('val-form') as HTMLFormElement
+    const steps = Array.from(document.querySelectorAll<HTMLElement>('[data-wiz-step]'))
+    if (!steps.length) return
+    const total = steps.length
+    const stepNum = document.getElementById('wiz-step-num') as HTMLSpanElement
+    const stepTitle = document.getElementById('wiz-step-title') as HTMLHeadingElement
+    const progress = document.getElementById('wiz-progress') as HTMLDivElement
+    const prevBtn = document.getElementById('wiz-prev') as HTMLButtonElement
+    const nextBtn = document.getElementById('wiz-next') as HTMLButtonElement
+    const skipBtn = document.getElementById('wiz-skip') as HTMLButtonElement
+    const submitBtn = document.getElementById('val-submit') as HTMLButtonElement
+    const validation = document.getElementById('wiz-validation') as HTMLDivElement
+    let current = 1
+
+    function showStep(n: number, direction: 'forward' | 'back') {
+      validation.classList.add('hidden')
+      steps.forEach((el) => {
+        const idx = Number(el.dataset.wizStep)
+        el.classList.remove('wiz-step', 'wiz-back')
+        if (idx === n) {
+          el.classList.remove('hidden')
+          // Force reflow para que la animación se reinicie cada vez.
+          void el.offsetWidth
+          el.classList.add('wiz-step')
+          if (direction === 'back') el.classList.add('wiz-back')
+          stepTitle.textContent = el.dataset.wizTitle || ''
+          const skippable = el.dataset.wizSkippable === 'true'
+          skipBtn.classList.toggle('hidden', !skippable)
+          // Foco al primer input del paso
+          const firstInput = el.querySelector<HTMLElement>('input, select, textarea')
+          if (firstInput) setTimeout(() => firstInput.focus({ preventScroll: true }), 50)
+        } else {
+          el.classList.add('hidden')
+        }
+      })
+      stepNum.textContent = String(n)
+      progress.style.width = `${(n / total) * 100}%`
+      prevBtn.disabled = n === 1
+      const isLast = n === total
+      nextBtn.classList.toggle('hidden', isLast)
+      submitBtn.classList.toggle('hidden', !isLast)
+      current = n
+    }
+
+    function validateStep(n: number): boolean {
+      const el = steps.find((s) => Number(s.dataset.wizStep) === n)
+      if (!el) return true
+      const requiredIds = (el.dataset.wizRequired || '').split(',').filter(Boolean)
+      for (const id of requiredIds) {
+        const input = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null
+        if (!input) continue
+        if (!input.value.trim()) {
+          validation.textContent = `Completá "${input.previousElementSibling?.textContent?.trim() || 'este campo'}" para continuar.`
+          validation.classList.remove('hidden')
+          input.focus()
+          input.classList.add('wiz-shake')
+          setTimeout(() => input.classList.remove('wiz-shake'), 500)
+          return false
+        }
+      }
+      return true
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (!validateStep(current)) return
+      if (current < total) showStep(current + 1, 'forward')
+    })
+    prevBtn.addEventListener('click', () => {
+      if (current > 1) showStep(current - 1, 'back')
+    })
+    skipBtn.addEventListener('click', () => {
+      if (current < total) showStep(current + 1, 'forward')
+    })
+
+    // Enter en cualquier input avanza al siguiente paso (excepto en textarea / último paso).
+    formEl.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return
+      const target = e.target as HTMLElement
+      if (target.tagName === 'TEXTAREA') return
+      if (current < total) {
+        e.preventDefault()
+        nextBtn.click()
+      }
+    })
+
+    showStep(1, 'forward')
+  })()
 
   type Band = { low: number; typical: number; high: number }
   type Comparable = {

@@ -190,7 +190,7 @@
            transition-colors focus-within:border-accent;
   }
   .stepper-btn {
-    @apply w-10 flex items-center justify-center text-muted select-none
+    @apply w-9 sm:w-10 flex items-center justify-center text-muted select-none
            hover:bg-accent/10 hover:text-accent active:scale-[0.92]
            transition-all duration-150;
   }
