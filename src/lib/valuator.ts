@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getMarketAnchor, formatAnchorForPrompt } from './market-anchors'
 
 const apiKey = process.env.GEMINI_API_KEY ?? import.meta.env.GEMINI_API_KEY
 const modelName =
@@ -70,6 +71,19 @@ export async function valuateProperty(input: ValuatorInput): Promise<ValuatorOut
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
   })
 
+  const anchor = getMarketAnchor({ type: input.type, location: input.location })
+  const anchorBlock = anchor ? `\n\n${formatAnchorForPrompt(anchor)}\n` : ''
+  const anchorRules = anchor
+    ? `
+
+Reglas de anclaje (OBLIGATORIO — el ancla es tu primary ground truth):
+- El bloque "ANCLA REAL DEL CATÁLOGO PROPIO" más abajo son propiedades reales publicadas hoy en el mismo mercado. Tomalo como referencia dura, no como sugerencia.
+- "pricePerM2USD.typical" debe estar dentro del rango P25–P75 del ancla, salvo que la propiedad evaluada tenga atributos muy distintos al promedio del ancla — en ese caso justificá el desvío en "factorsUp" o "factorsDown".
+- "pricePerM2USD.low" no debe bajar del Min del ancla, "pricePerM2USD.high" no debe superar el Max del ancla, salvo justificación explícita en "caveats".
+- Recordá: el ancla son precios de PUBLICACIÓN. Tu output debe ser VALOR DE CIERRE estimado (ver regla de mercado abajo).
+- En "comparables" del output, priorizá los reales del ancla (podés parafrasear el "description"). Solo agregá hipotéticos si te faltan para llegar a 3.`
+    : ''
+
   const prompt = `Sos un tasador inmobiliario senior con foco en Argentina (CABA, GBA, principales capitales). Trabajás con metodología ACM (Análisis Comparativo de Mercado) basada en operaciones reales del mercado al día de hoy.
 
 Recibís los datos de una propiedad y devolvés un JSON con la valuación, comparables plausibles para la zona, factores de ajuste y recomendaciones comerciales.
@@ -106,12 +120,18 @@ Devolvé exclusivamente JSON con esta estructura exacta (todos los campos obliga
 }
 
 Reglas duras:
-- NO inventes precios sin sustento. Usá tu conocimiento general del mercado argentino y la zona.
+- NO inventes precios sin sustento. ${anchor ? 'Usá el ancla real provista más abajo como ground truth y tu conocimiento del mercado argentino para los ajustes finos.' : 'Usá tu conocimiento general del mercado argentino y la zona.'}
 - Si los datos son insuficientes para una banda angosta, devolvé "confidence" = "baja" y banda más amplia.
-- 3 a 5 comparables. Que sean plausibles para la zona y tipología (no copies datos del prompt; generá con criterio).
+- 3 a 5 comparables. ${anchor ? 'Priorizá los reales del ancla (podés parafrasear).' : 'Que sean plausibles para la zona y tipología.'}
 - pricePerM2USD * surfaceTotalM2 debe ser coherente con totalPriceUSD (típico ≈ pricePerM2USD.typical * surfaceTotalM2).
 - Tono profesional, conciso, en español rioplatense (vos).
 - En "caveats" dejá claro que es una valuación orientativa automatizada y que la tasación final requiere visita presencial.
+
+Reglas de mercado argentino (HOY, mercado ilíquido, post-cepo en transición):
+- Estimás VALOR DE CIERRE, no precio de publicación. En Argentina los listados típicamente cierran entre 8% y 18% por debajo del precio publicado. En el contexto actual (2025–2026, mercado con poca demanda) usá el extremo alto del descuento (~12–15%) salvo que la propiedad sea muy líquida (CABA premium a estrenar, etc).
+- Sé CONSERVADOR con los premiums: "a estrenar" suma ~10–15% real, NO 30%. "Excelente estado" suma 5–8%, no 20%. La suma combinada de features (cochera + amenities + pileta + etc) no debería superar +20% sobre el promedio de la zona.
+- "Regular" o "a refaccionar" descuenta 12–25% según severidad. No suavices este descuento.
+- Si la cuadra/posición es residencial estándar (no premium del barrio), no asumas premium implícito por el barrio. Una propiedad en zona "buena" pero sobre avenida ruidosa o cuadra fea NO va al techo de la zona.${anchorRules}
 
 Datos de la propiedad a valuar:
 - Tipo: ${input.type}
@@ -129,7 +149,7 @@ ${input.expensesArs ? `- Expensas mensuales (ARS): ${input.expensesArs.toLocaleS
 ${input.orientation ? `- Orientación: ${input.orientation}` : ''}
 ${input.notes ? `- Notas adicionales: ${input.notes.replace(/"/g, '\\"')}` : ''}
 
-Tené en cuenta para el ajuste fino: la altura de la calle (cuadra específica), el piso (mejor cotización a mayor altura por luz/vistas en general, salvo último piso con problemas), la orientación (norte / contrafrente / lateral), y la posición exacta dentro del barrio (si es zona premium del barrio o periférica).`
+Tené en cuenta para el ajuste fino: la altura de la calle (cuadra específica), el piso (mejor cotización a mayor altura por luz/vistas en general, salvo último piso con problemas), la orientación (norte / contrafrente / lateral), y la posición exacta dentro del barrio (si es zona premium del barrio o periférica).${anchorBlock}`
 
   const result = await model.generateContent(prompt)
   const txt = result.response.text()
