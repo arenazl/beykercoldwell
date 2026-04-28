@@ -25,7 +25,7 @@ const path = Astro.url.pathname
           <a
             href={item.href}
             class:list={[
-              'relative px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200',
+              'relative whitespace-nowrap px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200',
               active
                 ? 'text-text bg-elevated/80'
                 : 'text-muted hover:text-text hover:bg-elevated/50',
@@ -43,7 +43,7 @@ const path = Astro.url.pathname
     <div class="flex items-center gap-2">
       <a
         href={NAV_CTA.href}
-        class="hidden sm:inline-flex btn-gold text-sm px-4 py-2"
+        class="hidden sm:inline-flex btn-gold text-sm px-4 py-2 whitespace-nowrap"
       >
         {NAV_CTA.label}
       </a>
