@@ -184,6 +184,29 @@
   }
   @keyframes btn-spin { to { transform: rotate(360deg); } }
 
+  /* Stepper numérico — botón − / valor / + en una sola pill. Reusable. */
+  .stepper {
+    @apply flex items-stretch rounded-xl border border-border bg-bg overflow-hidden
+           transition-colors focus-within:border-accent;
+  }
+  .stepper-btn {
+    @apply w-10 flex items-center justify-center text-muted select-none
+           hover:bg-accent/10 hover:text-accent active:scale-[0.92]
+           transition-all duration-150;
+  }
+  .stepper-btn:disabled {
+    @apply opacity-30 pointer-events-none;
+  }
+  .stepper-input {
+    @apply flex-1 min-w-0 bg-transparent text-center font-bold text-text text-base
+           focus:outline-none px-1 py-2.5;
+  }
+  .stepper-input::-webkit-outer-spin-button,
+  .stepper-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
   .container-app {
     @apply max-w-7xl mx-auto px-6 lg:px-10;
   }

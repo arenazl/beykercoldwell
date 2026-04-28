@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import Stepper from '../components/Stepper.astro'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
@@ -60,16 +61,16 @@ const featureOptions = [
           </div>
           <div>
             <label class="text-sm font-semibold mb-2 block">Dorm</label>
-            <input id="bedrooms" name="bedrooms" type="number" min="0" class="w-full px-3 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+            <Stepper id="bedrooms" min={0} max={15} placeholder="2" />
           </div>
           <div>
             <label class="text-sm font-semibold mb-2 block">Baños</label>
-            <input id="bathrooms" name="bathrooms" type="number" min="0" class="w-full px-3 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+            <Stepper id="bathrooms" min={0} max={10} placeholder="1" />
           </div>
         </div>
         <div>
           <label class="text-sm font-semibold mb-2 block">Antigüedad (años)</label>
-          <input id="ageYears" name="ageYears" type="number" min="0" placeholder="0 = a estrenar" class="w-full px-4 py-3 rounded-xl border border-border bg-bg text-text focus:outline-none focus:border-accent/60" />
+          <Stepper id="ageYears" min={0} max={150} placeholder="0 = a estrenar" />
         </div>
         <div>
           <label class="text-sm font-semibold mb-2 block">Características</label>
@@ -106,6 +107,9 @@ const featureOptions = [
 <script>
   import { startThinking } from '../lib/thinking-rotator'
   import { setBtnLoading } from '../lib/btn-loading'
+  import { initSteppers } from '../lib/stepper'
+
+  initSteppers()
 
   const form = document.getElementById('gen-form') as HTMLFormElement
   const submit = document.getElementById('gen-submit') as HTMLButtonElement

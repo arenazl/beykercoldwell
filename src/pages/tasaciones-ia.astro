@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import Stepper from '../components/Stepper.astro'
 import { CONTACT } from '../data/site'
 
 const breadcrumbs = [
@@ -132,22 +133,22 @@ const featureOptions = [
         <div class="grid grid-cols-3 gap-3">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold uppercase tracking-wider text-muted">Ambientes</label>
-            <input id="f-rooms" type="number" min="1" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            <Stepper id="f-rooms" min={1} max={20} placeholder="3" />
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm.</label>
-            <input id="f-bedrooms" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            <Stepper id="f-bedrooms" min={0} max={15} placeholder="2" />
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold uppercase tracking-wider text-muted">Baños</label>
-            <input id="f-bathrooms" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            <Stepper id="f-bathrooms" min={0} max={10} placeholder="1" />
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold uppercase tracking-wider text-muted">Antigüedad (años)</label>
-            <input id="f-age" type="number" min="0" class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent" />
+            <Stepper id="f-age" min={0} max={150} placeholder="0 = a estrenar" />
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold uppercase tracking-wider text-muted">Expensas (ARS)</label>
@@ -236,8 +237,10 @@ const featureOptions = [
 <script>
   import { initMoneyMasks, unmaskMoney } from '../lib/money-mask'
   import { setBtnLoading } from '../lib/btn-loading'
+  import { initSteppers } from '../lib/stepper'
 
   initMoneyMasks()
+  initSteppers()
 
   type Band = { low: number; typical: number; high: number }
   type Comparable = {

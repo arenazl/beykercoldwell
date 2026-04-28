@@ -1,0 +1,61 @@
+---
+/**
+ * Stepper numérico (− N +). El input interno conserva el `id` original
+ * para que el JS existente que hace `document.getElementById(id).value`
+ * siga funcionando sin cambios.
+ *
+ * Uso:
+ *   <Stepper id="f-rooms" min={1} max={20} placeholder="3" />
+ */
+interface Props {
+  id: string
+  name?: string
+  min?: number
+  max?: number
+  step?: number
+  value?: number | ''
+  required?: boolean
+  placeholder?: string
+}
+
+const {
+  id,
+  name = id,
+  min = 0,
+  max = 99,
+  step = 1,
+  value = '',
+  required = false,
+  placeholder = '',
+} = Astro.props
+---
+
+<div
+  class="stepper"
+  data-stepper-min={min}
+  data-stepper-max={max}
+  data-stepper-step={step}
+>
+  <button type="button" class="stepper-btn stepper-dec" aria-label="Disminuir" tabindex="-1">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  </button>
+  <input
+    id={id}
+    name={name}
+    type="text"
+    inputmode="numeric"
+    autocomplete="off"
+    value={value}
+    placeholder={placeholder}
+    required={required}
+    class="stepper-input"
+  />
+  <button type="button" class="stepper-btn stepper-inc" aria-label="Aumentar" tabindex="-1">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  </button>
+</div>
