@@ -1,5 +1,6 @@
 import { PROPERTIES, type Property } from '../data/properties'
 import type { AISearchFilters } from './gemini'
+import { featureLabel, type Feature } from './feature-index'
 
 /**
  * Aplica filtros estructurados al catálogo y devuelve los matches ordenados por
@@ -101,6 +102,21 @@ export function applyFilters(filters: AISearchFilters, limit = 120): SearchRespo
       // Si no la sabemos, no descartamos (no hay dato suficiente).
       if (p.antiguedadYears != null && p.antiguedadYears > filters.maxAntiguedad) pass = false
       else if (p.antiguedadLabel) hits.push(`🏛 ${p.antiguedadLabel}`)
+    }
+
+    // Features estandarizadas: lookup O(1) contra el Set pre-computado.
+    if (pass && filters.featuresRequired?.length) {
+      for (const f of filters.featuresRequired) {
+        if (!p.features.has(f as Feature)) {
+          pass = false
+          break
+        }
+      }
+      if (pass) {
+        hits.push(
+          ...filters.featuresRequired.map((f) => `★ ${featureLabel(f as Feature)}`),
+        )
+      }
     }
 
     // Keywords obligatorias y excluidas. Computamos haystack una sola vez

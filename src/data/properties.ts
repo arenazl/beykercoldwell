@@ -11,6 +11,7 @@ import raw from './cb-argentina.json' assert { type: 'json' }
 // Detalles enriquecidos (scraped de fichas individuales: antigüedad estructurada,
 // situation, orientation, etc.). El archivo siempre existe (mínimo {details:{}}).
 import detailsRaw from './cb-argentina-details.json' assert { type: 'json' }
+import { detectFeatures } from '../lib/feature-index'
 
 interface DetailEntry {
   antiquity?: string
@@ -59,6 +60,9 @@ export interface Property extends RawProperty {
   antiguedadLabel: string | null
   /** true si `location` se derivó del title (el scrape lo trajo vacío). */
   locationInferred: boolean
+  /** Set de features estandarizadas detectadas en title+desc. Pre-computado
+   *  al cargar el catálogo para lookup O(1) en filtros (ver feature-index.ts). */
+  features: Set<import('../lib/feature-index').Feature>
 }
 
 function normLoc(s: string): string {
@@ -225,6 +229,7 @@ export const PROPERTIES: Property[] = catalog.properties.map((p) => {
     antiguedadYears: years,
     antiguedadLabel: label,
     locationInferred,
+    features: detectFeatures(`${p.title || ''} ${p.description || ''}`),
   }
 })
 

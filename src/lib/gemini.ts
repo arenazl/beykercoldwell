@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { listFeatureKeys } from './feature-index'
 
 const apiKey = process.env.GEMINI_API_KEY ?? import.meta.env.GEMINI_API_KEY
 const modelName =
@@ -40,11 +41,15 @@ export interface AISearchFilters {
   /** Keywords con scoring "soft" — suman puntos al ranking pero no descartan. */
   keywords?: string[]
   /** Keywords obligatorias — TODAS deben aparecer en title+description.
-   * Usar para requerimientos duros: "tiene que tener pileta", "con cochera". */
+   * Usar SOLO si la palabra NO está en `featuresRequired`. */
   keywordsRequired?: string[]
   /** Keywords prohibidas — NINGUNA puede aparecer. Usar para negaciones:
    * "sin reciclar", "que no esté en pozo", "no balcón francés". */
   keywordsExcluded?: string[]
+  /** Features estandarizadas obligatorias (preferir sobre keywordsRequired
+   *  cuando exista equivalente en el diccionario — ver feature-index.ts).
+   *  Lookup O(1) contra Property.features pre-computado. */
+  featuresRequired?: string[]
   summary: string
   follow_up?: string
   /** true cuando el cliente pide algo fuera del alcance del catálogo (ej: ubicación en otro país). */
@@ -96,8 +101,9 @@ Devolvé JSON con esta forma exacta:
   "maxSurfaceM2": number | null,
   "maxAntiguedad": number | null,
   "aEstrenar": true | false | null,
-  "keywords": ["palabras 'soft' que ranquean mejor si aparecen, pero no descartan. Ej: 'amenities', 'luminoso'. Defaultear acá si no estás seguro de si es requisito duro."],
-  "keywordsRequired": ["palabras OBLIGATORIAS — todas tienen que aparecer en title+description. Usar para requerimientos duros que el cliente expresó como condición. Ej: 'pileta' si dijo 'CON pileta', 'cochera' si dijo 'que tenga cochera', 'apto credito' si dijo 'apto crédito'."],
+  "featuresRequired": ["features estandarizadas REQUERIDAS — usar PREFERENTEMENTE para requisitos duros. Lista cerrada: ${JSON.stringify(listFeatureKeys())}. Ej: 'pileta' si dijo 'con pileta', 'apto_credito' si dijo 'apto crédito'."],
+  "keywords": ["palabras 'soft' que ranquean mejor si aparecen, pero no descartan. Ej: adjetivos sueltos no presentes en featuresRequired."],
+  "keywordsRequired": ["palabras OBLIGATORIAS libres — usar SOLO cuando el requisito no exista en featuresRequired. Si la palabra está en la lista de features, usá featuresRequired."],
   "keywordsExcluded": ["palabras PROHIBIDAS — ninguna puede aparecer. Usar para negaciones explícitas. Ej: 'pozo' si dijo 'que NO esté en pozo', 'reciclar' si dijo 'sin reciclar'."],
   "summary": "Resumen amigable de lo que entendiste, en 1 oración. Tutealo (vos), tono argentino.",
   "follow_up": "Pregunta corta si la consulta es ambigua o falta info clave (ej: '¿Para vivir o invertir?'). null si no hace falta.",
