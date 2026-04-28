@@ -36,7 +36,7 @@ if (precioRaw) {
 }
 
 // =============================================================================
-// 2) Filtrado server-side. Sin IA — la IA está en /buscar.
+// 2) Filtrado server-side. La búsqueda inteligente vive en /buscar.
 // =============================================================================
 const norm = (s: string) =>
   (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -209,7 +209,7 @@ const breadcrumbs = [
       <h1 class="text-3xl md:text-5xl font-bold tracking-tightest mb-2">Propiedades</h1>
       <p class="text-base lg:text-lg text-muted max-w-2xl leading-relaxed">
         {CATALOG_META.total.toLocaleString('es-AR')} propiedades de toda la red Coldwell Banker Argentina —
-        filtrá lo que buscás o usá la <a href="/buscar" class="text-accent hover:underline font-semibold">búsqueda con IA</a>
+        filtrá lo que buscás o usá la <a href="/buscar" class="text-accent hover:underline font-semibold">búsqueda inteligente</a>
         en lenguaje natural.
       </p>
     </div>
@@ -442,11 +442,11 @@ const breadcrumbs = [
           </div>
           <h3 class="text-lg font-bold mb-1">Sin resultados con esos filtros</h3>
           <p class="text-sm text-muted leading-relaxed max-w-md mx-auto mb-4">
-            Probá relajar algún filtro o describir lo que buscás en lenguaje natural en la búsqueda con IA.
+            Probá relajar algún filtro o describir lo que buscás en lenguaje natural en la búsqueda inteligente.
           </p>
           <div class="flex flex-wrap items-center justify-center gap-2">
             <a href={urlClearAll()} class="btn-secondary text-sm">Limpiar filtros</a>
-            <a href="/buscar" class="btn-primary text-sm">Buscar con IA</a>
+            <a href="/buscar" class="btn-primary text-sm">Búsqueda inteligente</a>
           </div>
         </div>
       )}

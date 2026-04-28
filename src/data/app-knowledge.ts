@@ -25,8 +25,8 @@ export const APP_SECTIONS: AppSection[] = [
   },
   {
     href: '/buscar',
-    label: 'Buscar con IA',
-    purpose: 'Búsqueda en lenguaje natural sobre las 9.240 propiedades del catálogo. El usuario escribe lo que quiere y la IA filtra.',
+    label: 'Búsqueda inteligente',
+    purpose: 'Búsqueda en lenguaje natural sobre las 9.240 propiedades del catálogo. El usuario escribe lo que quiere y filtramos.',
     intents: ['quiero comprar', 'busco propiedad', 'ver propiedades por criterio', 'filtrar', 'departamento en X', 'casa con Y'],
   },
   {
@@ -43,9 +43,9 @@ export const APP_SECTIONS: AppSection[] = [
   },
   {
     href: '/tasaciones-ia',
-    label: 'Valuación con IA',
-    purpose: 'Estimación instantánea de valor de una propiedad mediante IA. Resultado en segundos vs días de la tasación humana.',
-    intents: ['estimación rápida', 'cuánto vale ahora', 'valuación IA', 'tasación instantánea'],
+    label: 'Tasación inteligente',
+    purpose: 'Estimación instantánea de valor de una propiedad. Resultado en segundos vs días de la tasación humana.',
+    intents: ['estimación rápida', 'cuánto vale ahora', 'valuación inteligente', 'tasación instantánea'],
   },
   {
     href: '/credito',
@@ -56,25 +56,25 @@ export const APP_SECTIONS: AppSection[] = [
   {
     href: '/comparar',
     label: 'Comparador de propiedades',
-    purpose: 'Compara 2-3 propiedades lado a lado: precio, m², ubicación, antigüedad. La IA recomienda la mejor según perfil.',
+    purpose: 'Compara 2-3 propiedades lado a lado: precio, m², ubicación, antigüedad. Recomendamos la mejor según perfil.',
     intents: ['comparar propiedades', 'cuál conviene', 'pros y contras', 'lado a lado'],
   },
   {
     href: '/match-ia',
-    label: 'Match-IA',
+    label: 'Match guiado',
     purpose: 'Quiz corto que detecta perfil del comprador (familia, inversor, primera vivienda) y sugiere las 3 mejores propiedades.',
     intents: ['no sé qué busco', 'recomendame', 'guíame', 'soy nuevo', 'me orienten'],
   },
   {
     href: '/generar-aviso',
-    label: 'Generador de aviso (IA)',
+    label: 'Generador de aviso',
     purpose: 'Crea título, descripción, hashtags y CTA para una publicación inmobiliaria a partir de datos crudos.',
     intents: ['publicar mi propiedad', 'redactar aviso', 'copywriting', 'crear publicación'],
   },
   {
     href: '/barrios',
     label: 'Guías de barrios',
-    purpose: 'Guía editorial de zonas (CABA, GBA): perfil habitante, fortalezas, contras, rangos de precio. Generadas con IA.',
+    purpose: 'Guía editorial de zonas (CABA, GBA): perfil habitante, fortalezas, contras, rangos de precio.',
     intents: ['cómo es el barrio X', 'guía de zona', 'info de Palermo', 'qué tal vivir en X'],
   },
   {

@@ -5,7 +5,7 @@ import SortBar from '../components/SortBar.astro'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
-  { name: 'Buscar con IA', url: '/buscar' },
+  { name: 'Búsqueda inteligente', url: '/buscar' },
 ]
 
 const sugerencias = [
@@ -18,8 +18,8 @@ const sugerencias = [
 ---
 
 <Layout
-  title="Búsqueda IA · Coldwell Banker Beyker"
-  description={`Buscá entre ${CATALOG_META.total} propiedades de la red Coldwell Banker Argentina con asistente IA. Decime qué buscás en lenguaje natural.`}
+  title="Búsqueda inteligente · Coldwell Banker Beyker"
+  description={`Buscá entre ${CATALOG_META.total} propiedades de la red Coldwell Banker Argentina con nuestro asistente. Decinos qué buscás en lenguaje natural.`}
   breadcrumbs={breadcrumbs}
 >
   <section class="relative overflow-hidden -mt-16 lg:-mt-20 pt-16 lg:pt-20">
@@ -34,14 +34,14 @@ const sugerencias = [
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
           </svg>
-          Búsqueda guiada por IA
+          Búsqueda guiada
         </div>
         <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tightest leading-[1.02] mb-6">
           Decime qué buscás.<br />
           <span class="gradient-text-accent">Yo me encargo del resto.</span>
         </h1>
         <p class="text-base lg:text-lg text-muted leading-relaxed max-w-2xl mx-auto">
-          {CATALOG_META.total.toLocaleString('es-AR')} propiedades de toda la red Coldwell Banker Argentina. Escribí en lenguaje natural — barrio, ambientes, presupuesto, características — y la IA elige lo que mejor matchea.
+          {CATALOG_META.total.toLocaleString('es-AR')} propiedades de toda la red Coldwell Banker Argentina. Escribí en lenguaje natural — barrio, ambientes, presupuesto, características — y elegimos lo que mejor matchea.
         </p>
       </div>
     </div>

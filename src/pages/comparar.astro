@@ -4,7 +4,7 @@ import { PROPERTIES, formatPriceUSD } from '../data/properties'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
-  { name: 'Comparador IA', url: '/comparar' },
+  { name: 'Comparador inteligente', url: '/comparar' },
 ]
 
 // Sample inicial: 12 propiedades destacadas para que el usuario elija.
@@ -12,8 +12,8 @@ const sample = PROPERTIES.slice(0, 36)
 ---
 
 <Layout
-  title="Comparador IA · Compará hasta 3 propiedades · Coldwell Banker Beyker"
-  description="Elegí 2 o 3 propiedades y la IA te arma una tabla comparativa con veredicto, perfil ideal y riesgos a chequear."
+  title="Comparador inteligente · Compará hasta 3 propiedades · Coldwell Banker Beyker"
+  description="Elegí 2 o 3 propiedades y armamos una tabla comparativa con veredicto, perfil ideal y riesgos a chequear."
   breadcrumbs={breadcrumbs}
 >
   <section class="border-b border-border bg-elevated/30">
@@ -23,14 +23,14 @@ const sample = PROPERTIES.slice(0, 36)
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
           </svg>
-          Comparador IA
+          Comparador inteligente
         </div>
         <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
           ¿Cuál te conviene?<br />
-          <span class="text-accent">La IA decide por vos.</span>
+          <span class="text-accent">Te decimos cuál.</span>
         </h1>
         <p class="text-lg text-muted leading-relaxed">
-          Marcá hasta 3 propiedades y la IA arma tabla comparativa, veredicto y para qué perfil
+          Marcá hasta 3 propiedades y armamos tabla comparativa, veredicto y para qué perfil
           es cada una.
         </p>
       </div>
@@ -46,7 +46,7 @@ const sample = PROPERTIES.slice(0, 36)
           <span class="text-muted"> / 3</span>
         </div>
         <button id="compare-btn" type="button" disabled class="btn-primary w-full sm:w-auto justify-center whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
-          <span id="compare-label">Comparar con IA</span>
+          <span id="compare-label">Comparar propiedades</span>
         </button>
       </div>
 
@@ -225,7 +225,7 @@ const sample = PROPERTIES.slice(0, 36)
     } finally {
       stopThinking()
       setBtnLoading(btn, false)
-      lbl.textContent = 'Comparar con IA'
+      lbl.textContent = 'Comparar propiedades'
     }
   })
 </script>

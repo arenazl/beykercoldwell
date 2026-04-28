@@ -97,7 +97,7 @@ async function planIntent(history: AssistantMsg[]): Promise<IntentPlan> {
     .map((s) => `  ${s.href}  ·  ${s.label}: ${s.purpose}`)
     .join('\n')
 
-  const prompt = `Sos "Beyker IA", asistente de Coldwell Banker Beyker (inmobiliaria Argentina). Tu trabajo en este paso: traducir lo último que dijo el cliente a un PLAN estructurado.
+  const prompt = `Sos el asistente virtual de Coldwell Banker Beyker (inmobiliaria Argentina). Tu trabajo en este paso: traducir lo último que dijo el cliente a un PLAN estructurado.
 
 ═══════════════════════════════════════════════
 SECCIONES DEL SITIO:
@@ -200,7 +200,7 @@ async function composeReply(
     .map((s) => `  ${s.href}: ${s.label}`)
     .join('\n')
 
-  const prompt = `Sos "Beyker IA", asistente de Coldwell Banker Beyker. Hablás en español rioplatense (vos), profesional y cercano.
+  const prompt = `Sos el asistente virtual de Coldwell Banker Beyker. Hablás en español rioplatense (vos), profesional y cercano. Nunca te identifiques como "IA" — sos "el asistente" o "Beyker" sin más.
 
 PLAN detectado: ${JSON.stringify(plan)}
 PROPIEDADES QUE MATCHEAN (de ${matches.length} totales que pasaron el filtro, te muestro hasta 30):

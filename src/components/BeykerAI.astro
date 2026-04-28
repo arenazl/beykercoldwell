@@ -9,7 +9,7 @@
   <button
     id="beyker-ai-fab"
     type="button"
-    aria-label="Abrir asistente IA"
+    aria-label="Abrir asistente Beyker"
     class="group relative w-14 h-14 rounded-full bg-accent text-bg shadow-2xl shadow-accent/30
            hover:shadow-accent/50 hover:scale-105 active:scale-95 transition-all duration-300
            flex items-center justify-center"
@@ -21,7 +21,7 @@
     <span class="hidden sm:flex absolute right-16 top-1/2 -translate-y-1/2 whitespace-nowrap
                  px-3 py-1.5 rounded-full bg-elevated border border-border text-xs font-medium text-text
                  opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-      Beyker IA — preguntame lo que quieras
+      Asistente Beyker — preguntame lo que quieras
     </span>
   </button>
 
@@ -37,7 +37,7 @@
         </svg>
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-sm font-semibold text-text">Beyker IA</div>
+        <div class="text-sm font-semibold text-text">Asistente Beyker</div>
         <div class="text-xs text-muted flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
           Online · Respondo al toque
@@ -247,7 +247,7 @@
   function welcome() {
     const greeting: Msg = {
       role: 'assistant',
-      text: '¡Hola! Soy Beyker IA. Te ayudo a encontrar propiedad, tasar la tuya o ver si te da el crédito. ¿Por dónde arrancamos?',
+      text: '¡Hola! Soy el asistente de Beyker. Te ayudo a encontrar propiedad, tasar la tuya o ver si te da el crédito. ¿Por dónde arrancamos?',
     }
     renderMsg(greeting)
   }

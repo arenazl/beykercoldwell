@@ -5,7 +5,7 @@ import { CONTACT } from '../data/site'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
-  { name: 'Tasación IA', url: '/tasaciones-ia' },
+  { name: 'Tasación inteligente', url: '/tasaciones-ia' },
 ]
 
 const types = ['Departamento', 'Casa', 'PH', 'Casa Quinta', 'Lote', 'Local', 'Oficina']
@@ -24,8 +24,8 @@ const featureOptions = [
 ---
 
 <Layout
-  title="Tasación IA · Valuación instantánea con Análisis Comparativo"
-  description="Valuá tu propiedad con IA: banda de precio, comparables de la zona, factores de ajuste y estrategia comercial en menos de 30 segundos."
+  title="Tasación inteligente · Valuación instantánea con Análisis Comparativo"
+  description="Valuá tu propiedad: banda de precio, comparables de la zona, factores de ajuste y estrategia comercial en menos de 30 segundos."
   schemaType="Service"
   breadcrumbs={breadcrumbs}
 >
@@ -36,14 +36,14 @@ const featureOptions = [
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
           </svg>
-          Tasación con IA
+          Tasación inteligente
         </div>
         <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
           Valuá tu propiedad<br />
           <span class="text-accent">en 30 segundos.</span>
         </h1>
         <p class="text-lg text-muted leading-relaxed">
-          Análisis Comparativo de Mercado generado por IA: banda de precio, comparables de la zona, factores
+          Análisis Comparativo de Mercado: banda de precio, comparables de la zona, factores
           que suman y restan, y estrategia comercial recomendada. Es una valuación orientativa —
           la final requiere visita presencial.
         </p>
@@ -200,7 +200,7 @@ const featureOptions = [
                         class="px-3 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent resize-none"></textarea>
             </div>
             <p class="text-xs text-muted leading-relaxed">
-              Valuación orientativa generada por IA. Para una tasación profesional con visita presencial,
+              Valuación orientativa. Para una tasación profesional con visita presencial,
               <a href="/tasaciones" class="text-accent hover:underline">solicitala acá</a>.
             </p>
           </div>
@@ -226,7 +226,7 @@ const featureOptions = [
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
             </svg>
-            <span id="val-submit-label">Valuar con IA</span>
+            <span id="val-submit-label">Valuar mi propiedad</span>
           </button>
         </footer>
       </form>
@@ -240,7 +240,7 @@ const featureOptions = [
           </div>
           <h3 class="text-xl font-bold mb-2">Esperando los datos</h3>
           <p class="text-muted text-sm leading-relaxed max-w-md mx-auto">
-            Completá el formulario de la izquierda y la IA va a generar la valuación con banda de precio,
+            Completá el formulario de la izquierda y vas a recibir la valuación con banda de precio,
             comparables, factores de ajuste y estrategia comercial.
           </p>
         </div>
@@ -264,7 +264,7 @@ const featureOptions = [
         <div class="section-eyebrow mb-3">Próximo paso</div>
         <h2 class="section-title mb-4">¿Querés una tasación profesional con visita?</h2>
         <p class="text-muted mb-6 leading-relaxed">
-          La IA te da una banda orientativa. La tasación profesional ajusta esa banda con visita presencial,
+          La valuación inteligente te da una banda orientativa. La tasación profesional ajusta esa banda con visita presencial,
           inspección detallada y estrategia comercial diseñada para tu propiedad.
         </p>
         <div class="flex flex-wrap items-center justify-center gap-3">
@@ -659,7 +659,7 @@ const featureOptions = [
     } finally {
       loading.classList.add('hidden')
       setBtnLoading(submitBtn, false)
-      submitLabel.textContent = 'Valuar con IA'
+      submitLabel.textContent = 'Valuar mi propiedad'
     }
   })
 </script>
