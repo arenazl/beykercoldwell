@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import PropertyCard from '../components/PropertyCard.astro'
+import SortBar from '../components/SortBar.astro'
 import { PROPERTIES, FILTERS, CATALOG_META } from '../data/properties'
 
 const breadcrumbs = [
@@ -115,17 +116,12 @@ const visible = PROPERTIES.slice(0, 24)
     </aside>
 
     <div class="lg:col-span-9">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between">
         <p class="text-sm text-muted">Mostrando {visible.length} de {CATALOG_META.total.toLocaleString('es-AR')} resultados</p>
-        <select class="px-3 py-2 rounded-lg bg-elevated border border-border text-sm focus:outline-none focus:border-accent">
-          <option>Más recientes</option>
-          <option>Menor precio</option>
-          <option>Mayor precio</option>
-          <option>Mayor superficie</option>
-        </select>
+        <SortBar target="#props-grid" />
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div id="props-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {visible.map((p) => <PropertyCard property={p} />)}
       </div>
     </div>

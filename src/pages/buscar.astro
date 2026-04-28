@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import { CATALOG_META, FILTERS } from '../data/properties'
+import SortBar from '../components/SortBar.astro'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
@@ -144,6 +145,10 @@ const sugerencias = [
         </div>
       </div>
 
+      <div id="ai-sortbar-wrap" class="hidden mb-6">
+        <SortBar target="#ai-results" />
+      </div>
+
       <div id="ai-results" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
 
       <div id="ai-empty" class="hidden text-center py-20 text-muted">
@@ -157,6 +162,7 @@ const sugerencias = [
 
 <script>
   import { startThinking } from '../lib/thinking-rotator'
+  import { setBtnLoading } from '../lib/btn-loading'
 
   const form = document.getElementById('ai-form') as HTMLFormElement
   const input = document.getElementById('query') as HTMLInputElement
@@ -191,9 +197,10 @@ const sugerencias = [
     const hits = (item.hits as string[]).map(
       (h) => `<span class="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">${h}</span>`
     ).join('')
+    const href = p.slug ? `/propiedades/${p.slug}` : '#'
     return `
-      <article class="property-card group">
-        <a href="${p.detailUrl}" target="_blank" rel="noopener" class="block relative aspect-[4/3] overflow-hidden bg-border/30">
+      <article class="property-card group" data-sort-price="${p.priceValue ?? ''}" data-sort-m2="${p.surfaceM2 ?? ''}" data-sort-bedrooms="${p.bedrooms ?? ''}">
+        <a href="${href}" class="block relative aspect-[4/3] overflow-hidden bg-border/30">
           <img src="${p.image}" alt="${p.title.replace(/"/g, '&quot;')}" loading="lazy"
                class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           <div class="absolute top-3 left-3 flex flex-wrap gap-2">
@@ -219,7 +226,7 @@ const sugerencias = [
               <div class="text-xs text-muted">Precio de ${p.operacion || 'venta'}</div>
               <div class="text-xl font-bold text-accent">${fmtPrice(p.priceValue, p.priceCurrency)}</div>
             </div>
-            <a href="${p.detailUrl}" target="_blank" rel="noopener" class="text-sm font-semibold text-accent hover:text-accent-hover">
+            <a href="${href}" class="text-sm font-semibold text-accent hover:text-accent-hover">
               Ver ficha →
             </a>
           </div>
@@ -241,7 +248,7 @@ const sugerencias = [
     const query = input.value.trim()
     if (!query) return
 
-    submitBtn.disabled = true
+    setBtnLoading(submitBtn, true)
     const stopThinking = startThinking(submitLabel, {
       messages: [
         'Buscando propiedades',
@@ -299,17 +306,21 @@ const sugerencias = [
       }
       status.classList.remove('hidden')
 
+      const sortbarWrap = document.getElementById('ai-sortbar-wrap') as HTMLDivElement
       if (data.results.length === 0) {
         empty.classList.remove('hidden')
+        sortbarWrap.classList.add('hidden')
       } else {
         results.innerHTML = data.results.map(renderCard).join('')
+        sortbarWrap.classList.remove('hidden')
+        results.dispatchEvent(new CustomEvent('sortbar:reinit'))
       }
     } catch (err) {
       error.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
       error.classList.remove('hidden')
     } finally {
       stopThinking()
-      submitBtn.disabled = false
+      setBtnLoading(submitBtn, false)
       submitLabel.textContent = 'Buscar'
     }
   })

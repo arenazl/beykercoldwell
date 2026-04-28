@@ -5,7 +5,7 @@
  */
 ---
 
-<div id="beyker-ai-root" class="fixed bottom-24 right-4 lg:bottom-5 lg:right-5 z-50 print:hidden">
+<div id="beyker-ai-root" class="fixed bottom-20 right-4 lg:bottom-4 lg:right-5 z-50 print:hidden">
   <button
     id="beyker-ai-fab"
     type="button"
@@ -15,8 +15,8 @@
            flex items-center justify-center"
   >
     <span class="absolute inset-0 rounded-full bg-accent/30 animate-ping opacity-40"></span>
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
     </svg>
     <span class="hidden sm:flex absolute right-16 top-1/2 -translate-y-1/2 whitespace-nowrap
                  px-3 py-1.5 rounded-full bg-elevated border border-border text-xs font-medium text-text
@@ -119,9 +119,12 @@
 </style>
 
 <script>
+  import { setBtnLoading } from '../lib/btn-loading'
+
   type Msg = { role: 'user' | 'assistant'; text: string }
   type ApiProperty = {
     id: string
+    slug: string
     title: string
     location: string
     image: string
@@ -189,9 +192,7 @@
       cards.className = 'flex flex-col gap-2 pl-1'
       props.slice(0, 3).forEach((p) => {
         const card = document.createElement('a')
-        card.href = p.detailUrl || '#'
-        card.target = '_blank'
-        card.rel = 'noopener'
+        card.href = p.slug ? `/propiedades/${p.slug}` : '#'
         card.className = 'flex gap-2.5 p-2 rounded-xl border border-border bg-elevated/60 hover:border-accent/40 hover:bg-elevated transition-all'
         card.innerHTML = `
           <div class="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-border/30">
@@ -294,7 +295,7 @@
     saveHistory()
     renderMsg({ role: 'user', text })
     const typing = renderTyping()
-    sendBtn.disabled = true
+    setBtnLoading(sendBtn, true)
 
     try {
       const res = await fetch('/api/assistant', {
@@ -321,7 +322,7 @@
       typing.remove()
       renderMsg({ role: 'assistant', text: 'Sin conexión. Reintentá en un momento.' })
     } finally {
-      sendBtn.disabled = false
+      setBtnLoading(sendBtn, false)
     }
   }
 
