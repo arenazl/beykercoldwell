@@ -2,15 +2,25 @@
 /**
  * Input de dirección con autocomplete contra Nominatim (OSM). Sólo deja
  * "verificada" una dirección cuando el usuario eligió una sugerencia de
- * la lista — si tipea libre no avanza. Eso es lo que pidió el usuario.
+ * la lista — si tipea libre no avanza.
+ *
+ * Flujo:
+ *  1. El usuario elige una provincia del combobox (con type-to-filter
+ *     sobre la lista hardcodeada de las 24 jurisdicciones).
+ *  2. Recién ahí se habilita el input de dirección.
+ *  3. El autocomplete de Nominatim queda sesgado a esa provincia y
+ *     filtramos los resultados para que sólo aparezcan los que matcheen.
  *
  * Mantiene los IDs `f-location`, `f-street`, `f-street-number` como
  * <input type="hidden"> para que el payload existente de /api/valuar
- * siga funcionando sin cambios. Suma `f-address`, `f-lat`, `f-lng`.
+ * siga funcionando sin cambios. Suma `f-province`, `f-address`, `f-lat`,
+ * `f-lng`.
  *
  * Uso:
  *   <AddressInput required />
  */
+import { PROVINCIAS } from '../data/argentina-provinces'
+
 interface Props {
   required?: boolean
 }
@@ -18,6 +28,61 @@ const { required = false } = Astro.props
 ---
 
 <div id="address-input" class="relative" data-verified="false">
+  <!-- Provincia combobox (con type-to-filter) -->
+  <div id="province-combo" class="mb-4 relative">
+    <label class="text-xs font-semibold uppercase tracking-wider text-muted block mb-1.5">
+      Provincia
+    </label>
+    <button
+      id="province-trigger"
+      type="button"
+      class="w-full flex items-center gap-3 pl-3 pr-3 py-2.5 rounded-xl bg-bg border border-border text-text hover:border-accent/40 focus:outline-none focus:border-accent transition-colors"
+    >
+      <span class="flex-shrink-0 w-9 h-9 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      </span>
+      <span id="province-label" class="flex-1 text-left text-muted truncate">
+        Elegí una provincia…
+      </span>
+      <svg
+        id="province-chevron"
+        class="flex-shrink-0 w-4 h-4 text-muted transition-transform"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+
+    <div
+      id="province-panel"
+      class="hidden absolute z-40 left-0 right-0 mt-1 bg-elevated border border-border rounded-xl shadow-2xl overflow-hidden"
+    >
+      <div class="p-2 border-b border-border">
+        <input
+          id="province-search"
+          type="text"
+          autocomplete="off"
+          placeholder="Buscar provincia…"
+          class="w-full px-3 py-2 bg-bg rounded-lg border border-border text-sm text-text placeholder:text-muted/60 focus:outline-none focus:border-accent transition-colors"
+        />
+      </div>
+      <ul
+        id="province-list"
+        role="listbox"
+        class="max-h-64 overflow-y-auto"
+      ></ul>
+    </div>
+  </div>
+
+  <!-- Dirección (autocomplete Nominatim) -->
   <label class="text-xs font-semibold uppercase tracking-wider text-muted block mb-1.5">
     Dirección
   </label>
@@ -27,9 +92,10 @@ const { required = false } = Astro.props
       id="f-address-search"
       type="text"
       autocomplete="off"
-      placeholder="Empezá a tipear: Av. Callao 1240, Recoleta…"
+      placeholder="Elegí provincia primero…"
+      disabled
       required={required}
-      class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent transition-colors"
+      class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-bg border border-border text-text focus:outline-none focus:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     />
     <svg
       aria-hidden="true"
@@ -48,12 +114,10 @@ const { required = false } = Astro.props
       class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 hidden"
       aria-hidden="true"
     >
-      <!-- Spinner mientras busca -->
       <span
         id="f-address-spinner"
         class="hidden w-4 h-4 rounded-full border-2 border-muted/40 border-t-accent animate-spin"
       ></span>
-      <!-- Check verde cuando hay match seleccionado -->
       <svg
         id="f-address-check"
         class="hidden w-4 h-4 text-green-500"
@@ -67,9 +131,8 @@ const { required = false } = Astro.props
     </span>
   </div>
 
-  <!-- Hint debajo del input -->
   <p id="f-address-hint" class="text-[11px] text-muted mt-1.5 leading-snug">
-    Elegí una de las sugerencias para verificar la ubicación.
+    Primero elegí la provincia, después tipeá la dirección.
   </p>
 
   <!-- Lista de sugerencias -->
@@ -80,6 +143,7 @@ const { required = false } = Astro.props
   ></ul>
 
   <!-- Hidden fields que consume el form / payload del wizard -->
+  <input type="hidden" id="f-province" name="f-province" />
   <input type="hidden" id="f-location" name="f-location" />
   <input type="hidden" id="f-street" name="f-street" />
   <input type="hidden" id="f-street-number" name="f-street-number" />
@@ -90,6 +154,7 @@ const { required = false } = Astro.props
 
 <script>
   import { searchAddresses, type AddressResult } from '../lib/address-search'
+  import { PROVINCIAS } from '../data/argentina-provinces'
 
   const root = document.getElementById('address-input') as HTMLDivElement
   const search = document.getElementById('f-address-search') as HTMLInputElement
@@ -98,6 +163,7 @@ const { required = false } = Astro.props
   const status = document.getElementById('f-address-status') as HTMLSpanElement
   const spinner = document.getElementById('f-address-spinner') as HTMLSpanElement
   const check = document.getElementById('f-address-check') as HTMLElement
+  const fProvince = document.getElementById('f-province') as HTMLInputElement
   const fLocation = document.getElementById('f-location') as HTMLInputElement
   const fStreet = document.getElementById('f-street') as HTMLInputElement
   const fStreetNum = document.getElementById('f-street-number') as HTMLInputElement
@@ -105,13 +171,135 @@ const { required = false } = Astro.props
   const fLat = document.getElementById('f-lat') as HTMLInputElement
   const fLng = document.getElementById('f-lng') as HTMLInputElement
 
+  // Province combobox
+  const provinceCombo = document.getElementById('province-combo') as HTMLDivElement
+  const provinceTrigger = document.getElementById('province-trigger') as HTMLButtonElement
+  const provincePanel = document.getElementById('province-panel') as HTMLDivElement
+  const provinceSearch = document.getElementById('province-search') as HTMLInputElement
+  const provinceList = document.getElementById('province-list') as HTMLUListElement
+  const provinceLabel = document.getElementById('province-label') as HTMLSpanElement
+  const provinceChevron = document.getElementById('province-chevron') as unknown as SVGElement
+
+  let selectedProvince: string | null = null
+
   let debounce: number | undefined
   let activeController: AbortController | null = null
+
+  function escapeHtml(s: string): string {
+    const d = document.createElement('div')
+    d.textContent = s
+    return d.innerHTML
+  }
+
+  // ====== Province combobox ======
+
+  function renderProvinceOptions(filter: string) {
+    const norm = filter
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .trim()
+    const items = norm
+      ? PROVINCIAS.filter((p) => {
+          const a = p.label.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+          const b = p.nominatim.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+          return a.includes(norm) || b.includes(norm)
+        })
+      : PROVINCIAS
+    if (items.length === 0) {
+      provinceList.innerHTML = `
+        <li class="px-4 py-3 text-sm text-muted">Sin coincidencias.</li>
+      `
+      return
+    }
+    provinceList.innerHTML = items
+      .map((p) => {
+        const isSel = selectedProvince === p.nominatim
+        return `
+        <li role="option" data-value="${escapeHtml(p.nominatim)}" data-label="${escapeHtml(p.label)}"
+            class="px-4 py-2.5 cursor-pointer transition-colors border-b border-border last:border-b-0 ${isSel ? 'bg-accent/10 text-accent font-semibold' : 'text-text hover:bg-accent/10'}">
+          ${escapeHtml(p.label)}
+        </li>`
+      })
+      .join('')
+    provinceList.querySelectorAll<HTMLLIElement>('[data-value]').forEach((li) => {
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault()
+        const value = li.dataset.value!
+        const label = li.dataset.label!
+        selectProvince(value, label)
+      })
+    })
+  }
+
+  function selectProvince(nominatim: string, label: string) {
+    selectedProvince = nominatim
+    fProvince.value = nominatim
+    provinceLabel.textContent = label
+    provinceLabel.classList.remove('text-muted')
+    provinceLabel.classList.add('text-text', 'font-semibold')
+    closeProvincePanel()
+
+    // Habilitar el input de dirección y resetear estado previo.
+    search.disabled = false
+    search.placeholder = 'Empezá a tipear: Av. Callao 1240…'
+    clearVerified()
+    search.value = ''
+    list.innerHTML = ''
+    list.classList.add('hidden')
+    hint.textContent = 'Elegí una de las sugerencias para verificar la ubicación.'
+    hint.classList.remove('text-green-600')
+    hint.classList.add('text-muted')
+    setTimeout(() => search.focus(), 50)
+  }
+
+  function openProvincePanel() {
+    provincePanel.classList.remove('hidden')
+    provinceChevron.classList.add('rotate-180')
+    provinceSearch.value = ''
+    renderProvinceOptions('')
+    setTimeout(() => provinceSearch.focus(), 30)
+  }
+
+  function closeProvincePanel() {
+    provincePanel.classList.add('hidden')
+    provinceChevron.classList.remove('rotate-180')
+  }
+
+  provinceTrigger.addEventListener('click', () => {
+    if (provincePanel.classList.contains('hidden')) openProvincePanel()
+    else closeProvincePanel()
+  })
+  provinceSearch.addEventListener('input', () => {
+    renderProvinceOptions(provinceSearch.value)
+  })
+  provinceSearch.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeProvincePanel()
+      provinceTrigger.focus()
+    }
+  })
+  document.addEventListener('mousedown', (e) => {
+    if (!provinceCombo.contains(e.target as Node)) closeProvincePanel()
+  })
+
+  // ====== Address autocomplete ======
 
   function setBusy(busy: boolean) {
     status.classList.toggle('hidden', !busy && root.dataset.verified !== 'true')
     spinner.classList.toggle('hidden', !busy)
     if (busy) check.classList.add('hidden')
+  }
+
+  function formatAddressLine(r: AddressResult): string {
+    if (r.street) {
+      return r.houseNumber ? `${r.street} ${r.houseNumber}` : r.street
+    }
+    return r.displayName.split(',')[0]?.trim() || r.displayName
+  }
+
+  function formatBarrioLine(r: AddressResult): string {
+    return r.city || ''
   }
 
   function setVerified(r: AddressResult) {
@@ -122,7 +310,8 @@ const { required = false } = Astro.props
     fStreetNum.value = r.houseNumber ?? ''
     fLat.value = String(r.lat)
     fLng.value = String(r.lng)
-    search.value = r.displayName
+    if (r.province) fProvince.value = r.province
+    search.value = formatAddressLine(r)
     list.classList.add('hidden')
     status.classList.remove('hidden')
     spinner.classList.add('hidden')
@@ -130,7 +319,6 @@ const { required = false } = Astro.props
     hint.textContent = '✓ Dirección verificada'
     hint.classList.remove('text-muted')
     hint.classList.add('text-green-600')
-    // Notificar al wizard que la dirección ahora es válida.
     search.dispatchEvent(new Event('input', { bubbles: true }))
   }
 
@@ -149,23 +337,11 @@ const { required = false } = Astro.props
     hint.classList.remove('text-green-600')
   }
 
-  function formatAddressLine(r: AddressResult): string {
-    if (r.street) {
-      return r.houseNumber ? `${r.street} ${r.houseNumber}` : r.street
-    }
-    // Fallback: primer segmento del displayName (antes de la primera coma).
-    return r.displayName.split(',')[0]?.trim() || r.displayName
-  }
-
-  function formatBarrioLine(r: AddressResult): string {
-    return r.city || r.province || ''
-  }
-
   function renderSuggestions(items: AddressResult[]) {
     if (items.length === 0) {
       list.innerHTML = `
         <li class="px-4 py-3 text-sm text-muted">
-          Sin coincidencias. Probá con otra forma — ej: "Av. Callao 1240, Recoleta".
+          Sin coincidencias en ${escapeHtml(provinceLabel.textContent ?? 'esta provincia')}. Probá con otra forma — ej: "Av. Callao 1240".
         </li>
       `
       list.classList.remove('hidden')
@@ -199,7 +375,7 @@ const { required = false } = Astro.props
     list.classList.remove('hidden')
     list.querySelectorAll<HTMLLIElement>('[data-idx]').forEach((li) => {
       li.addEventListener('mousedown', (e) => {
-        e.preventDefault() // evita que el input pierda el foco antes del click
+        e.preventDefault()
         const idx = Number(li.dataset.idx)
         const item = items[idx]
         if (item) setVerified(item)
@@ -207,14 +383,8 @@ const { required = false } = Astro.props
     })
   }
 
-  function escapeHtml(s: string): string {
-    const d = document.createElement('div')
-    d.textContent = s
-    return d.innerHTML
-  }
-
   search.addEventListener('input', () => {
-    // Cualquier edición manual invalida la verificación previa.
+    if (search.disabled) return
     if (root.dataset.verified === 'true') clearVerified()
 
     if (debounce) window.clearTimeout(debounce)
@@ -231,10 +401,12 @@ const { required = false } = Astro.props
     debounce = window.setTimeout(async () => {
       activeController = new AbortController()
       try {
-        const items = await searchAddresses(q, activeController.signal)
+        const items = await searchAddresses(q, activeController.signal, {
+          province: selectedProvince ?? undefined,
+        })
         renderSuggestions(items)
       } catch {
-        // Si fue abort por nueva tecla, ignorar. Otro error: no mostramos.
+        // ignore
       } finally {
         setBusy(false)
       }
@@ -242,7 +414,6 @@ const { required = false } = Astro.props
   })
 
   search.addEventListener('blur', () => {
-    // Pequeño delay para permitir que el mousedown del item dispare antes.
     setTimeout(() => list.classList.add('hidden'), 150)
   })
 
@@ -251,4 +422,7 @@ const { required = false } = Astro.props
       list.classList.remove('hidden')
     }
   })
+
+  // Init: precargar la lista de provincias en el panel.
+  renderProvinceOptions('')
 </script>
