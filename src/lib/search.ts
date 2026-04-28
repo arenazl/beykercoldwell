@@ -137,10 +137,11 @@ export function applyFilters(filters: AISearchFilters, limit = 120): SearchRespo
 
     let score = 1
     if (filters.keywords?.length) {
-      const haystack = normalize(`${p.title} ${p.description}`)
+      // Reusa el haystack ya computado arriba; si no se computó, lo armamos.
+      const hay = haystack || normalize(`${p.title} ${p.description}`)
       for (const kw of filters.keywords) {
         const needle = normalize(kw)
-        if (needle && haystack.includes(needle)) {
+        if (needle && hay.includes(needle)) {
           score += 2
           hits.push(`✓ ${kw}`)
         }
