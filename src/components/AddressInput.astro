@@ -111,7 +111,7 @@ const { required = false } = Astro.props
 
     <span
       id="f-address-status"
-      class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 hidden"
+      class="absolute right-2 top-1/2 -translate-y-1/2 hidden flex items-center gap-1"
       aria-hidden="true"
     >
       <span
@@ -128,6 +128,18 @@ const { required = false } = Astro.props
       >
         <polyline points="20 6 9 17 4 12" />
       </svg>
+      <button
+        id="f-address-clear"
+        type="button"
+        aria-label="Limpiar dirección y volver a editar"
+        title="Limpiar"
+        class="hidden w-7 h-7 rounded-full text-muted hover:text-red-500 hover:bg-red-500/10 active:scale-90 transition-all flex items-center justify-center"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
     </span>
   </div>
 
@@ -163,6 +175,7 @@ const { required = false } = Astro.props
   const status = document.getElementById('f-address-status') as HTMLSpanElement
   const spinner = document.getElementById('f-address-spinner') as HTMLSpanElement
   const check = document.getElementById('f-address-check') as HTMLElement
+  const clearBtn = document.getElementById('f-address-clear') as HTMLButtonElement
   const fProvince = document.getElementById('f-province') as HTMLInputElement
   const fLocation = document.getElementById('f-location') as HTMLInputElement
   const fStreet = document.getElementById('f-street') as HTMLInputElement
@@ -286,7 +299,8 @@ const { required = false } = Astro.props
   // ====== Address autocomplete ======
 
   function setBusy(busy: boolean) {
-    status.classList.toggle('hidden', !busy && root.dataset.verified !== 'true')
+    const verified = root.dataset.verified === 'true'
+    status.classList.toggle('hidden', !busy && !verified)
     spinner.classList.toggle('hidden', !busy)
     if (busy) check.classList.add('hidden')
   }
@@ -312,14 +326,22 @@ const { required = false } = Astro.props
     fLng.value = String(r.lng)
     if (r.province) fProvince.value = r.province
     search.value = formatAddressLine(r)
+    // Una vez geolocalizado bloqueamos el input para que no se pueda
+    // toquetear sin querer. El usuario tiene que apretar la X explícita
+    // para volver a editar.
+    search.readOnly = true
+    search.classList.add('cursor-not-allowed', 'border-green-500/40')
+    list.innerHTML = ''
     list.classList.add('hidden')
     status.classList.remove('hidden')
     spinner.classList.add('hidden')
     check.classList.remove('hidden')
-    hint.textContent = '✓ Dirección verificada'
+    clearBtn.classList.remove('hidden')
+    hint.textContent = '✓ Dirección verificada — tocá la cruz para editar'
     hint.classList.remove('text-muted')
     hint.classList.add('text-green-600')
-    search.dispatchEvent(new Event('input', { bubbles: true }))
+    // OJO: NO disparamos el evento input acá. Hacerlo retriggerea el
+    // listener de input que invalida la verificación al toque.
   }
 
   function clearVerified() {
@@ -331,11 +353,21 @@ const { required = false } = Astro.props
     fLat.value = ''
     fLng.value = ''
     check.classList.add('hidden')
+    clearBtn.classList.add('hidden')
     status.classList.add('hidden')
+    search.readOnly = false
+    search.classList.remove('cursor-not-allowed', 'border-green-500/40')
     hint.textContent = 'Elegí una de las sugerencias para verificar la ubicación.'
     hint.classList.add('text-muted')
     hint.classList.remove('text-green-600')
   }
+
+  // Click en la X → limpiar y volver a editar.
+  clearBtn.addEventListener('click', () => {
+    clearVerified()
+    search.value = ''
+    setTimeout(() => search.focus(), 30)
+  })
 
   function renderSuggestions(items: AddressResult[]) {
     if (items.length === 0) {
@@ -418,7 +450,9 @@ const { required = false } = Astro.props
   })
 
   search.addEventListener('focus', () => {
-    if (list.children.length > 0 && root.dataset.verified !== 'true') {
+    // No reabrimos la lista si está bloqueado o ya hay una dirección verificada.
+    if (search.readOnly || root.dataset.verified === 'true') return
+    if (list.children.length > 0) {
       list.classList.remove('hidden')
     }
   })
