@@ -1,16 +1,201 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import PropertyCard from '../components/PropertyCard.astro'
-import SortBar from '../components/SortBar.astro'
-import { PROPERTIES, FILTERS, CATALOG_META } from '../data/properties'
+import {
+  PROPERTIES,
+  FILTERS,
+  CATALOG_META,
+  type Property,
+} from '../data/properties'
+
+export const prerender = false
+
+// =============================================================================
+// 1) Lectura de filtros de la URL — todo se persiste en query params para que
+//    el listado sea bookmarkeable / compartible.
+// =============================================================================
+const sp = Astro.url.searchParams
+
+const q = (sp.get('q') ?? '').trim()
+const ops = sp.getAll('operacion').filter(Boolean)
+const tipos = sp.getAll('tipo').filter(Boolean)
+const dorms = sp.getAll('dorm').map(Number).filter((n) => Number.isFinite(n) && n > 0)
+const precioRaw = sp.get('precio') ?? ''
+const ant = sp.get('antiguedad') ?? ''
+const sort = sp.get('sort') ?? 'recientes'
+const pageNum = Math.max(1, Number(sp.get('page')) || 1)
+
+const PER_PAGE = 24
+
+let precioMin: number | null = null
+let precioMax: number | null = null
+if (precioRaw) {
+  const [a, b] = precioRaw.split('-')
+  precioMin = a ? Number(a) || null : null
+  precioMax = b ? Number(b) || null : null
+}
+
+// =============================================================================
+// 2) Filtrado server-side. Sin IA — la IA está en /buscar.
+// =============================================================================
+const norm = (s: string) =>
+  (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+const qNorm = norm(q)
+
+let filtered: Property[] = PROPERTIES.filter((p) => {
+  if (ops.length && !ops.includes(p.operacion)) return false
+  if (tipos.length && !tipos.includes(p.type)) return false
+  if (dorms.length) {
+    const minDorm = Math.min(...dorms)
+    if ((p.bedrooms ?? 0) < minDorm) return false
+  }
+  if (precioMin != null && (p.priceValue ?? 0) < precioMin) return false
+  if (precioMax != null && (p.priceValue ?? Infinity) > precioMax) return false
+
+  if (ant !== '') {
+    const maxAnt = Number(ant)
+    if (Number.isFinite(maxAnt)) {
+      if (maxAnt === 0) {
+        if (p.antiguedadYears !== 0) return false
+      } else if (p.antiguedadYears != null && p.antiguedadYears > maxAnt) {
+        return false
+      }
+    }
+  }
+
+  if (qNorm) {
+    const hay = norm(`${p.title} ${p.description} ${p.location}`)
+    if (!hay.includes(qNorm)) return false
+  }
+  return true
+})
+
+// =============================================================================
+// 3) Sort server-side. Las propiedades sin dato del campo elegido caen al final.
+// =============================================================================
+function sortRank(p: Property, key: string): number {
+  const last = Number.MAX_SAFE_INTEGER
+  switch (key) {
+    case 'price-asc':
+      return p.priceValue == null ? last : p.priceValue
+    case 'price-desc':
+      return p.priceValue == null ? last : -p.priceValue
+    case 'm2-desc':
+      return p.surfaceM2 == null ? last : -p.surfaceM2
+    case 'bedrooms-desc':
+      return p.bedrooms == null ? last : -p.bedrooms
+    default:
+      return 0
+  }
+}
+if (sort !== 'recientes') {
+  filtered = [...filtered].sort((a, b) => sortRank(a, sort) - sortRank(b, sort))
+}
+
+// =============================================================================
+// 4) Paginación.
+// =============================================================================
+const total = filtered.length
+const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
+const page = Math.min(pageNum, totalPages)
+const startIdx = (page - 1) * PER_PAGE
+const visible = filtered.slice(startIdx, startIdx + PER_PAGE)
+
+// =============================================================================
+// 5) URL helpers para chips removibles y paginación. Cada link conserva el
+//    resto de los filtros y aterriza en `#listado` para que el browser haga
+//    el smooth-scroll al grid (CSS ya tiene scroll-behavior: smooth).
+// =============================================================================
+function urlWithout(name: string, value?: string): string {
+  const url = new URL(Astro.url)
+  if (value === undefined) {
+    url.searchParams.delete(name)
+  } else {
+    const all = url.searchParams.getAll(name).filter((v) => v !== value)
+    url.searchParams.delete(name)
+    all.forEach((v) => url.searchParams.append(name, v))
+  }
+  url.searchParams.delete('page')
+  url.hash = 'listado'
+  return url.pathname + url.search + url.hash
+}
+function urlWithPage(n: number): string {
+  const url = new URL(Astro.url)
+  url.searchParams.set('page', String(n))
+  url.hash = 'listado'
+  return url.pathname + url.search + url.hash
+}
+function urlWithSort(value: string): string {
+  const url = new URL(Astro.url)
+  if (value === 'recientes') url.searchParams.delete('sort')
+  else url.searchParams.set('sort', value)
+  url.searchParams.delete('page')
+  url.hash = 'listado'
+  return url.pathname + url.search + url.hash
+}
+function urlClearAll(): string {
+  return '/propiedades#listado'
+}
+
+// =============================================================================
+// 6) Chips de filtros activos.
+// =============================================================================
+type Chip = { label: string; href: string }
+const chips: Chip[] = []
+if (q) chips.push({ label: `"${q}"`, href: urlWithout('q') })
+ops.forEach((o) =>
+  chips.push({
+    label: o[0].toUpperCase() + o.slice(1),
+    href: urlWithout('operacion', o),
+  }),
+)
+tipos.forEach((t) => chips.push({ label: t, href: urlWithout('tipo', t) }))
+dorms.forEach((d) =>
+  chips.push({ label: `${d}+ dormitorios`, href: urlWithout('dorm', String(d)) }),
+)
+if (precioRaw) {
+  const found = FILTERS.precios.find(
+    (pr) => `${pr.min ?? ''}-${pr.max ?? ''}` === precioRaw,
+  )
+  chips.push({ label: found?.label ?? precioRaw, href: urlWithout('precio') })
+}
+if (ant) {
+  const lbl: Record<string, string> = {
+    '0': 'A estrenar / en pozo',
+    '5': 'Hasta 5 años',
+    '10': 'Hasta 10 años',
+    '20': 'Hasta 20 años',
+    '50': 'Hasta 50 años',
+  }
+  chips.push({ label: lbl[ant] ?? `Hasta ${ant} años`, href: urlWithout('antiguedad') })
+}
+const hasFilters = chips.length > 0
+
+// =============================================================================
+// 7) Tipos: los más comunes primero (top por volumen del catálogo). Reduce el
+//    ruido de la lista exhaustiva con tipos casi vacíos (Baulera, Hotel, etc).
+// =============================================================================
+const typeCounts = new Map<string, number>()
+PROPERTIES.forEach((p) => {
+  if (p.type) typeCounts.set(p.type, (typeCounts.get(p.type) ?? 0) + 1)
+})
+const topTipos = [...typeCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .map(([t]) => t)
+  .slice(0, 10)
+
+const sortOptions = [
+  { value: 'recientes', label: 'Recientes' },
+  { value: 'price-asc', label: 'Menor precio' },
+  { value: 'price-desc', label: 'Mayor precio' },
+  { value: 'm2-desc', label: 'Más superficie' },
+  { value: 'bedrooms-desc', label: 'Más ambientes' },
+]
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
   { name: 'Propiedades', url: '/propiedades' },
 ]
-
-// Mostramos primera página de 24 — el filtrado real se hace client-side o vía /buscar (IA).
-const visible = PROPERTIES.slice(0, 24)
 ---
 
 <Layout
@@ -20,110 +205,340 @@ const visible = PROPERTIES.slice(0, 24)
   breadcrumbs={breadcrumbs}
 >
   <section class="border-b border-border bg-elevated/30">
-    <div class="container-app py-12 lg:py-16">
-      <nav class="text-xs text-muted mb-4" aria-label="Breadcrumb">
-        <a href="/" class="hover:text-accent transition-colors">Inicio</a>
-        <span class="mx-2">/</span>
-        <span class="text-text">Propiedades</span>
-      </nav>
-      <h1 class="text-4xl md:text-5xl font-bold tracking-tightest mb-3">Propiedades</h1>
-      <p class="text-lg text-muted max-w-2xl">
-        Encontrá tu próximo hogar o inversión. {CATALOG_META.total.toLocaleString('es-AR')} propiedades disponibles
-        en toda la red Coldwell Banker Argentina.
-      </p>
-      <p class="text-sm text-accent mt-3">
-        💡 Probá la <a href="/buscar" class="underline font-semibold">búsqueda con IA</a> — describí lo que buscás en
-        lenguaje natural.
+    <div class="container-app py-10 lg:py-14">
+      <h1 class="text-3xl md:text-5xl font-bold tracking-tightest mb-2">Propiedades</h1>
+      <p class="text-base lg:text-lg text-muted max-w-2xl leading-relaxed">
+        {CATALOG_META.total.toLocaleString('es-AR')} propiedades de toda la red Coldwell Banker Argentina —
+        filtrá lo que buscás o usá la <a href="/buscar" class="text-accent hover:underline font-semibold">búsqueda con IA</a>
+        en lenguaje natural.
       </p>
     </div>
   </section>
 
-  <section class="container-app py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
-    <aside class="lg:col-span-3 lg:sticky lg:top-24 lg:self-start space-y-6">
-      <form method="get" class="bg-elevated border border-border rounded-2xl p-5 space-y-5">
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted">Filtros</h2>
+  <section class="container-app py-8 lg:py-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+    <!-- =================================================================
+         FILTROS — sidebar en lg+, collapsable en mobile vía <details>
+         ================================================================= -->
+    <aside class="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+      <details
+        id="filters-details"
+        class="bg-elevated border border-border rounded-2xl overflow-hidden lg:open"
+        open={hasFilters}
+      >
+        <summary class="lg:hidden flex items-center justify-between px-5 py-4 cursor-pointer select-none">
+          <span class="font-semibold flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M3 6h18M6 12h12M10 18h4" />
+            </svg>
+            Filtros{hasFilters && ` · ${chips.length}`}
+          </span>
+          <svg class="filter-chevron transition-transform" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
 
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold">Palabras clave</h3>
-          <input type="text" name="q" placeholder="Barrio, calle…" class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm focus:outline-none focus:border-accent" />
-        </div>
+        <form
+          method="get"
+          action="/propiedades#listado"
+          class="px-5 pb-5 pt-1 lg:pt-5 space-y-5"
+        >
+          <h2 class="hidden lg:block text-sm font-semibold uppercase tracking-wider text-muted">Filtros</h2>
 
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold">Tipo de operación</h3>
-          <div class="flex flex-col gap-1.5">
-            {FILTERS.operaciones.map((op) => (
-              <label class="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" name="operacion" value={op} class="rounded border-border accent-accent" />
-                <span>{op === 'venta' ? 'Venta' : 'Alquiler'}</span>
-              </label>
-            ))}
+          <div class="space-y-2">
+            <label class="text-sm font-semibold block">Palabras clave</label>
+            <input
+              type="text"
+              name="q"
+              value={q}
+              placeholder="Barrio, calle, característica…"
+              class="w-full px-3 py-2.5 rounded-xl bg-bg border border-border text-sm focus:outline-none focus:border-accent transition-colors"
+            />
           </div>
-        </div>
 
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold">Tipo de propiedad</h3>
-          <div class="flex flex-col gap-1.5">
-            {FILTERS.tipos.map((t) => (
-              <label class="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" name="tipo" value={t} class="rounded border-border accent-accent" />
-                <span>{t}</span>
-              </label>
-            ))}
+          <div class="space-y-2">
+            <span class="text-sm font-semibold block">Operación</span>
+            <div class="grid grid-cols-2 gap-2">
+              {FILTERS.operaciones.map((op) => (
+                <label class="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="operacion"
+                    value={op}
+                    checked={ops.includes(op)}
+                    class="peer sr-only"
+                  />
+                  <span class="block text-center px-3 py-2 rounded-xl text-sm border border-border bg-bg text-muted peer-checked:bg-accent peer-checked:text-bg peer-checked:border-accent transition-all hover:border-accent/40">
+                    {op === 'venta' ? 'Venta' : op === 'alquiler' ? 'Alquiler' : op}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold">Dormitorios</h3>
-          <div class="flex flex-wrap gap-2">
-            {FILTERS.dormitorios.map((n) => (
-              <label class="cursor-pointer">
-                <input type="checkbox" name="dorm" value={n} class="peer sr-only" />
-                <span class="px-3 py-1 rounded-full text-sm border border-border peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent transition-all">
-                  {n}+
-                </span>
-              </label>
-            ))}
+          <div class="space-y-2">
+            <span class="text-sm font-semibold block">Tipo</span>
+            <div class="flex flex-wrap gap-2">
+              {topTipos.map((t) => (
+                <label class="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="tipo"
+                    value={t}
+                    checked={tipos.includes(t)}
+                    class="peer sr-only"
+                  />
+                  <span class="block px-3 py-1.5 rounded-full text-xs border border-border bg-bg text-muted peer-checked:bg-accent peer-checked:text-bg peer-checked:border-accent transition-all hover:border-accent/40">
+                    {t}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold">Precio (USD)</h3>
-          <select name="precio" class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm focus:outline-none focus:border-accent">
-            <option value="">Todos</option>
-            {FILTERS.precios.map((p) => (
-              <option value={`${p.min ?? ''}-${p.max ?? ''}`}>{p.label}</option>
-            ))}
-          </select>
-        </div>
+          <div class="space-y-2">
+            <span class="text-sm font-semibold block">Dormitorios (mínimo)</span>
+            <div class="flex flex-wrap gap-2">
+              {FILTERS.dormitorios.map((n) => (
+                <label class="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="dorm"
+                    value={n}
+                    checked={dorms.includes(n)}
+                    class="peer sr-only"
+                  />
+                  <span class="block w-10 text-center px-2 py-1.5 rounded-full text-sm border border-border bg-bg text-muted peer-checked:bg-accent peer-checked:text-bg peer-checked:border-accent transition-all hover:border-accent/40">
+                    {n}+
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold">Antigüedad</h3>
-          <select name="antiguedad" class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-sm focus:outline-none focus:border-accent">
-            <option value="">Cualquiera</option>
-            <option value="0">A estrenar / en pozo</option>
-            <option value="5">Hasta 5 años</option>
-            <option value="10">Hasta 10 años</option>
-            <option value="20">Hasta 20 años</option>
-            <option value="50">Hasta 50 años</option>
-          </select>
-          <p class="text-xs text-muted">Dato disponible en {((CATALOG_META.withAntiguedad ?? 0) / CATALOG_META.total * 100).toFixed(0)}% del catálogo.</p>
-        </div>
+          <div class="space-y-2">
+            <label class="text-sm font-semibold block">Precio (USD)</label>
+            <select
+              name="precio"
+              class="w-full px-3 py-2.5 rounded-xl bg-bg border border-border text-sm focus:outline-none focus:border-accent transition-colors"
+            >
+              <option value="">Todos</option>
+              {FILTERS.precios.map((p) => {
+                const v = `${p.min ?? ''}-${p.max ?? ''}`
+                return <option value={v} selected={v === precioRaw}>{p.label}</option>
+              })}
+            </select>
+          </div>
 
-        <button type="submit" class="btn-primary w-full justify-center">
-          Aplicar filtros
-        </button>
-      </form>
+          <div class="space-y-2">
+            <label class="text-sm font-semibold block">Antigüedad</label>
+            <select
+              name="antiguedad"
+              class="w-full px-3 py-2.5 rounded-xl bg-bg border border-border text-sm focus:outline-none focus:border-accent transition-colors"
+            >
+              <option value="" selected={ant === ''}>Cualquiera</option>
+              <option value="0" selected={ant === '0'}>A estrenar / en pozo</option>
+              <option value="5" selected={ant === '5'}>Hasta 5 años</option>
+              <option value="10" selected={ant === '10'}>Hasta 10 años</option>
+              <option value="20" selected={ant === '20'}>Hasta 20 años</option>
+              <option value="50" selected={ant === '50'}>Hasta 50 años</option>
+            </select>
+            <p class="text-[11px] text-muted leading-snug">
+              Dato disponible en {((CATALOG_META.withAntiguedad ?? 0) / CATALOG_META.total * 100).toFixed(0)}% del catálogo.
+            </p>
+          </div>
+
+          <!-- Mantener el sort actual al re-submit del form -->
+          {sort !== 'recientes' && <input type="hidden" name="sort" value={sort} />}
+
+          <div class="flex flex-col sm:flex-row gap-2 pt-1">
+            <button type="submit" class="btn-primary flex-1 justify-center whitespace-nowrap">
+              Aplicar filtros
+            </button>
+            {hasFilters && (
+              <a href={urlClearAll()} class="btn-secondary flex-1 justify-center whitespace-nowrap text-sm">
+                Limpiar
+              </a>
+            )}
+          </div>
+        </form>
+      </details>
     </aside>
 
-    <div class="lg:col-span-9">
-      <div class="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between">
-        <p class="text-sm text-muted">Mostrando {visible.length} de {CATALOG_META.total.toLocaleString('es-AR')} resultados</p>
-        <SortBar target="#props-grid" />
+    <!-- =================================================================
+         RESULTADOS
+         ================================================================= -->
+    <div class="lg:col-span-9 min-w-0">
+      <a id="listado" class="block scroll-mt-24" aria-hidden="true"></a>
+
+      <!-- Top bar: contador + sort -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <p class="text-sm text-muted">
+          {hasFilters ? (
+            <>
+              <span class="font-bold text-text">{total.toLocaleString('es-AR')}</span> resultado{total === 1 ? '' : 's'}
+              {total > PER_PAGE && (
+                <span> · página {page} de {totalPages}</span>
+              )}
+            </>
+          ) : (
+            <>
+              Mostrando {visible.length} de <span class="font-bold text-text">{CATALOG_META.total.toLocaleString('es-AR')}</span>
+            </>
+          )}
+        </p>
+
+        <div class="flex items-center gap-2">
+          <label for="sort-select" class="text-xs uppercase tracking-wider text-muted font-semibold">Ordenar</label>
+          <select
+            id="sort-select"
+            class="px-3 py-2 rounded-xl bg-elevated border border-border text-sm focus:outline-none focus:border-accent transition-colors cursor-pointer"
+            data-sort-current={sort}
+          >
+            {sortOptions.map((o) => (
+              <option value={urlWithSort(o.value)} selected={o.value === sort}>{o.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div id="props-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {visible.map((p) => <PropertyCard property={p} />)}
-      </div>
+      <!-- Chips de filtros activos -->
+      {hasFilters && (
+        <div class="flex flex-wrap items-center gap-2 mb-6 pb-5 border-b border-border">
+          <span class="text-[11px] uppercase tracking-wider text-muted font-semibold mr-1">Filtros activos:</span>
+          {chips.map((c) => (
+            <a
+              href={c.href}
+              class="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors"
+              title={`Quitar: ${c.label}`}
+            >
+              {c.label}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </a>
+          ))}
+          <a
+            href={urlClearAll()}
+            class="inline-flex items-center text-xs text-muted hover:text-accent ml-1 underline underline-offset-2"
+          >
+            Limpiar todo
+          </a>
+        </div>
+      )}
+
+      <!-- Grid de propiedades -->
+      {visible.length > 0 ? (
+        <div id="props-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6">
+          {visible.map((p) => <PropertyCard property={p} />)}
+        </div>
+      ) : (
+        <div class="text-center py-16 px-6 rounded-2xl border border-dashed border-border bg-elevated/40">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-accent/10 text-accent flex items-center justify-center mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-1">Sin resultados con esos filtros</h3>
+          <p class="text-sm text-muted leading-relaxed max-w-md mx-auto mb-4">
+            Probá relajar algún filtro o describir lo que buscás en lenguaje natural en la búsqueda con IA.
+          </p>
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <a href={urlClearAll()} class="btn-secondary text-sm">Limpiar filtros</a>
+            <a href="/buscar" class="btn-primary text-sm">Buscar con IA</a>
+          </div>
+        </div>
+      )}
+
+      <!-- Paginación -->
+      {totalPages > 1 && (
+        <nav class="flex flex-wrap items-center justify-center gap-2 mt-10" aria-label="Paginación">
+          {page > 1 && (
+            <a
+              href={urlWithPage(page - 1)}
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border border-border bg-elevated text-text hover:border-accent/40 hover:text-accent transition-all active:scale-95"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Anterior
+            </a>
+          )}
+
+          <span class="px-4 py-2 text-sm text-muted">
+            Página <span class="font-bold text-text">{page}</span> de {totalPages}
+          </span>
+
+          {page < totalPages && (
+            <a
+              href={urlWithPage(page + 1)}
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border border-border bg-elevated text-text hover:border-accent/40 hover:text-accent transition-all active:scale-95"
+            >
+              Siguiente
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </a>
+          )}
+        </nav>
+      )}
     </div>
   </section>
 </Layout>
+
+<style>
+  /* En desktop ocultamos el summary y mostramos el form siempre. El
+     atributo `open` lo forzamos por JS porque CSS no puede setearlo. */
+  @media (min-width: 1024px) {
+    #filters-details > summary {
+      display: none;
+    }
+    #filters-details > form {
+      display: block !important;
+    }
+  }
+  #filters-details[open] .filter-chevron {
+    transform: rotate(180deg);
+  }
+</style>
+
+<script>
+  // Sort: el <select> contiene URLs, navega al elegir.
+  const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      const url = sortSelect.value
+      if (url) window.location.href = url
+    })
+  }
+
+  // Forzar <details> abierto en desktop (1024px+) ya que el atributo `open`
+  // es booleano y no se puede toggle por media query desde HTML puro.
+  const details = document.getElementById('filters-details') as HTMLDetailsElement | null
+  function syncDetailsOpen() {
+    if (!details) return
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      details.open = true
+    }
+  }
+  syncDetailsOpen()
+  window.addEventListener('resize', syncDetailsOpen)
+
+  // Auto-scroll suave al listado si la URL trae filtros pero no hash.
+  // Algunos browsers ignoran el hash en navegaciones tras submit del form
+  // hacia la misma URL — lo hacemos a mano.
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search)
+    const hasAnyFilter = ['q', 'operacion', 'tipo', 'dorm', 'precio', 'antiguedad', 'sort', 'page']
+      .some((k) => params.has(k))
+    if (hasAnyFilter && window.location.hash !== '#listado') {
+      const anchor = document.getElementById('listado')
+      if (anchor) {
+        requestAnimationFrame(() => {
+          anchor.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      }
+    }
+  }
+</script>
