@@ -1,6 +1,13 @@
 ---
 import { SITE, CONTACT, SOCIAL, NAV, NAV_TOOLS_IA, LOGOS } from '../data/site'
 const year = new Date().getFullYear()
+
+// Build info — se evalúa al hacer build. Tanto el ISO como el commit short
+// quedan congelados en el HTML generado. Sirve para confirmar a simple
+// vista qué versión está sirviendo Netlify (ver footer + console).
+const BUILD_TIME = new Date().toISOString()
+const BUILD_COMMIT = (process.env.COMMIT_REF ?? process.env.GITHUB_SHA ?? 'dev').slice(0, 7)
+const BUILD_LABEL = `v${BUILD_TIME.slice(0, 16).replace('T', ' ')} · ${BUILD_COMMIT}`
 ---
 
 <footer class="border-t border-border bg-bg mt-12">
@@ -93,7 +100,24 @@ const year = new Date().getFullYear()
         marcas de servicio de propiedad de Coldwell Banker Real Estate LLC. El sistema Coldwell Banker® está compuesto por
         oficinas propias y oficinas adheridas al Sistema Coldwell Banker que son de propiedad y operación independiente.
       </p>
-      <span>Buenos Aires, Argentina</span>
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <span>Buenos Aires, Argentina</span>
+        <span class="text-[10px] text-muted/60 font-mono tracking-tight" title="Build identifier">
+          {BUILD_LABEL}
+        </span>
+      </div>
     </div>
   </div>
 </footer>
+
+<script is:inline define:vars={{ label: BUILD_LABEL, ts: BUILD_TIME, commit: BUILD_COMMIT }}>
+  // Imprime una sola línea por carga así podés confirmar en consola
+  // (incluso desde mobile via Safari/Chrome DevTools remoto) que estás
+  // viendo el último build deployado.
+  // eslint-disable-next-line no-console
+  console.log(
+    '%c[Beyker]%c build ' + label,
+    'background:#C9A45A;color:#0b1120;padding:2px 6px;border-radius:3px;font-weight:bold',
+    'color:#94a3b8',
+  )
+</script>
