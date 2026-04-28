@@ -317,7 +317,16 @@
       const reply: Msg = { role: 'assistant', text: data.reply || '...' }
       history.push(reply)
       saveHistory()
-      renderMsg(reply, data.properties as ApiProperty[], data.cta, data.followUp)
+
+      // El CTA "Ver todas" apunta a /buscar plano y pierde el contexto del
+      // chat. Le reinyectamos el último mensaje del cliente como ?q= para
+      // que /buscar lo auto-busque al cargar.
+      const cta = data.cta as { label: string; href: string } | null
+      if (cta && cta.href && cta.href.startsWith('/buscar') && !cta.href.includes('?')) {
+        cta.href = `/buscar?q=${encodeURIComponent(text)}`
+      }
+
+      renderMsg(reply, data.properties as ApiProperty[], cta, data.followUp)
     } catch (err) {
       typing.remove()
       renderMsg({ role: 'assistant', text: 'Sin conexión. Reintentá en un momento.' })
