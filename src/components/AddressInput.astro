@@ -316,6 +316,15 @@ const { required = false } = Astro.props
     return r.city || ''
   }
 
+  /** Clases que pintan el input como "geolocalizado" — fuerte, obvio. */
+  const VERIFIED_INPUT_CLASSES = [
+    'cursor-not-allowed',
+    'border-green-500/60',
+    'bg-green-500/5',
+    'text-green-700',
+    'font-semibold',
+  ]
+
   function setVerified(r: AddressResult) {
     root.dataset.verified = 'true'
     fAddress.value = r.displayName
@@ -326,20 +335,24 @@ const { required = false } = Astro.props
     fLng.value = String(r.lng)
     if (r.province) fProvince.value = r.province
     search.value = formatAddressLine(r)
-    // Una vez geolocalizado bloqueamos el input para que no se pueda
-    // toquetear sin querer. El usuario tiene que apretar la X explícita
-    // para volver a editar.
+
+    // Bloqueo total: readOnly + classes "geolocalizado". El usuario tiene
+    // que apretar la X explícita para volver a editar. blur() libera el
+    // foco para que el teclado de mobile no re-dispare focus → lista.
     search.readOnly = true
-    search.classList.add('cursor-not-allowed', 'border-green-500/40')
+    search.classList.add(...VERIFIED_INPUT_CLASSES)
+    search.blur()
+
     list.innerHTML = ''
     list.classList.add('hidden')
     status.classList.remove('hidden')
     spinner.classList.add('hidden')
     check.classList.remove('hidden')
     clearBtn.classList.remove('hidden')
-    hint.textContent = '✓ Dirección verificada — tocá la cruz para editar'
+    hint.textContent = '✓ Dirección geolocalizada — tocá la cruz para editar'
     hint.classList.remove('text-muted')
-    hint.classList.add('text-green-600')
+    hint.classList.add('text-green-600', 'font-semibold')
+
     // OJO: NO disparamos el evento input acá. Hacerlo retriggerea el
     // listener de input que invalida la verificación al toque.
   }
@@ -356,10 +369,10 @@ const { required = false } = Astro.props
     clearBtn.classList.add('hidden')
     status.classList.add('hidden')
     search.readOnly = false
-    search.classList.remove('cursor-not-allowed', 'border-green-500/40')
+    search.classList.remove(...VERIFIED_INPUT_CLASSES)
     hint.textContent = 'Elegí una de las sugerencias para verificar la ubicación.'
     hint.classList.add('text-muted')
-    hint.classList.remove('text-green-600')
+    hint.classList.remove('text-green-600', 'font-semibold')
   }
 
   // Click en la X → limpiar y volver a editar.
