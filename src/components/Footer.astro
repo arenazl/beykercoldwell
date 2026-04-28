@@ -1,5 +1,5 @@
 ---
-import { SITE, CONTACT, SOCIAL, NAV, NAV_TOOLS_IA, LOGOS } from '../data/site'
+import { SITE, CONTACT, SOCIAL, NAV, NAV_TOOLS, LOGOS } from '../data/site'
 const year = new Date().getFullYear()
 
 // Build info — se evalúa al hacer build. Tanto el ISO como el commit short
@@ -54,7 +54,7 @@ const BUILD_LABEL = `v${BUILD_TIME.slice(0, 16).replace('T', ' ')} · ${BUILD_CO
     <div class="md:col-span-2">
       <h3 class="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Herramientas inteligentes</h3>
       <ul class="space-y-2">
-        {NAV_TOOLS_IA.map((t) => (
+        {NAV_TOOLS.map((t) => (
           <li><a href={t.href} class="text-sm text-text/80 hover:text-accent transition-colors">{t.label}</a></li>
         ))}
       </ul>

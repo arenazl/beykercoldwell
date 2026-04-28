@@ -111,7 +111,7 @@ Reglas duras:
 - 3 a 5 comparables. Que sean plausibles para la zona y tipología (no copies datos del prompt; generá con criterio).
 - pricePerM2USD * surfaceTotalM2 debe ser coherente con totalPriceUSD (típico ≈ pricePerM2USD.typical * surfaceTotalM2).
 - Tono profesional, conciso, en español rioplatense (vos).
-- En "caveats" dejá claro que es una valuación orientativa por IA y que la tasación final requiere visita presencial.
+- En "caveats" dejá claro que es una valuación orientativa automatizada y que la tasación final requiere visita presencial.
 
 Datos de la propiedad a valuar:
 - Tipo: ${input.type}

@@ -42,7 +42,7 @@ export const APP_SECTIONS: AppSection[] = [
     intents: ['tasar mi propiedad', 'cuánto vale mi casa', 'vender', 'tasación profesional'],
   },
   {
-    href: '/tasaciones-ia',
+    href: '/tasacion-online',
     label: 'Tasación inteligente',
     purpose: 'Estimación instantánea de valor de una propiedad. Resultado en segundos vs días de la tasación humana.',
     intents: ['estimación rápida', 'cuánto vale ahora', 'valuación inteligente', 'tasación instantánea'],
@@ -60,7 +60,7 @@ export const APP_SECTIONS: AppSection[] = [
     intents: ['comparar propiedades', 'cuál conviene', 'pros y contras', 'lado a lado'],
   },
   {
-    href: '/match-ia',
+    href: '/match-guiado',
     label: 'Match guiado',
     purpose: 'Quiz corto que detecta perfil del comprador (familia, inversor, primera vivienda) y sugiere las 3 mejores propiedades.',
     intents: ['no sé qué busco', 'recomendame', 'guíame', 'soy nuevo', 'me orienten'],
@@ -98,7 +98,7 @@ export const APP_SECTIONS: AppSection[] = [
   {
     href: '/unite',
     label: 'Carrera comercial',
-    purpose: 'Landing para asesores que quieran sumarse a Beyker. Perfil buscado y stack IA disponible.',
+    purpose: 'Landing para asesores que quieran sumarse a Beyker. Perfil buscado y stack tecnológico disponible.',
     intents: ['quiero trabajar acá', 'asesor inmobiliario', 'sumarme', 'unirme al equipo'],
   },
   {
@@ -110,8 +110,8 @@ export const APP_SECTIONS: AppSection[] = [
   {
     href: '/tecnologia',
     label: 'Stack tecnológico',
-    purpose: 'Detalle del stack IA propio: CRM, captación, valuador, WhatsApp IA, etc.',
-    intents: ['qué tecnología usan', 'stack', 'herramientas IA'],
+    purpose: 'Detalle del stack tecnológico propio: CRM, captación, valuador, asistente de WhatsApp, etc.',
+    intents: ['qué tecnología usan', 'stack', 'herramientas tecnológicas'],
   },
   {
     href: '/inversores',

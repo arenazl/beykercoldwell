@@ -4,7 +4,7 @@ import Stepper from '../components/Stepper.astro'
 
 const breadcrumbs = [
   { name: 'Inicio', url: '/' },
-  { name: 'Generador de aviso IA', url: '/generar-aviso' },
+  { name: 'Generador de avisos', url: '/generar-aviso' },
 ]
 
 const types = ['Departamento', 'Casa', 'PH', 'Casa Quinta', 'Lote', 'Local', 'Oficina']
@@ -16,8 +16,8 @@ const featureOptions = [
 ---
 
 <Layout
-  title="Generador de aviso IA · Coldwell Banker Beyker"
-  description="Subí los datos crudos de tu propiedad y la IA arma el título, descripción larga, highlights y hashtags para tu publicación."
+  title="Generador de avisos · Coldwell Banker Beyker"
+  description="Subí los datos crudos de tu propiedad y te armamos el título, descripción larga, highlights y hashtags para tu publicación."
   breadcrumbs={breadcrumbs}
 >
   <section class="border-b border-border bg-elevated/30">
@@ -27,14 +27,14 @@ const featureOptions = [
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
           </svg>
-          Generador de aviso IA
+          Generador de avisos
         </div>
         <h1 class="text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-5">
           De datos crudos a aviso premium.<br />
           <span class="text-accent">En 15 segundos.</span>
         </h1>
         <p class="text-lg text-muted leading-relaxed">
-          Cargá los datos básicos de la propiedad y la IA te arma título, descripción larga,
+          Cargá los datos básicos de la propiedad y te armamos título, descripción larga,
           highlights y hashtags listos para publicar.
         </p>
       </div>
@@ -95,7 +95,7 @@ const featureOptions = [
       <div class="lg:col-span-3 space-y-4">
         <div id="gen-empty" class="card-static text-center py-16 text-muted">
           <div class="text-5xl mb-3 opacity-40">✍️</div>
-          <p class="text-sm">Completá los datos y la IA te arma el aviso completo.</p>
+          <p class="text-sm">Completá los datos y te armamos el aviso completo.</p>
         </div>
         <div id="gen-error" class="hidden p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
         <div id="gen-result" class="hidden space-y-4"></div>

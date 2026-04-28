@@ -35,18 +35,18 @@ export const SOCIAL = {
 export const NAV = [
   { label: 'Inicio', href: '/' },
   { label: 'Búsqueda inteligente', href: '/buscar' },
-  { label: 'Match guiado', href: '/match-ia' },
+  { label: 'Match guiado', href: '/match-guiado' },
   { label: 'Propiedades', href: '/propiedades' },
-  { label: 'Tasar', href: '/tasaciones-ia' },
+  { label: 'Tasar', href: '/tasacion-online' },
   { label: 'Crédito', href: '/credito' },
   { label: 'La Empresa', href: '/la-empresa' },
   { label: 'Contacto', href: '/contacto' },
 ]
 
-export const NAV_TOOLS_IA = [
+export const NAV_TOOLS = [
   { label: 'Búsqueda inteligente', href: '/buscar', desc: 'Lenguaje natural sobre el catálogo' },
-  { label: 'Match guiado', href: '/match-ia', desc: '4 preguntas, 3 propiedades ideales' },
-  { label: 'Tasación inteligente', href: '/tasaciones-ia', desc: 'Banda de precio en 30 segundos' },
+  { label: 'Match guiado', href: '/match-guiado', desc: '4 preguntas, 3 propiedades ideales' },
+  { label: 'Tasación inteligente', href: '/tasacion-online', desc: 'Banda de precio en 30 segundos' },
   { label: '¿Te da el crédito?', href: '/credito', desc: 'Capacidad de compra hipotecaria' },
   { label: 'Comparador inteligente', href: '/comparar', desc: 'Compará hasta 3 propiedades' },
   { label: 'Guías de barrios', href: '/barrios', desc: 'Perfil, fortalezas y precios' },

@@ -149,6 +149,18 @@ const { required = false } = Astro.props
     hint.classList.remove('text-green-600')
   }
 
+  function formatAddressLine(r: AddressResult): string {
+    if (r.street) {
+      return r.houseNumber ? `${r.street} ${r.houseNumber}` : r.street
+    }
+    // Fallback: primer segmento del displayName (antes de la primera coma).
+    return r.displayName.split(',')[0]?.trim() || r.displayName
+  }
+
+  function formatBarrioLine(r: AddressResult): string {
+    return r.city || r.province || ''
+  }
+
   function renderSuggestions(items: AddressResult[]) {
     if (items.length === 0) {
       list.innerHTML = `
@@ -160,19 +172,29 @@ const { required = false } = Astro.props
       return
     }
     list.innerHTML = items
-      .map(
-        (r, i) => `
+      .map((r, i) => {
+        const main = escapeHtml(formatAddressLine(r))
+        const sub = escapeHtml(formatBarrioLine(r))
+        return `
         <li role="option" data-idx="${i}"
-            class="px-4 py-2.5 cursor-pointer hover:bg-accent/10 transition-colors border-b border-border last:border-b-0">
-          <div class="flex items-start gap-2">
-            <svg class="flex-shrink-0 w-4 h-4 text-accent mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
+            class="group px-3 py-2.5 cursor-pointer hover:bg-accent/10 transition-colors border-b border-border last:border-b-0">
+          <div class="flex items-center gap-3">
+            <span class="flex-shrink-0 w-9 h-9 rounded-xl bg-accent/10 text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-semibold text-text leading-snug truncate">${main}</div>
+              ${sub ? `<div class="text-xs text-muted leading-snug truncate mt-0.5">${sub}</div>` : ''}
+            </div>
+            <svg class="flex-shrink-0 w-4 h-4 text-muted/40 group-hover:text-accent transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6" />
             </svg>
-            <span class="text-sm text-text leading-snug">${escapeHtml(r.displayName)}</span>
           </div>
-        </li>`,
-      )
+        </li>`
+      })
       .join('')
     list.classList.remove('hidden')
     list.querySelectorAll<HTMLLIElement>('[data-idx]').forEach((li) => {

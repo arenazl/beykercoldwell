@@ -132,7 +132,7 @@ Devolvé JSON:
 
 Reglas:
 - "casas" → type: "Casa". "departamentos", "depto" → "Departamento". Singular/plural NO importa, vos lo resolvés.
-- Si menciona vender o tasar → suggestedRoute: "/tasaciones-ia", filters: {} vacío.
+- Si menciona vender o tasar → suggestedRoute: "/tasacion-online", filters: {} vacío.
 - Si menciona crédito → suggestedRoute: "/credito".
 - Si pide hablar con alguien → suggestedRoute: "/contacto", intent: "derivar".
 - Si pide ver propiedades con criterios → suggestedRoute: null, llená filters.
