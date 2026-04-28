@@ -53,10 +53,10 @@ const featureOptions = [
 
   <section class="container-app py-12">
     <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <form id="val-form" class="lg:col-span-5 bg-elevated border border-border rounded-2xl shadow-xl p-6 flex flex-col">
-        <!-- Wizard header con progreso -->
-        <header class="mb-5 flex-shrink-0">
-          <div class="flex items-center justify-between mb-2.5">
+      <form id="val-form" class="lg:col-span-5 flex flex-col">
+        <!-- Wizard header con progreso — sin recuadro, full width -->
+        <header class="mb-6 flex-shrink-0">
+          <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
               <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent text-bg text-xs font-bold" id="wiz-step-num">1</span>
               <span class="text-xs uppercase tracking-wider text-muted font-semibold">de 7</span>
@@ -65,8 +65,8 @@ const featureOptions = [
               Saltar paso →
             </button>
           </div>
-          <h2 id="wiz-step-title" class="text-2xl font-bold leading-snug mb-3">¿Qué propiedad querés valuar?</h2>
-          <div class="h-1 rounded-full bg-border overflow-hidden">
+          <h2 id="wiz-step-title" class="text-2xl sm:text-3xl font-bold leading-tight mb-4">¿Qué propiedad querés valuar?</h2>
+          <div class="h-1 rounded-full bg-border/60 overflow-hidden">
             <div id="wiz-progress" class="h-full bg-gradient-to-r from-gold via-accent to-accent transition-all duration-500 ease-out" style="width: 14.3%"></div>
           </div>
         </header>
