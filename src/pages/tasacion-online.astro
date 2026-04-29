@@ -234,8 +234,8 @@ const featureOptions = [
 
         <div id="val-loading" class="hidden bg-elevated border border-border rounded-2xl p-10 text-center">
           <div class="w-12 h-12 mx-auto rounded-full border-2 border-accent/20 border-t-accent animate-spin mb-4"></div>
-          <h3 class="text-lg font-bold mb-1">Analizando el mercado…</h3>
-          <p class="text-muted text-sm">Cruzando datos comparables y factores de la zona.</p>
+          <h3 id="val-loading-title" class="text-lg font-bold mb-1 transition-opacity duration-300">Analizando el mercado…</h3>
+          <p id="val-loading-sub" class="text-muted text-sm transition-opacity duration-300">Cruzando datos comparables y factores de la zona.</p>
         </div>
 
         <div id="val-error" class="hidden p-5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-600 text-sm"></div>
@@ -513,8 +513,48 @@ const featureOptions = [
   const submitLabel = document.getElementById('val-submit-label') as HTMLSpanElement
   const empty = document.getElementById('val-empty') as HTMLDivElement
   const loading = document.getElementById('val-loading') as HTMLDivElement
+  const loadingTitle = document.getElementById('val-loading-title') as HTMLHeadingElement
+  const loadingSub = document.getElementById('val-loading-sub') as HTMLParagraphElement
   const errorBox = document.getElementById('val-error') as HTMLDivElement
   const result = document.getElementById('val-result') as HTMLDivElement
+
+  // Mensajes rotativos del loader. Son dummy (no representan trabajo real),
+  // pero dan sensación de progreso para que no parezca colgado durante los
+  // ~10-25s que tarda Gemini.
+  const LOADING_STEPS: Array<{ title: string; sub: string }> = [
+    { title: 'Analizando el mercado…', sub: 'Cruzando datos comparables y factores de la zona.' },
+    { title: 'Buscando comparables…', sub: 'Filtrando propiedades reales del catálogo en tu zona.' },
+    { title: 'Calibrando precios…', sub: 'Ajustando bandas según tu superficie y estado.' },
+    { title: 'Evaluando factores…', sub: 'Antigüedad, orientación, amenities y posición.' },
+    { title: 'Estimando cierre…', sub: 'Aplicando descuento típico de negociación argentino.' },
+    { title: 'Armando estrategia…', sub: 'Calculando margen y tiempo esperado en mercado.' },
+    { title: 'Casi listo…', sub: 'Redondeando bandas y comparables finales.' },
+  ]
+  let loadingTimer: number | null = null
+  function startLoadingRotator() {
+    let i = 0
+    loadingTitle.textContent = LOADING_STEPS[0].title
+    loadingSub.textContent = LOADING_STEPS[0].sub
+    loadingTimer = window.setInterval(() => {
+      i = (i + 1) % LOADING_STEPS.length
+      loadingTitle.style.opacity = '0'
+      loadingSub.style.opacity = '0'
+      window.setTimeout(() => {
+        loadingTitle.textContent = LOADING_STEPS[i].title
+        loadingSub.textContent = LOADING_STEPS[i].sub
+        loadingTitle.style.opacity = '1'
+        loadingSub.style.opacity = '1'
+      }, 250)
+    }, 2800)
+  }
+  function stopLoadingRotator() {
+    if (loadingTimer !== null) {
+      window.clearInterval(loadingTimer)
+      loadingTimer = null
+    }
+    loadingTitle.style.opacity = '1'
+    loadingSub.style.opacity = '1'
+  }
 
   function num(id: string): number | undefined {
     const el = document.getElementById(id) as HTMLInputElement | null
@@ -965,14 +1005,35 @@ const featureOptions = [
     errorBox.classList.add('hidden')
     result.classList.add('hidden')
     loading.classList.remove('hidden')
+    startLoadingRotator()
+
+    // Abort interno a 28s — un poco antes que el timeout del proxy (30s) para
+    // que el catch reciba un AbortError limpio en vez de HTML del gateway.
+    const ctrl = new AbortController()
+    const abortTimer = window.setTimeout(() => ctrl.abort(), 28_000)
 
     try {
       const res = await fetch('/api/valuar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: ctrl.signal,
       })
-      const data = await res.json()
+      // Parseo robusto: si el proxy devolvió HTML (504/503), no rompemos con
+      // "Unexpected token '<'". Leemos como texto y mostramos mensaje útil.
+      const raw = await res.text()
+      let data: { error?: string; hint?: string; [k: string]: unknown } = {}
+      try {
+        data = JSON.parse(raw) as typeof data
+      } catch {
+        const isTimeout = res.status === 504 || res.status === 503 || res.status === 502
+        errorBox.textContent = isTimeout
+          ? 'El servidor tardó demasiado. Probá de nuevo en unos segundos.'
+          : `Respuesta inesperada del servidor (${res.status}). Probá de nuevo.`
+        errorBox.classList.remove('hidden')
+        empty.classList.remove('hidden')
+        return
+      }
       if (!res.ok) {
         let msg = data.error || 'Error desconocido'
         if (data.hint) msg += ` — ${data.hint}`
@@ -981,15 +1042,21 @@ const featureOptions = [
         empty.classList.remove('hidden')
         return
       }
-      const valData = data as Result
+      const valData = data as unknown as Result
       result.innerHTML = renderResult(valData, payload)
       result.classList.remove('hidden')
       wireResultCTAs(valData, payload)
     } catch (err) {
-      errorBox.textContent = 'No pudimos contactar el servidor: ' + String((err as Error).message)
+      const e = err as Error
+      const aborted = e.name === 'AbortError'
+      errorBox.textContent = aborted
+        ? 'La valuación tardó demasiado. Probá de nuevo en unos segundos.'
+        : 'No pudimos contactar el servidor: ' + String(e.message)
       errorBox.classList.remove('hidden')
       empty.classList.remove('hidden')
     } finally {
+      window.clearTimeout(abortTimer)
+      stopLoadingRotator()
       loading.classList.add('hidden')
       setBtnLoading(submitBtn, false)
       submitLabel.textContent = 'Valuar mi propiedad'

@@ -101,6 +101,77 @@ const sugerencias = [
         </div>
       </form>
 
+      <details class="group mb-6 reveal reveal-delay-1">
+        <summary class="cursor-pointer inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors select-none list-none [&::-webkit-details-marker]:hidden">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform duration-200 group-open:rotate-180">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          <span>Más filtros</span>
+          <span class="text-xs text-muted/70">(combos clásicos)</span>
+        </summary>
+
+        <form id="classic-form" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-5 rounded-2xl glass">
+          <label class="flex flex-col gap-1.5">
+            <span class="text-xs text-muted">Operación</span>
+            <select name="operacion" class="bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent/60">
+              <option value="">Cualquiera</option>
+              {FILTERS.operaciones.map((op) => (
+                <option value={op}>{op.charAt(0).toUpperCase() + op.slice(1)}</option>
+              ))}
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-1.5">
+            <span class="text-xs text-muted">Tipo</span>
+            <select name="type" class="bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent/60">
+              <option value="">Cualquiera</option>
+              {FILTERS.tipos.map((t) => (
+                <option value={t}>{t}</option>
+              ))}
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-1.5">
+            <span class="text-xs text-muted">Ambientes</span>
+            <select name="bedrooms" class="bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent/60">
+              <option value="">Cualquiera</option>
+              <option value="1">1 ambiente</option>
+              <option value="2">2 ambientes</option>
+              <option value="3">3 ambientes</option>
+              <option value="4+">4+ ambientes</option>
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-1.5">
+            <span class="text-xs text-muted">Precio mín. (USD)</span>
+            <input type="number" name="minPriceUSD" placeholder="0" min="0" class="bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent/60" />
+          </label>
+
+          <label class="flex flex-col gap-1.5">
+            <span class="text-xs text-muted">Precio máx. (USD)</span>
+            <input type="number" name="maxPriceUSD" placeholder="Sin límite" min="0" class="bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent/60" />
+          </label>
+
+          <label class="flex flex-col gap-1.5">
+            <span class="text-xs text-muted">Superficie (m²)</span>
+            <div class="flex gap-2">
+              <input type="number" name="minSurfaceM2" placeholder="Min" min="0" class="flex-1 min-w-0 bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent/60" />
+              <input type="number" name="maxSurfaceM2" placeholder="Max" min="0" class="flex-1 min-w-0 bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-accent/60" />
+            </div>
+          </label>
+
+          <label class="flex items-center gap-2 col-span-full md:col-span-1 self-end pb-2">
+            <input type="checkbox" name="aEstrenar" class="w-4 h-4 accent-accent" />
+            <span class="text-sm text-text">Solo a estrenar / en pozo</span>
+          </label>
+
+          <div class="col-span-full flex justify-end gap-2 pt-3 border-t border-border/50">
+            <button type="reset" class="px-4 py-2 rounded-lg text-sm border border-border text-muted hover:text-text hover:border-text/50 transition-all duration-200 active:scale-95">Limpiar</button>
+            <button type="submit" class="btn-primary text-sm sm:px-5 sm:py-2.5">Aplicar filtros</button>
+          </div>
+        </form>
+      </details>
+
       <div class="flex flex-wrap items-center gap-2 mb-10 reveal reveal-delay-1">
         <span class="text-xs text-muted">Probá:</span>
         {sugerencias.map((s) => (
@@ -162,6 +233,10 @@ const sugerencias = [
         </div>
       </div>
 
+      <div id="ai-active-filters" class="hidden flex flex-wrap items-center gap-2 mb-4">
+        <span class="text-xs text-muted mr-1">Filtros aplicados:</span>
+      </div>
+
       <div id="ai-sortbar-wrap" class="hidden mb-6">
         <SortBar target="#ai-results" />
       </div>
@@ -199,6 +274,8 @@ const sugerencias = [
   const suggestMessage = document.getElementById('ai-suggest-message') as HTMLParagraphElement
   const suggestChips = document.getElementById('ai-suggest-chips') as HTMLDivElement
   const followupChips = document.getElementById('ai-followup-chips') as HTMLDivElement
+  const activeFilters = document.getElementById('ai-active-filters') as HTMLDivElement
+  const activeFiltersLabel = activeFilters.firstElementChild as HTMLSpanElement
 
   type AnyFilters = Record<string, unknown> & { type?: string; location_includes?: string; summary?: string }
   let lastFilters: AnyFilters | null = null
@@ -268,6 +345,98 @@ const sugerencias = [
     requestAnimationFrame(() => form.requestSubmit())
   }
 
+  function fmtPriceLabel(usd: number): string {
+    if (usd >= 1_000_000) return `USD ${(usd / 1_000_000).toFixed(1)}M`
+    if (usd >= 1_000) return `USD ${Math.round(usd / 1_000)}k`
+    return `USD ${Math.round(usd)}`
+  }
+
+  type Pill = { keys: string[]; label: string; keywordIdx?: number }
+
+  function buildPills(f: AnyFilters): Pill[] {
+    const pills: Pill[] = []
+    if (f.type) pills.push({ keys: ['type'], label: String(f.type) })
+    if (f.location_includes) pills.push({ keys: ['location_includes'], label: '📍 ' + String(f.location_includes) })
+    if (f.operacion) {
+      const op = String(f.operacion)
+      pills.push({ keys: ['operacion'], label: op.charAt(0).toUpperCase() + op.slice(1) })
+    }
+
+    const minB = f.minBedrooms as number | undefined
+    const maxB = f.maxBedrooms as number | undefined
+    if (minB != null || maxB != null) {
+      let label = ''
+      if (minB != null && maxB != null && minB === maxB) label = `${minB} amb`
+      else if (minB != null && maxB == null) label = `${minB}+ amb`
+      else if (maxB != null && minB == null) label = `Hasta ${maxB} amb`
+      else if (minB != null && maxB != null) label = `${minB}–${maxB} amb`
+      if (label) pills.push({ keys: ['minBedrooms', 'maxBedrooms'], label })
+    }
+
+    const minP = f.minPriceUSD as number | undefined
+    const maxP = f.maxPriceUSD as number | undefined
+    if (minP != null || maxP != null) {
+      let label = ''
+      if (minP != null && maxP != null) label = `${fmtPriceLabel(minP)} – ${fmtPriceLabel(maxP)}`
+      else if (minP != null) label = `Más de ${fmtPriceLabel(minP)}`
+      else if (maxP != null) label = `Hasta ${fmtPriceLabel(maxP)}`
+      if (label) pills.push({ keys: ['minPriceUSD', 'maxPriceUSD'], label })
+    }
+
+    const minS = f.minSurfaceM2 as number | undefined
+    const maxS = f.maxSurfaceM2 as number | undefined
+    if (minS != null || maxS != null) {
+      let label = ''
+      if (minS != null && maxS != null) label = `${minS}–${maxS} m²`
+      else if (minS != null) label = `Más de ${minS} m²`
+      else if (maxS != null) label = `Hasta ${maxS} m²`
+      if (label) pills.push({ keys: ['minSurfaceM2', 'maxSurfaceM2'], label })
+    }
+
+    if (f.aEstrenar) pills.push({ keys: ['aEstrenar'], label: '✨ A estrenar' })
+    else if (f.maxAntiguedad != null) pills.push({ keys: ['maxAntiguedad'], label: `≤ ${f.maxAntiguedad} años` })
+
+    if (Array.isArray(f.keywords)) {
+      const kws = f.keywords as string[]
+      for (let i = 0; i < kws.length; i++) {
+        pills.push({ keys: [], label: `“${kws[i]}”`, keywordIdx: i })
+      }
+    }
+
+    return pills
+  }
+
+  function renderActiveFilters(f: AnyFilters) {
+    while (activeFilters.children.length > 1) activeFilters.removeChild(activeFilters.lastChild as ChildNode)
+    const pills = buildPills(f)
+    if (pills.length === 0) {
+      activeFilters.classList.add('hidden')
+      return
+    }
+    for (const pill of pills) {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.title = 'Quitar este filtro'
+      btn.className =
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-elevated border border-border text-text hover:border-red-400/60 hover:text-red-400 transition-all duration-200 active:scale-95 group'
+      btn.innerHTML = `<span>${pill.label}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="opacity-50 group-hover:opacity-100"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+      btn.addEventListener('click', () => {
+        const newF: AnyFilters = { ...f }
+        for (const k of pill.keys) delete newF[k]
+        if (pill.keywordIdx != null && Array.isArray(newF.keywords)) {
+          const filtered = (newF.keywords as string[]).filter((_, i) => i !== pill.keywordIdx)
+          if (filtered.length === 0) delete newF.keywords
+          else newF.keywords = filtered
+        }
+        delete newF.summary
+        runSearch({ filters: newF })
+      })
+      activeFilters.appendChild(btn)
+    }
+    activeFilters.classList.remove('hidden')
+    activeFiltersLabel.classList.remove('hidden')
+  }
+
   function renderSuggest(originalType: string, location: string | undefined, alternatives: { type: string; count: number }[], baseFilters: AnyFilters) {
     suggestTitle.textContent = `Se encontraron 0 ${originalType.toLowerCase()}${location ? ' en ' + location : ''}.`
     const top = alternatives.slice(0, 4)
@@ -309,6 +478,8 @@ const sugerencias = [
     suggest.classList.add('hidden')
     followupChips.classList.add('hidden')
     followupChips.innerHTML = ''
+    activeFilters.classList.add('hidden')
+    while (activeFilters.children.length > 1) activeFilters.removeChild(activeFilters.lastChild as ChildNode)
     results.innerHTML = ''
 
     try {
@@ -356,24 +527,27 @@ const sugerencias = [
         countText = `${total} propiedad${total === 1 ? '' : 'es'} encontrada${total === 1 ? '' : 's'}`
       }
       meta.textContent = countText + (parts.length ? ' · ' + parts.join(' · ') : '')
-      if (f.follow_up) {
-        followup.textContent = '💬 ' + f.follow_up
+      // Próxima dimensión sugerida: si el endpoint mandó `missing`, su pregunta
+      // pisa al follow_up libre del LLM (más concreto + accionable).
+      const missing = data.missing as { dimension: string; question: string; options: Array<{ label: string; filterPatch: Record<string, unknown>; count: number }> } | undefined
+      const followupText = missing?.question || f.follow_up
+      if (followupText) {
+        followup.textContent = '💬 ' + followupText
         followup.classList.remove('hidden')
       } else {
         followup.classList.add('hidden')
       }
 
-      if (data.missing?.operacion?.length) {
-        for (const opt of data.missing.operacion as { value: string; count: number }[]) {
+      if (missing?.options?.length) {
+        for (const opt of missing.options) {
           const btn = document.createElement('button')
           btn.type = 'button'
           btn.className =
-            'px-3.5 py-1.5 rounded-full text-xs border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent/70 transition-all duration-200 active:scale-95 capitalize'
-          btn.innerHTML = `${opt.value} <span class="opacity-70">(${opt.count})</span>`
+            'px-3.5 py-1.5 rounded-full text-xs border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent/70 transition-all duration-200 active:scale-95'
+          btn.innerHTML = `${opt.label} <span class="opacity-70">(${opt.count})</span>`
           btn.addEventListener('click', () => {
-            const loc = f.location_includes ? ` en ${f.location_includes}` : ''
-            const newSummary = `Te muestro propiedades en ${opt.value}${loc}.`
-            runSearch({ filters: { ...f, operacion: opt.value, summary: newSummary } })
+            const newSummary = `Refinando: ${opt.label.toLowerCase()}.`
+            runSearch({ filters: { ...f, ...opt.filterPatch, summary: newSummary } })
           })
           followupChips.appendChild(btn)
         }
@@ -382,6 +556,8 @@ const sugerencias = [
 
       status.classList.remove('hidden')
       status.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+      renderActiveFilters(f)
 
       const sortbarWrap = document.getElementById('ai-sortbar-wrap') as HTMLDivElement
       if (data.results.length === 0) {
@@ -411,6 +587,44 @@ const sugerencias = [
     const query = input.value.trim()
     if (!query) return
     await runSearch({ query })
+  })
+
+  // Form de filtros clásicos: arma `filters` desde los inputs y los manda al
+  // mismo endpoint, salteando Gemini (modo `filters` directo).
+  const classicForm = document.getElementById('classic-form') as HTMLFormElement | null
+  classicForm?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const data = new FormData(classicForm)
+    const filters: AnyFilters = {}
+
+    const operacion = String(data.get('operacion') || '').trim()
+    if (operacion) filters.operacion = operacion
+
+    const type = String(data.get('type') || '').trim()
+    if (type) filters.type = type
+
+    const bedrooms = String(data.get('bedrooms') || '').trim()
+    if (bedrooms === '4+') filters.minBedrooms = 4
+    else if (bedrooms) {
+      const n = Number(bedrooms)
+      filters.minBedrooms = n
+      filters.maxBedrooms = n
+    }
+
+    const minP = Number(data.get('minPriceUSD'))
+    if (Number.isFinite(minP) && minP > 0) filters.minPriceUSD = minP
+    const maxP = Number(data.get('maxPriceUSD'))
+    if (Number.isFinite(maxP) && maxP > 0) filters.maxPriceUSD = maxP
+
+    const minS = Number(data.get('minSurfaceM2'))
+    if (Number.isFinite(minS) && minS > 0) filters.minSurfaceM2 = minS
+    const maxS = Number(data.get('maxSurfaceM2'))
+    if (Number.isFinite(maxS) && maxS > 0) filters.maxSurfaceM2 = maxS
+
+    if (data.get('aEstrenar')) filters.aEstrenar = true
+
+    filters.summary = 'Filtros aplicados manualmente.'
+    await runSearch({ filters })
   })
 
   // ======================

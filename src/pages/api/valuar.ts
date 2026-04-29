@@ -71,16 +71,34 @@ export const POST: APIRoute = async ({ request }) => {
     notes: body.notes,
   }
 
+  // Hard timeout antes del 30s del proxy (Heroku/Netlify) — si el modelo no
+  // respondió en 24s, cortamos limpio con JSON propio. Sin esto el proxy mata
+  // el request y devuelve HTML, rompiendo el JSON.parse del cliente.
+  const TIMEOUT_MS = 24_000
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('valuator-timeout')), TIMEOUT_MS)
+  )
+
   try {
-    const result = await valuateProperty(input)
+    const result = await Promise.race([valuateProperty(input), timeout])
     return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {
+    const message = String((err as Error).message)
+    if (message === 'valuator-timeout') {
+      return new Response(
+        JSON.stringify({
+          error: 'La valuación tardó demasiado',
+          hint: 'El modelo está saturado. Probá de nuevo en unos segundos.',
+        }),
+        { status: 504, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
     return new Response(
       JSON.stringify({
         error: 'Error procesando la valuación',
-        detail: String((err as Error).message),
+        detail: message,
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )

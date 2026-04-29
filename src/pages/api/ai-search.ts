@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro'
 import { extractFilters, isEnabled, type AISearchFilters } from '../../lib/gemini'
 import { applyFilters } from '../../lib/search'
+import { computeNextMissing } from '../../lib/search-suggest'
 import { FILTERS, CATALOG_META } from '../../data/properties'
 
 export const prerender = false
@@ -93,27 +94,13 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    // Dimensiones faltantes: cuando el usuario no precisó `operacion` y los
-    // resultados muestran variedad real (hay venta y alquiler), exponemos las
-    // opciones para que la UI las renderice como chips actionables al lado del
-    // follow_up. 100% data-driven: si solo hay una operación en los matches,
-    // no preguntamos.
-    let missing: { operacion?: { value: string; count: number }[] } | undefined
-    if (!filters.operacion && results.length > 0) {
-      const opCounts = new Map<string, number>()
-      for (const r of results) {
-        if (r.property.operacion) {
-          opCounts.set(r.property.operacion, (opCounts.get(r.property.operacion) ?? 0) + 1)
-        }
-      }
-      if (opCounts.size > 1) {
-        missing = {
-          operacion: [...opCounts.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .map(([value, count]) => ({ value, count })),
-        }
-      }
-    }
+    // Próxima dimensión a refinar (si la hay): la primera del pipeline
+    // operacion → ambientes → precio → superficie → antigüedad que aún no
+    // esté seteada y tenga variedad en el resultset. La UI la renderiza como
+    // chips clickeables al lado del follow_up.
+    const missing = results.length > 0
+      ? computeNextMissing(filters, results.map((r) => r.property))
+      : undefined
 
     return new Response(
       JSON.stringify({
