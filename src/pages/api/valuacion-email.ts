@@ -99,16 +99,39 @@ function buildEmailHtml(opts: {
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>Tu cotización Beyker — ${code}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tu cotización Coldwell Banker Beyker — ${code}</title>
 </head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#0f172a;">
+  <!-- Preheader oculto: aparece en preview de inbox sin verse en el body -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">
+    Tu valuación orientativa Coldwell Banker Beyker — código ${code}.
+  </div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;padding:24px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
-        <tr><td style="background:#002554;padding:24px 28px;color:#ffffff;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#C9A45A;font-weight:700;margin-bottom:6px;">Coldwell Banker Beyker</div>
-          <div style="font-size:22px;font-weight:700;line-height:1.2;">Tu cotización está lista</div>
-          <div style="font-size:12px;color:#94a3b8;margin-top:6px;">Código de seguimiento: <span style="font-family:monospace;color:#C9A45A;">${code}</span></div>
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,37,84,0.08);">
+
+        <!-- Banda dorada superior — firma visual Coldwell -->
+        <tr><td style="background:#C9A45A;height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr>
+
+        <!-- Header institucional Coldwell -->
+        <tr><td style="background:#002554;padding:32px 32px 28px;color:#ffffff;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+              <td valign="middle">
+                <div style="font-size:22px;font-weight:800;letter-spacing:4px;color:#ffffff;line-height:1;">COLDWELL BANKER</div>
+                <div style="font-size:14px;font-weight:700;letter-spacing:8px;color:#C9A45A;line-height:1;margin-top:6px;">B E Y K E R</div>
+              </td>
+              <td valign="middle" align="right" style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;line-height:1.4;">
+                Bienes Raíces<br/>
+                <span style="color:#C9A45A;">desde 1906</span>
+              </td>
+            </tr>
+          </table>
+          <div style="height:1px;background:linear-gradient(to right, #C9A45A 0%, rgba(201,164,90,0.2) 100%);margin:22px 0 18px;"></div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#C9A45A;font-weight:700;margin-bottom:6px;">Análisis Comparativo de Mercado</div>
+          <div style="font-size:24px;font-weight:700;line-height:1.2;">Tu cotización está lista</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:8px;">Código de seguimiento · <span style="font-family:'Courier New',monospace;color:#C9A45A;font-weight:700;">${code}</span></div>
         </td></tr>
 
         <tr><td style="padding:28px;">
@@ -213,10 +236,17 @@ function buildEmailHtml(opts: {
           </p>
         </td></tr>
 
-        <tr><td style="background:#0f172a;padding:18px 28px;text-align:center;">
-          <div style="font-size:11px;color:#94a3b8;line-height:1.5;">
-            Coldwell Banker Beyker · Florida 826, CABA<br/>
+        <tr><td style="background:#0f172a;padding:24px 32px;text-align:center;color:#ffffff;">
+          <div style="font-size:13px;font-weight:700;letter-spacing:3px;color:#ffffff;margin-bottom:4px;">COLDWELL BANKER</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:6px;color:#C9A45A;margin-bottom:14px;">B E Y K E R</div>
+          <div style="height:1px;background:rgba(201,164,90,0.25);margin:0 auto 14px;max-width:160px;"></div>
+          <div style="font-size:11px;color:#94a3b8;line-height:1.7;">
+            Florida 826, Primer Piso · Centro · CABA<br/>
+            <a href="tel:+5491130779018" style="color:#94a3b8;text-decoration:none;">+54 9 11 3077-9018</a> ·
             <a href="https://beykerbienesraices.com.ar" style="color:#C9A45A;text-decoration:none;">beykerbienesraices.com.ar</a>
+          </div>
+          <div style="font-size:10px;color:#475569;margin-top:14px;letter-spacing:1px;">
+            Red internacional · Más de 100 años · Presencia en +40 países
           </div>
         </td></tr>
       </table>
