@@ -837,6 +837,25 @@ const featureOptions = [
               </div>
               <p id="cta-email-feedback" class="hidden text-xs mt-2"></p>
             </form>
+
+            <button type="button" id="cta-show-now"
+                    class="block w-full p-4 rounded-2xl border border-dashed border-border hover:border-accent/40 hover:bg-accent/5 active:scale-[0.99] transition-all group text-left">
+              <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-elevated border border-border flex items-center justify-center text-accent">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-bold text-text">Ver ahora la cotización</div>
+                  <div class="text-xs text-muted">Mostrar los números acá mismo, sin pasar por mail.</div>
+                </div>
+                <svg class="flex-shrink-0 w-4 h-4 text-muted transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
+            </button>
           </div>
 
           <p class="text-[11px] text-muted mt-4 leading-snug">
@@ -915,6 +934,17 @@ const featureOptions = [
         ctaEmailToggle.classList.add('hidden')
         ctaEmailForm.classList.remove('hidden')
         ctaEmailInput.focus()
+      })
+    }
+
+    // Botón temporal "Ver ahora" — mientras el flujo de mail/Brevo no está
+    // 100%. Desbloquea las bandas in-page sin requerir contacto.
+    const ctaShowNow = document.getElementById('cta-show-now') as HTMLButtonElement | null
+    if (ctaShowNow) {
+      ctaShowNow.addEventListener('click', () => {
+        unlockBands()
+        const ctas = document.getElementById('unlock-ctas')
+        if (ctas) ctas.style.display = 'none'
       })
     }
 
