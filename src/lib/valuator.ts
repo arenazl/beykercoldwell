@@ -73,11 +73,10 @@ export async function valuateProperty(input: ValuatorInput): Promise<ValuatorOut
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.2,
-      // Cap de output: 8k. Empezamos en 2k → cortaba ("Unterminated string in
-      // JSON"). Subimos a 4k → seguía cortando con anclas grandes (Recoleta,
-      // 426 props). 8k da margen sin descontrolar p99 (gemini-flash-latest
-      // genera ~200-300 tok/s, peor caso ~30s ya cubierto por timeout 24s).
-      maxOutputTokens: 8192,
+      // 4k es suficiente cuando los strings y arrays están acotados (ver
+      // límites de longitud en el prompt). Antes había que subir a 8k porque
+      // Gemini se entusiasmaba — ahora con caps duros vuelve a entrar holgado.
+      maxOutputTokens: 4096,
     },
   })
 
@@ -96,17 +95,19 @@ export async function valuateProperty(input: ValuatorInput): Promise<ValuatorOut
   "pricePerM2USD": { "low": n, "typical": n, "high": n },
   "totalPriceUSD": { "low": n, "typical": n, "high": n },
   "confidence": "alta" | "media" | "baja",
-  "marketSummary": "2-3 oraciones del mercado actual de la zona/tipología",
-  "comparables": [ { "description": "...", "surfaceM2": n, "pricePerM2USD": n, "totalPriceUSD": n, "reason": "..." } ],
-  "factorsUp": ["factores que suman"],
-  "factorsDown": ["factores que restan"],
-  "commercialStrategy": "precio inicial, tiempo en mercado, margen de negociación",
-  "recommendations": ["acciones concretas pre-publicación"],
-  "caveats": "valuación orientativa automatizada; la final requiere visita presencial"
+  "marketSummary": "máx 2 oraciones, ≤40 palabras",
+  "comparables": [ { "description": "≤12 palabras", "surfaceM2": n, "pricePerM2USD": n, "totalPriceUSD": n, "reason": "≤15 palabras" } ],
+  "factorsUp": ["≤8 palabras c/u"],
+  "factorsDown": ["≤8 palabras c/u"],
+  "commercialStrategy": "máx 2 oraciones, ≤35 palabras",
+  "recommendations": ["≤10 palabras c/u"],
+  "caveats": "máx 1 oración, ≤25 palabras"
 }
 
-Reglas:
-- 3 comparables. ${anchor ? 'Priorizá los del ancla (parafraseá).' : 'Plausibles para zona/tipología.'}
+Reglas duras de longitud (críticas para no inflar tokens):
+- comparables: EXACTAMENTE 3, ni más ni menos. ${anchor ? 'Priorizá los del ancla, parafraseá description en ≤12 palabras.' : 'Plausibles, descripción corta.'}
+- factorsUp: máx 3 items. factorsDown: máx 3 items. recommendations: máx 3 items.
+- Strings sin adornos ni adjetivos redundantes. No repitas info entre campos.
 - pricePerM2USD.typical × surfaceTotalM2 ≈ totalPriceUSD.typical.
 - Datos insuficientes → confidence "baja" + banda más amplia.
 - Tono rioplatense (vos), conciso.

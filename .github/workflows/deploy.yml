@@ -24,7 +24,25 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
         run: |
-          git push "https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git" HEAD:refs/heads/main
+          REMOTE="https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git"
+          # 1) Si Heroku ya está en este commit (push manual previo, dual deploy),
+          #    no hacemos nada — evita el "rejected (fetch first)" del race.
+          git fetch "$REMOTE" main || true
+          HEROKU_HEAD=$(git rev-parse FETCH_HEAD 2>/dev/null || echo "")
+          LOCAL_HEAD=$(git rev-parse HEAD)
+          if [ "$HEROKU_HEAD" = "$LOCAL_HEAD" ]; then
+            echo "Heroku already at $LOCAL_HEAD — skipping."
+            exit 0
+          fi
+          # 2) Push normal (fast-forward).
+          if git push "$REMOTE" HEAD:refs/heads/main; then
+            exit 0
+          fi
+          # 3) Si la historia divergió (rewrite con filter-repo, force-push manual),
+          #    reintentamos con --force-with-lease usando lo que vimos en el fetch.
+          echo "Fast-forward push failed — retrying with --force-with-lease."
+          git push --force-with-lease="refs/heads/main:${HEROKU_HEAD}" \
+            "$REMOTE" HEAD:refs/heads/main
 
   netlify:
     name: Netlify
