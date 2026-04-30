@@ -73,9 +73,9 @@ export async function valuateProperty(input: ValuatorInput): Promise<ValuatorOut
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.2,
-      // Cap de output: la respuesta cabe holgadamente en 2k tokens. Capear
-      // baja la latencia de p95 cuando el modelo se entusiasma generando.
-      maxOutputTokens: 2048,
+      // Cap de output: 4k es suficiente para 3 comparables + summary + strategy
+      // + recommendations. Bajarlo más cortaba el JSON a mitad.
+      maxOutputTokens: 4096,
     },
   })
 
