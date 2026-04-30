@@ -1073,12 +1073,33 @@ const featureOptions = [
         return
       }
       const valData = data as unknown as Result
-      result.innerHTML = renderResult(valData, payload)
-      result.classList.remove('hidden')
-      wireResultCTAs(valData, payload)
+      // Validación mínima de shape — si Gemini devuelve algo raro pese al
+      // responseMimeType:json, no queremos crashear silencioso en renderResult.
+      if (!valData?.totalPriceUSD?.typical || !valData?.pricePerM2USD?.typical) {
+        console.error('[valuacion] response shape inválido', valData)
+        errorBox.textContent = 'La valuación llegó pero faltan campos clave. Probá de nuevo.'
+        errorBox.classList.remove('hidden')
+        empty.classList.remove('hidden')
+        return
+      }
+      // Render aislado: si tira, mostramos detalle en vez de un genérico que
+      // confunda al usuario con "no pudimos contactar el servidor".
+      try {
+        result.innerHTML = renderResult(valData, payload)
+        result.classList.remove('hidden')
+        wireResultCTAs(valData, payload)
+      } catch (renderErr) {
+        console.error('[valuacion] error renderizando', renderErr, valData)
+        errorBox.textContent =
+          'Recibimos la valuación pero hubo un problema al mostrarla. Detalle: ' +
+          String((renderErr as Error).message)
+        errorBox.classList.remove('hidden')
+        empty.classList.remove('hidden')
+      }
     } catch (err) {
       const e = err as Error
       const aborted = e.name === 'AbortError'
+      console.error('[valuacion] error de red/parseo', e)
       errorBox.textContent = aborted
         ? 'La valuación tardó demasiado. Probá de nuevo en unos segundos.'
         : 'No pudimos contactar el servidor: ' + String(e.message)

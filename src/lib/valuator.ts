@@ -73,9 +73,11 @@ export async function valuateProperty(input: ValuatorInput): Promise<ValuatorOut
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.2,
-      // Cap de output: 4k es suficiente para 3 comparables + summary + strategy
-      // + recommendations. Bajarlo más cortaba el JSON a mitad.
-      maxOutputTokens: 4096,
+      // Cap de output: 8k. Empezamos en 2k → cortaba ("Unterminated string in
+      // JSON"). Subimos a 4k → seguía cortando con anclas grandes (Recoleta,
+      // 426 props). 8k da margen sin descontrolar p99 (gemini-flash-latest
+      // genera ~200-300 tok/s, peor caso ~30s ya cubierto por timeout 24s).
+      maxOutputTokens: 8192,
     },
   })
 
