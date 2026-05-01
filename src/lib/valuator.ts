@@ -73,10 +73,9 @@ export async function valuateProperty(input: ValuatorInput): Promise<ValuatorOut
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.2,
-      // 4k es suficiente cuando los strings y arrays están acotados (ver
-      // límites de longitud en el prompt). Antes había que subir a 8k porque
-      // Gemini se entusiasmaba — ahora con caps duros vuelve a entrar holgado.
-      maxOutputTokens: 4096,
+      // 6144 = colchón sobre el peor caso (~1500 tokens con caps). Gemini
+      // ignora los límites de palabras a veces; este margen evita el corte.
+      maxOutputTokens: 6144,
     },
   })
 
@@ -130,9 +129,21 @@ ${input.features.length ? `- Características: ${input.features.join(', ')}` : '
 
 Ajuste fino: altura de calle (cuadra), piso (mejor a mayor altura salvo último con problemas), orientación, posición premium/periférica del barrio.${anchorBlock}`
 
-  const result = await model.generateContent(prompt)
-  const txt = result.response.text()
-  const parsed = JSON.parse(txt) as ValuatorOutput
+  // Intento 1: prompt normal. Intento 2 (solo si falla parse): pedido más
+  // estricto en concisión. Gemini a veces ignora límites de palabras y corta.
+  let parsed: ValuatorOutput
+  try {
+    const result = await model.generateContent(prompt)
+    parsed = JSON.parse(result.response.text()) as ValuatorOutput
+  } catch (err) {
+    const msg = String((err as Error).message)
+    const isJsonError = msg.includes('JSON') || msg.includes('Unexpected') || msg.includes('Unterminated')
+    if (!isJsonError) throw err
+    console.warn('[valuator] retry tras JSON inválido:', msg)
+    const tighter = prompt + '\n\nIMPORTANTE: tu intento anterior generó JSON inválido (cortado). Esta vez sé EXTREMADAMENTE conciso. Strings al mínimo. NO excedas los límites de palabras de cada campo.'
+    const retry = await model.generateContent(tighter)
+    parsed = JSON.parse(retry.response.text()) as ValuatorOutput
+  }
 
   if (!parsed.pricePerM2USD || !parsed.totalPriceUSD) {
     throw new Error('Respuesta inválida del modelo: faltan bandas de precio')
